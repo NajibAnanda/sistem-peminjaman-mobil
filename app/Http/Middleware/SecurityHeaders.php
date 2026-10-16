@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\ContentSecurityPolicy;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -22,40 +23,13 @@ final class SecurityHeaders
 
         $response = $next($request);
 
-        $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($nonce));
+        $response->headers->set('Content-Security-Policy', ContentSecurityPolicy::build($nonce, $this->viteDevServer()));
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), payment=(), usb=()');
 
         return $response;
-    }
-
-    private function contentSecurityPolicy(string $nonce): string
-    {
-        $devServer = $this->viteDevServer();
-        $dev = $devServer === null ? [] : [$devServer];
-        $devSocket = $devServer === null ? [] : [preg_replace('/^http/', 'ws', $devServer)];
-
-        $directives = [
-            'default-src' => ["'self'"],
-            'script-src' => ["'self'", "'nonce-{$nonce}'", ...$dev],
-            // Sonner, progress bar Inertia, dan Vite (dev) menyisipkan <style>
-            // lewat JavaScript, sehingga gaya inline harus diizinkan.
-            'style-src' => ["'self'", "'unsafe-inline'", ...$dev],
-            'img-src' => ["'self'", 'data:', 'blob:', ...$dev],
-            'font-src' => ["'self'", 'data:', ...$dev],
-            'connect-src' => ["'self'", ...$dev, ...$devSocket],
-            'media-src' => ["'self'", 'blob:'],
-            'object-src' => ["'none'"],
-            'base-uri' => ["'self'"],
-            'form-action' => ["'self'"],
-            'frame-ancestors' => ["'none'"],
-        ];
-
-        return collect($directives)
-            ->map(fn (array $sources, string $directive): string => $directive.' '.implode(' ', $sources))
-            ->implode('; ');
     }
 
     /**
