@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
+use App\Enums\StaffRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -10,16 +13,14 @@ use Illuminate\Support\Str;
 /**
  * @extends Factory<User>
  */
-class UserFactory extends Factory
+final class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
+     * Password bersama untuk semua akun factory agar hashing hanya sekali.
      */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -27,8 +28,10 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => self::$password ??= Hash::make('password'),
+            'role' => StaffRole::Admin,
+            'is_active' => true,
+            'must_change_password' => false,
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
@@ -36,19 +39,34 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'role' => StaffRole::Admin,
         ]);
     }
 
-    /**
-     * Indicate that the model has two-factor authentication configured.
-     */
+    public function manager(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => StaffRole::Manager,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
+
+    public function mustChangePassword(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'must_change_password' => true,
+        ]);
+    }
+
     public function withTwoFactor(): static
     {
         return $this->state(fn (array $attributes) => [

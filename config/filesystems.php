@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Foto bukti hanya boleh disajikan lewat controller yang memanggil
+            // Policy, bukan lewat route storage bawaan Laravel.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

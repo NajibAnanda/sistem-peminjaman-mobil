@@ -1,92 +1,93 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Fortify\Features;
-use Tests\TestCase;
+use Inertia\Testing\AssertableInertia as Assert;
 
-class AuthenticationTest extends TestCase
-{
-    use RefreshDatabase;
+test('halaman login dapat dibuka tanpa opsi lupa password', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('auth/login')
+            ->missing('canResetPassword'),
+        );
+});
 
-    public function test_login_screen_can_be_rendered()
-    {
-        $response = $this->get(route('login'));
+test('petugas aktif dapat login dan waktu login terakhir tercatat', function () {
+    $this->travelTo(now()->setDateTime(2026, 10, 16, 8, 0));
+    $user = User::factory()->create();
 
-        $response->assertOk();
-    }
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect(route('dashboard', absolute: false));
 
-    public function test_users_can_authenticate_using_the_login_screen()
-    {
-        $user = User::factory()->create();
+    $this->assertAuthenticatedAs($user);
+    expect($user->fresh()->last_login_at->equalTo(now()))->toBeTrue();
+});
 
-        $response = $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+test('petugas dengan 2FA diarahkan ke tantangan 2FA', function () {
+    $user = User::factory()->withTwoFactor()->create();
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
-    }
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])
+        ->assertRedirect(route('two-factor.login'))
+        ->assertSessionHas('login.id', $user->id);
 
-    public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()
-    {
-        $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+    $this->assertGuest();
+});
 
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-        ]);
+test('password salah ditolak dengan pesan Bahasa Indonesia', function () {
+    $user = User::factory()->create();
 
-        $user = User::factory()->withTwoFactor()->create();
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password-salah',
+    ])->assertSessionHasErrors(['email' => 'Email atau password salah.']);
 
-        $response = $this->post(route('login'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+    $this->assertGuest();
+});
 
-        $response->assertRedirect(route('two-factor.login'));
-        $response->assertSessionHas('login.id', $user->id);
-        $this->assertGuest();
-    }
+test('akun nonaktif tidak dapat login walau password benar', function () {
+    $user = User::factory()->inactive()->create();
 
-    public function test_users_can_not_authenticate_with_invalid_password()
-    {
-        $user = User::factory()->create();
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertSessionHasErrors(['email' => __('auth.inactive')]);
 
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+    $this->assertGuest();
+    expect($user->fresh()->last_login_at)->toBeNull();
+});
 
-        $this->assertGuest();
-    }
+test('akun nonaktif dengan password salah hanya mendapat pesan umum', function () {
+    $user = User::factory()->inactive()->create();
 
-    public function test_users_can_logout()
-    {
-        $user = User::factory()->create();
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password-salah',
+    ])->assertSessionHasErrors(['email' => 'Email atau password salah.']);
+});
 
-        $response = $this->actingAs($user)->post(route('logout'));
+test('petugas dapat keluar', function () {
+    $user = User::factory()->create();
 
-        $response->assertRedirect(route('home'));
+    $this->actingAs($user)
+        ->post(route('logout'))
+        ->assertRedirect(route('home'));
 
-        $this->assertGuest();
-    }
+    $this->assertGuest();
+});
 
-    public function test_users_are_rate_limited()
-    {
-        $user = User::factory()->create();
+test('login dibatasi 5 percobaan per menit per email dan IP', function () {
+    $user = User::factory()->create();
 
-        RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+    RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
 
-        $response = $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
-
-        $response->assertTooManyRequests();
-    }
-}
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password-salah',
+    ])->assertTooManyRequests();
+});

@@ -4,8 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-        <script>
+        {{-- Menerapkan mode gelap sistem sebelum halaman tampil. Nonce wajib karena CSP melarang skrip inline tanpa nonce. --}}
+        <script nonce="{{ Vite::cspNonce() }}">
             (function() {
                 const appearance = '{{ $appearance ?? "system" }}';
 
@@ -19,7 +19,7 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Warna latar awal sesuai tema di app.css agar tidak berkedip. --}}
         <style>
             html {
                 background-color: oklch(1 0 0);
@@ -34,12 +34,10 @@
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-        @fonts
-
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>{{ config('app.name') }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

@@ -1,13 +1,15 @@
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+import { useAppearance } from "@/hooks/use-appearance"
 
+// Diubah dari preset: tema diambil dari pengaturan tampilan aplikasi, bukan
+// next-themes (tidak ada ThemeProvider di aplikasi ini).
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const { appearance } = useAppearance()
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={appearance}
       className="toaster group"
       icons={{
         success: (

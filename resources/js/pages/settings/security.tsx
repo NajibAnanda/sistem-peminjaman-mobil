@@ -1,22 +1,21 @@
 import { Form, Head } from '@inertiajs/react';
+import { ShieldAlert } from 'lucide-react';
 import { useRef } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import type { Props as ManageTwoFactorProps } from '@/components/manage-two-factor';
+import ManageTwoFactor from '@/components/manage-two-factor';
 import PasswordInput from '@/components/password-input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
-import type { Props as ManagePasskeysProps } from '@/components/manage-passkeys';
-import ManagePasskeys from '@/components/manage-passkeys';
-import type { Props as ManageTwoFactorProps } from '@/components/manage-two-factor';
-import ManageTwoFactor from '@/components/manage-two-factor';
 
-// oxfmt-ignore
 type Props = {
     passwordRules: string;
-} & ManagePasskeysProps &
-    ManageTwoFactorProps;
+    twoFactorRequired: boolean;
+} & ManageTwoFactorProps;
 
 export default function Security(props: Props) {
     const passwordInput = useRef<HTMLInputElement>(null);
@@ -24,15 +23,26 @@ export default function Security(props: Props) {
 
     return (
         <>
-            <Head title="Security settings" />
+            <Head title="Pengaturan keamanan" />
 
-            <h1 className="sr-only">Security settings</h1>
+            <h1 className="sr-only">Pengaturan keamanan</h1>
+
+            {props.twoFactorRequired && !props.twoFactorEnabled && (
+                <Alert>
+                    <ShieldAlert />
+                    <AlertTitle>Autentikasi dua faktor wajib</AlertTitle>
+                    <AlertDescription>
+                        Akun Pengelola wajib mengaktifkan autentikasi dua faktor
+                        sebelum dapat memakai aplikasi.
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    title="Ganti password"
+                    description="Gunakan minimal 10 karakter yang berisi huruf dan angka"
                 />
 
                 <Form
@@ -61,7 +71,7 @@ export default function Security(props: Props) {
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="current_password">
-                                    Current password
+                                    Password saat ini
                                 </Label>
 
                                 <PasswordInput
@@ -70,14 +80,14 @@ export default function Security(props: Props) {
                                     name="current_password"
                                     className="mt-1 block w-full"
                                     autoComplete="current-password"
-                                    placeholder="Current password"
+                                    placeholder="Password saat ini"
                                 />
 
                                 <InputError message={errors.current_password} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">New password</Label>
+                                <Label htmlFor="password">Password baru</Label>
 
                                 <PasswordInput
                                     id="password"
@@ -85,7 +95,7 @@ export default function Security(props: Props) {
                                     name="password"
                                     className="mt-1 block w-full"
                                     autoComplete="new-password"
-                                    placeholder="New password"
+                                    placeholder="Password baru"
                                     passwordrules={props.passwordRules}
                                 />
 
@@ -94,7 +104,7 @@ export default function Security(props: Props) {
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    Confirm password
+                                    Ulangi password baru
                                 </Label>
 
                                 <PasswordInput
@@ -102,7 +112,7 @@ export default function Security(props: Props) {
                                     name="password_confirmation"
                                     className="mt-1 block w-full"
                                     autoComplete="new-password"
-                                    placeholder="Confirm password"
+                                    placeholder="Ulangi password baru"
                                     passwordrules={props.passwordRules}
                                 />
 
@@ -116,7 +126,7 @@ export default function Security(props: Props) {
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    Save
+                                    Simpan
                                 </Button>
                             </div>
                         </>
@@ -129,11 +139,6 @@ export default function Security(props: Props) {
                 requiresConfirmation={props.requiresConfirmation}
                 twoFactorEnabled={props.twoFactorEnabled}
             />
-
-            <ManagePasskeys
-                canManagePasskeys={props.canManagePasskeys}
-                passkeys={props.passkeys}
-            />
         </>
     );
 }
@@ -141,7 +146,7 @@ export default function Security(props: Props) {
 Security.layout = {
     breadcrumbs: [
         {
-            title: 'Security settings',
+            title: 'Pengaturan keamanan',
             href: edit(),
         },
     ],

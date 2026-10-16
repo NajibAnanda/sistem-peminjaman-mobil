@@ -1,47 +1,94 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
+use Symfony\Component\HttpFoundation\Response;
 
-class HandleInertiaRequests extends Middleware
+final class HandleInertiaRequests extends Middleware
 {
     /**
-     * The root template that's loaded on the first page visit.
+     * Jenis flash message Laravel yang ditampilkan sebagai toast.
      *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
+     * @var list<string>
      */
+    private const TOAST_TYPES = ['success', 'info', 'warning', 'error'];
+
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $this->flashSessionMessagesAsToast($request);
+
+        return parent::handle($request, $next);
+    }
+
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
     /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
      * @return array<string, mixed>
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'timezone' => config('app.timezone'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user instanceof User ? $this->sharedUser($user) : null,
+                'can' => [
+                    'manageStaff' => $user?->can('viewAny', User::class) ?? false,
+                    'viewActivityLog' => $user?->can('view-activity-log') ?? false,
+                ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Hanya field yang dibutuhkan antarmuka; jangan kirim model utuh.
+     *
+     * @return array<string, mixed>
+     */
+    private function sharedUser(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role->value,
+            'role_label' => $user->role->label(),
+            'two_factor_enabled' => $user->hasConfirmedTwoFactor(),
+        ];
+    }
+
+    /**
+     * Controller boleh memakai `->with('success', '...')` seperti contoh di
+     * AGENTS.md; pesannya diteruskan ke toast Inertia di sini.
+     */
+    private function flashSessionMessagesAsToast(Request $request): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        foreach (self::TOAST_TYPES as $type) {
+            $message = $request->session()->get($type);
+
+            if (is_string($message) && $message !== '') {
+                Inertia::flash('toast', ['type' => $type, 'message' => $message]);
+            }
+        }
     }
 }
