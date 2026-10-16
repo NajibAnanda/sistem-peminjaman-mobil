@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\Staff;
+
+use App\Concerns\ProfileValidationRules;
+use App\Enums\StaffRole;
+use App\Http\Requests\Staff\Concerns\ProvidesStaffData;
+use App\Models\User;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+final class UpdateStaffRequest extends FormRequest
+{
+    use ProfileValidationRules;
+    use ProvidesStaffData;
+
+    public function authorize(): bool
+    {
+        return $this->user()?->can('update', $this->staff()) ?? false;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->normalizeEmail();
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => $this->nameRules(),
+            'email' => $this->emailRules($this->staff()->id),
+            'role' => ['required', Rule::enum(StaffRole::class)],
+        ];
+    }
+
+    public function staff(): User
+    {
+        /** @var User */
+        return $this->route('user');
+    }
+}

@@ -1,0 +1,89 @@
+import { Check, Copy, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { useClipboard } from '@/hooks/use-clipboard';
+import type { TemporaryPasswordFlash } from '@/types';
+
+type Props = {
+    credentials: TemporaryPasswordFlash | null;
+    onClose: () => void;
+};
+
+/**
+ * Menampilkan password sementara satu kali saja. Setelah ditutup, password
+ * tidak dapat dilihat lagi; Pengelola harus mereset ulang bila lupa.
+ */
+export function TemporaryPasswordDialog({ credentials, onClose }: Props) {
+    const [copiedText, copy] = useClipboard();
+
+    if (credentials === null) {
+        return null;
+    }
+
+    const copied = copiedText === credentials.password;
+    const CopyIcon = copied ? Check : Copy;
+
+    const handleCopy = async () => {
+        if (!(await copy(credentials.password))) {
+            toast.error('Gagal menyalin. Catat password secara manual.');
+        }
+    };
+
+    return (
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent
+                className="sm:max-w-md"
+                onInteractOutside={(event) => event.preventDefault()}
+            >
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <KeyRound className="size-5" aria-hidden="true" />
+                        Password Sementara
+                    </DialogTitle>
+                    <DialogDescription>
+                        Berikan password ini kepada {credentials.name} (
+                        {credentials.email}). Password wajib diganti saat login
+                        pertama.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex items-stretch overflow-hidden rounded-lg border border-border">
+                    <code
+                        className="flex-1 bg-muted px-3 py-2 font-mono text-lg tracking-wider select-all"
+                        data-test="temporary-password"
+                    >
+                        {credentials.password}
+                    </code>
+                    <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="flex items-center gap-1.5 border-l border-border px-3 text-sm hover:bg-muted"
+                    >
+                        <CopyIcon className="size-4" aria-hidden="true" />
+                        {copied ? 'Tersalin' : 'Salin'}
+                    </button>
+                </div>
+
+                <Alert>
+                    <AlertDescription>
+                        Password ini hanya ditampilkan sekali. Setelah dialog
+                        ditutup, password tidak dapat dilihat lagi.
+                    </AlertDescription>
+                </Alert>
+
+                <DialogFooter>
+                    <Button onClick={onClose}>Saya sudah mencatatnya</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}

@@ -15,9 +15,11 @@ import { cn } from '@/lib/utils';
 
 /**
  * Semua status yang ditampilkan aplikasi: status tersimpan peminjaman,
- * indikator turunan, dan status tampilan mobil (prd.md section 5).
+ * indikator turunan, status tampilan mobil (prd.md section 5), dan status
+ * aktif/nonaktif data master & akun (`enabled` / `inactive`).
  */
 export type StatusKey =
+    | 'enabled'
     | 'scheduled'
     | 'active'
     | 'completed'
@@ -45,6 +47,7 @@ const statuses: Record<
     StatusKey,
     { label: string; tone: Tone; icon: LucideIcon }
 > = {
+    enabled: { label: 'Aktif', tone: 'success', icon: CircleCheck },
     scheduled: { label: 'Dijadwalkan', tone: 'primary', icon: CalendarClock },
     active: { label: 'Aktif', tone: 'primary', icon: KeyRound },
     completed: { label: 'Selesai', tone: 'success', icon: CircleCheck },

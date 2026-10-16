@@ -14,8 +14,8 @@ test('disk privat tidak disajikan lewat route storage bawaan', function () {
 });
 
 test('pesan validasi memakai Bahasa Indonesia dan nama field Indonesia', function () {
-    $this->actingAs(User::factory()->create())
-        ->patch(route('profile.update'), ['name' => '', 'email' => 'bukan-email'])
+    $this->actingAs(User::factory()->manager()->create())
+        ->post(route('staff.store'), ['name' => '', 'email' => 'bukan-email', 'role' => 'admin'])
         ->assertSessionHasErrors([
             'name' => 'Nama wajib diisi.',
             'email' => 'Email harus berupa alamat email yang valid.',

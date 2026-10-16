@@ -20,7 +20,7 @@ export default function Profile() {
                 <Heading
                     variant="small"
                     title="Profil"
-                    description="Perbarui nama dan alamat email Anda"
+                    description="Perbarui nama yang tampil di aplikasi"
                 />
 
                 <Form
@@ -54,21 +54,20 @@ export default function Profile() {
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
 
+                                {/* Tanpa atribut name: email tidak dikirim dan
+                                    hanya dapat diubah Pengelola (FR-03). */}
                                 <Input
                                     id="email"
                                     type="email"
                                     className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
-                                    name="email"
-                                    required
+                                    value={auth.user.email}
+                                    readOnly
+                                    disabled
                                     autoComplete="username"
-                                    placeholder="Alamat email"
                                 />
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.email}
-                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Email hanya dapat diubah oleh Pengelola.
+                                </p>
                             </div>
 
                             <div className="flex items-center gap-4">

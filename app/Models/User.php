@@ -8,6 +8,7 @@ use App\Enums\StaffRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -45,6 +46,33 @@ final class User extends Authenticatable
             'last_login_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     */
+    public function scopeActiveManagers(Builder $query): void
+    {
+        $query->where('role', StaffRole::Manager)->where('is_active', true);
+    }
+
+    /**
+     * Pencarian nama atau email untuk daftar Kelola Petugas.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeSearch(Builder $query, ?string $term): void
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return;
+        }
+
+        $query->where(function (Builder $query) use ($term): void {
+            $query->where('name', 'like', "%{$term}%")
+                ->orWhere('email', 'like', "%{$term}%");
+        });
     }
 
     public function isManager(): bool

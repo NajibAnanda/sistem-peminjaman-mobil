@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\Staff\UpdateOwnProfile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
@@ -17,12 +18,10 @@ final class ProfileController extends Controller
         return Inertia::render('settings/profile');
     }
 
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, UpdateOwnProfile $action): RedirectResponse
     {
-        $request->user()->fill($request->validated())->save();
+        $action->handle($request->user(), $request->validated('name'));
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Profil berhasil diperbarui.']);
-
-        return to_route('profile.edit');
+        return to_route('profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }
 }

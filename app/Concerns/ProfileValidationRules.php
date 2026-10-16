@@ -1,29 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Concerns;
 
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 trait ProfileValidationRules
 {
     /**
-     * Get the validation rules used to validate user profiles.
-     *
-     * @return array<string, array<int, ValidationRule|array<mixed>|string>>
-     */
-    protected function profileRules(?int $userId = null): array
-    {
-        return [
-            'name' => $this->nameRules(),
-            'email' => $this->emailRules($userId),
-        ];
-    }
-
-    /**
-     * Get the validation rules used to validate user names.
-     *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
     protected function nameRules(): array
@@ -32,20 +20,29 @@ trait ProfileValidationRules
     }
 
     /**
-     * Get the validation rules used to validate user emails.
-     *
-     * @return array<int, ValidationRule|array<mixed>|string>
+     * @return array<int, string|Unique>
      */
-    protected function emailRules(?int $userId = null): array
+    protected function emailRules(?int $ignoreUserId = null): array
     {
         return [
             'required',
             'string',
             'email',
             'max:255',
-            $userId === null
+            $ignoreUserId === null
                 ? Rule::unique(User::class)
-                : Rule::unique(User::class)->ignore($userId),
+                : Rule::unique(User::class)->ignore($ignoreUserId),
         ];
+    }
+
+    /**
+     * Login Fortify mengecilkan email, jadi email harus disimpan huruf kecil
+     * agar akun tetap bisa masuk.
+     */
+    protected function normalizeEmail(): void
+    {
+        if (is_string($this->input('email'))) {
+            $this->merge(['email' => mb_strtolower(trim($this->input('email')))]);
+        }
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Staff;
 
+use App\Enums\ActivityEvent;
+use App\Enums\ActivityLogName;
 use App\Models\User;
 
 final class ChangeOwnPassword
@@ -16,6 +18,12 @@ final class ChangeOwnPassword
             'password' => $password,
             'must_change_password' => false,
         ])->save();
+
+        activity(ActivityLogName::Staff)
+            ->performedOn($user)
+            ->causedBy($user)
+            ->event(ActivityEvent::PasswordChanged->value)
+            ->log("{$user->name} mengganti password sendiri");
 
         return $user;
     }

@@ -48,6 +48,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pagination
+    |--------------------------------------------------------------------------
+    |
+    | Jumlah baris per halaman untuk daftar data (pagination di server).
+    |
+    */
+
+    'per_page' => 15,
+
+    /*
+    |--------------------------------------------------------------------------
     | Peminjaman
     |--------------------------------------------------------------------------
     |
@@ -74,6 +85,7 @@ return [
         'require_two_factor_for_manager' => (bool) env('FLEET_REQUIRE_2FA_FOR_MANAGER', false),
         'password_check_uncompromised' => (bool) env('FLEET_PASSWORD_CHECK_UNCOMPROMISED', false),
         'password_min_length' => 10,
+        'temporary_password_length' => 12,
     ],
 
     /*
