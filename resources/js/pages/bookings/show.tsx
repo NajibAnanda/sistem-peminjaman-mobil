@@ -142,10 +142,14 @@ export default function BookingShow({
                                                 {formatDateTime(
                                                     booking.picked_up_at,
                                                 )}
-                                                <Muted>
-                                                    oleh{' '}
-                                                    {booking.picked_up_by_name}
-                                                </Muted>
+                                                {booking.picked_up_by_name && (
+                                                    <Muted>
+                                                        oleh{' '}
+                                                        {
+                                                            booking.picked_up_by_name
+                                                        }
+                                                    </Muted>
+                                                )}
                                             </>
                                         ) : (
                                             <Muted>Belum</Muted>
@@ -157,10 +161,14 @@ export default function BookingShow({
                                                 {formatDateTime(
                                                     booking.returned_at,
                                                 )}
-                                                <Muted>
-                                                    oleh{' '}
-                                                    {booking.returned_by_name}
-                                                </Muted>
+                                                {booking.returned_by_name && (
+                                                    <Muted>
+                                                        oleh{' '}
+                                                        {
+                                                            booking.returned_by_name
+                                                        }
+                                                    </Muted>
+                                                )}
                                             </>
                                         ) : (
                                             <Muted>Belum</Muted>
@@ -182,9 +190,9 @@ export default function BookingShow({
                                                 <Muted>
                                                     {formatDateTime(
                                                         booking.cancelled_at,
-                                                    )}{' '}
-                                                    oleh{' '}
-                                                    {booking.cancelled_by_name}
+                                                    )}
+                                                    {booking.cancelled_by_name &&
+                                                        ` oleh ${booking.cancelled_by_name}`}
                                                 </Muted>
                                             )}
                                         </Field>

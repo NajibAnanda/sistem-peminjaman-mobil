@@ -308,12 +308,14 @@ final class Booking extends Model
      */
     public function scopeSearch(Builder $query, string $term): void
     {
+        // Subquery IN (dihitung sekali), bukan whereHas/EXISTS yang dijalankan
+        // ulang untuk setiap baris peminjaman: jauh lebih cepat pada riwayat besar.
         $query->where(fn (Builder $query) => $query
             ->where('code', 'like', "%{$term}%")
-            ->orWhereHas('employee', fn (Builder $query) => $query
+            ->orWhereIn('employee_id', Employee::query()->select('id')->where(fn (Builder $query) => $query
                 ->where('name', 'like', "%{$term}%")
-                ->orWhere('employee_number', 'like', "%{$term}%"))
-            ->orWhereHas('car', fn (Builder $query) => $query->where('plate_number', 'like', "%{$term}%")));
+                ->orWhere('employee_number', 'like', "%{$term}%")))
+            ->orWhereIn('car_id', Car::query()->select('id')->where('plate_number', 'like', "%{$term}%")));
     }
 
     /**
@@ -333,7 +335,7 @@ final class Booking extends Model
             ->when($table->filter('car'), fn (Builder $query, array $ids) => $query->whereIn('car_id', $ids))
             ->when($table->filter('employee'), fn (Builder $query, array $ids) => $query->whereIn('employee_id', $ids))
             ->when($table->filter('division'), fn (Builder $query, array $divisions) => $query
-                ->whereHas('employee', fn (Builder $query) => $query->whereIn('division', $divisions)))
+                ->whereIn('employee_id', Employee::query()->select('id')->whereIn('division', $divisions)))
             ->when($table->filter('lateness'), fn (Builder $query, array $values) => $query->where(
                 function (Builder $query) use ($values, $now): void {
                     foreach ($values as $value) {

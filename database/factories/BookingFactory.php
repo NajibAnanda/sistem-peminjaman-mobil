@@ -68,6 +68,7 @@ final class BookingFactory extends Factory
                 'start_at' => $start,
                 'planned_return_at' => $start->addHours(8),
                 'picked_up_at' => $start,
+                'picked_up_by' => fn (array $attributes) => $attributes['created_by'],
             ];
         });
     }
@@ -82,7 +83,9 @@ final class BookingFactory extends Factory
                 'start_at' => $start,
                 'planned_return_at' => $start->addHours(8),
                 'picked_up_at' => $start,
+                'picked_up_by' => fn (array $attributes) => $attributes['created_by'],
                 'returned_at' => $start->addHours(7),
+                'returned_by' => fn (array $attributes) => $attributes['created_by'],
             ];
         });
     }
@@ -107,6 +110,7 @@ final class BookingFactory extends Factory
                     'planned_return_at' => $plannedReturn,
                     'cancellation_reason' => fake()->randomElement(['Kegiatan ditunda', 'Karyawan berhalangan', 'Memakai kendaraan lain']),
                     'cancelled_at' => $createdAt->addHours(fake()->numberBetween(1, 20)),
+                    'cancelled_by' => fn (array $attributes) => $attributes['created_by'],
                     'created_at' => $createdAt,
                     'updated_at' => $createdAt,
                 ];
@@ -124,6 +128,8 @@ final class BookingFactory extends Factory
                 'picked_up_at' => $pickedUp,
                 // Minimal satu jam setelah diambil agar data tetap masuk akal.
                 'returned_at' => $returned->max($pickedUp->addHour()),
+                'picked_up_by' => fn (array $attributes) => $attributes['created_by'],
+                'returned_by' => fn (array $attributes) => $attributes['created_by'],
                 'created_at' => $createdAt,
                 'updated_at' => $returned,
             ];
@@ -136,6 +142,7 @@ final class BookingFactory extends Factory
             'status' => BookingStatus::Cancelled,
             'cancellation_reason' => 'Kegiatan dibatalkan',
             'cancelled_at' => now(),
+            'cancelled_by' => fn (array $attributes) => $attributes['created_by'],
         ]);
     }
 }

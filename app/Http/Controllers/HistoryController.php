@@ -11,6 +11,7 @@ use App\Http\Controllers\Concerns\PaginatesForTable;
 use App\Http\Requests\Booking\HistoryIndexRequest;
 use App\Http\Resources\HistoryResource;
 use App\Models\Booking;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,11 +29,14 @@ final class HistoryController extends Controller
         $bookings = $this->paginateForTable(
             Booking::query()
                 ->with(['employee', 'car'])
-                ->withCount('extensions')
                 ->forHistory($table)
                 ->orderByDesc('start_at')
                 ->orderByDesc('id'),
         );
+
+        // Dihitung untuk 10 baris halaman ini saja; withCount di query utama
+        // ikut dievaluasi untuk baris yang dilewati paginasi.
+        (new EloquentCollection($bookings->items()))->loadCount('extensions');
 
         return Inertia::render('history/index', [
             'bookings' => HistoryResource::collection($bookings),

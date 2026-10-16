@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ErrorPageStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsurePasswordChanged;
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -63,5 +65,34 @@ return Application::configure(basePath: dirname(__DIR__))
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
 
             return back();
+        });
+
+        // Halaman error ramah berbahasa Indonesia. Saat APP_DEBUG=true detail
+        // teknis bawaan Laravel tetap tampil untuk pengembang; selain itu
+        // pengguna tidak pernah melihat pesan exception atau stack trace.
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
+            $status = $response->getStatusCode();
+
+            if ($request->expectsJson()) {
+                return $response;
+            }
+
+            // Token CSRF kedaluwarsa (mis. halaman dibiarkan terbuka lama):
+            // kembali ke halaman sebelumnya dengan pesan, bukan halaman error.
+            if ($status === 419) {
+                return back()->with('warning', 'Sesi Anda telah berakhir. Silakan ulangi tindakan tadi.');
+            }
+
+            if (config('app.debug') || ! in_array($status, ErrorPageStatus::values(), true)) {
+                return $response;
+            }
+
+            $page = ErrorPageStatus::from($status);
+
+            return Inertia::render('error', [
+                'status' => $status,
+                'title' => $page->title(),
+                'description' => $page->description(),
+            ])->toResponse($request)->setStatusCode($status);
         });
     })->create();

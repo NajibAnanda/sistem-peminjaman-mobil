@@ -67,7 +67,6 @@ final class DevelopmentSeeder extends Seeder
     {
         $perCar = intdiv(self::HISTORICAL_BOOKINGS, $cars->count());
         $latestEnd = CarbonImmutable::now()->subDay()->startOfHour();
-        $created = [];
 
         foreach ($cars as $car) {
             $cursor = $latestEnd;
@@ -76,22 +75,16 @@ final class DevelopmentSeeder extends Seeder
                 $hours = fake()->numberBetween(self::MIN_DURATION_HOURS, self::MAX_DURATION_HOURS);
                 $start = $cursor->subHours($hours);
 
-                $created[] = Booking::factory()->historical($start, $hours)->create([
+                // Petugas ambil/kembali/batal diisi factory sesuai status akhirnya.
+                Booking::factory()->historical($start, $hours)->create([
                     'car_id' => $car->id,
                     'employee_id' => $employees->random()->id,
                     'created_by' => $staff->id,
-                    'picked_up_by' => $staff->id,
-                    'returned_by' => $staff->id,
-                ])->id;
+                ]);
 
                 $cursor = $start->subHours(fake()->numberBetween(self::MIN_GAP_HOURS, self::MAX_GAP_HOURS));
             }
         }
-
-        // Kolom penanggung jawab hanya bermakna sesuai status akhirnya. Dibatasi
-        // pada data yang baru dibuat agar data lain di database tidak tersentuh.
-        Booking::query()->whereKey($created)->where('status', BookingStatus::Cancelled)
-            ->update(['picked_up_by' => null, 'returned_by' => null, 'cancelled_by' => $staff->id]);
     }
 
     /**

@@ -12,7 +12,10 @@ use Carbon\CarbonInterface;
  */
 final class DateFormat
 {
-    private const LOCALE = 'id';
+    /** Sama dengan Intl.DateTimeFormat('id-ID', { month: 'short' }) di browser. */
+    private const MONTHS = [
+        1 => 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
 
     private const MINUTES_PER_HOUR = 60;
 
@@ -20,10 +23,12 @@ final class DateFormat
 
     public static function dateTime(CarbonInterface $value): string
     {
-        return $value->copy()
-            ->setTimezone((string) config('app.timezone'))
-            ->locale(self::LOCALE)
-            ->translatedFormat('j M Y, H.i');
+        // Disusun manual, bukan translatedFormat(): ±1 ms per panggilan terlalu
+        // lambat untuk ekspor ribuan baris, dan singkatan Carbon ("Agt")
+        // berbeda dengan Intl di browser ("Agu").
+        $local = $value->copy()->setTimezone((string) config('app.timezone'));
+
+        return $local->format('j').' '.self::MONTHS[(int) $local->format('n')].' '.$local->format('Y, H.i');
     }
 
     public static function range(CarbonInterface $start, CarbonInterface $end): string

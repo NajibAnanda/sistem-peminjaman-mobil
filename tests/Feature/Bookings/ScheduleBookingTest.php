@@ -234,13 +234,14 @@ test('form jadwal menandai ketersediaan mobil pada rentang yang dipilih', functi
             ->has('employees', 2)
             ->has('cars', 3)
             ->where('startToleranceMinutes', 15)
+            // Urutan mobil mengikuti plat (acak dari factory), jadi dibandingkan per id.
             ->where('cars', fn ($cars) => collect($cars)->mapWithKeys(fn ($car) => [
                 $car['id'] => [$car['available'], $car['reason']],
-            ])->all() === [
+            ])->sortKeys()->all() === collect([
                 $busy->id => [false, "Bentrok dengan {$conflict->code}"],
                 $maintenance->id => [false, 'Maintenance'],
                 $this->car->id => [true, null],
-            ]),
+            ])->sortKeys()->all()),
         );
 });
 

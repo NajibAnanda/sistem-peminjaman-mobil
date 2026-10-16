@@ -10,7 +10,7 @@ use App\Support\TableQuery;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithCustomChunkSize;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
@@ -30,7 +30,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  *
  * @implements WithMapping<Booking>
  */
-final class BookingsExport implements FromQuery, ShouldAutoSize, WithCustomChunkSize, WithCustomCsvSettings, WithCustomValueBinder, WithHeadings, WithMapping, WithStrictNullComparison, WithStyles
+final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChunkSize, WithCustomCsvSettings, WithCustomValueBinder, WithHeadings, WithMapping, WithStrictNullComparison, WithStyles
 {
     public function __construct(
         private readonly TableQuery $table,
@@ -100,6 +100,20 @@ final class BookingsExport implements FromQuery, ShouldAutoSize, WithCustomChunk
             (int) $row->extensions_count,
             $lateness === null ? '' : DateFormat::duration($lateness),
             $row->creator->name,
+        ];
+    }
+
+    /**
+     * Lebar kolom tetap (dalam karakter). Ukuran otomatis (ShouldAutoSize)
+     * mengukur setiap sel dan sangat memperlambat ekspor data besar.
+     *
+     * @return array<string, int>
+     */
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 18, 'B' => 28, 'C' => 14, 'D' => 14, 'E' => 22, 'F' => 13, 'G' => 40, 'H' => 19,
+            'I' => 19, 'J' => 19, 'K' => 19, 'L' => 14, 'M' => 12, 'N' => 18, 'O' => 22,
         ];
     }
 
