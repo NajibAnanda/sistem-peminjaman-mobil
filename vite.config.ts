@@ -69,6 +69,7 @@ export default defineConfig({
             'CLAUDE.md',
             'composer.json',
             'prd.md',
+            'PROMPTS.md',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
         ],

@@ -2,7 +2,7 @@
 
 # Sistem Peminjaman Mobil Dinas Internal
 
-**Versi Dokumen:** 2.0
+**Versi Dokumen:** 2.1
 **Tanggal:** 16 Oktober 2026
 **Status:** Draft — siap dikembangkan
 
@@ -14,6 +14,7 @@
 | ----- | --------------- | --------- |
 | 1.0 – 1.5 | Agustus – Oktober 2026 | Versi berbasis Next.js + Supabase + Vercel dengan karyawan sebagai pengguna aplikasi (self-service). Lihat dokumen PRD v1.5. |
 | 2.0   | 16 Oktober 2026 | **Perombakan total.** (1) Sistem berjalan **lokal di PC kantor** (Laragon) dengan rancangan siap deploy, menggantikan Supabase + Vercel. (2) Stack berganti ke **Laravel 13 + Inertia + React + TypeScript + shadcn/ui + MySQL**. (3) Sistem **hanya dioperasikan petugas GA**; karyawan tidak login dan hanya menjadi data. (4) Role menjadi **Pengelola** dan **Admin**. (5) Alur approve/tolak dihapus, diganti penjadwalan langsung oleh Admin + pembatalan. (6) **Odometer dihapus seluruhnya** (foto maupun angka); foto bukti menjadi **1 foto kondisi** per serah terima. (7) Ditambahkan: perpanjangan peminjaman, indikator Belum Diambil, log aktivitas, ekspor **Excel & CSV**, **light/dark mode**, backup otomatis. |
+| 2.1   | 16 Oktober 2026 | Keputusan setelah analisis starter kit. (1) Lupa password lewat email, verifikasi email, dan passkey dinonaktifkan; reset password hanya oleh Pengelola, ditambah perintah artisan untuk Pengelola yang terkunci. (2) 2FA opsional, dapat diwajibkan untuk Pengelola lewat `.env`. (3) Kebijakan password minimal 10 karakter huruf + angka di semua environment; cek password bocor opsional lewat `.env`. (4) Aturan baru: toleransi waktu mulai 15 menit, serah terima ambil boleh lebih awal, edit jadwal boleh mengganti mobil/karyawan, perpanjangan tidak boleh memperpendek, serah terima ambil ditolak selama mobil belum kembali dari peminjaman sebelumnya. (5) Foto referensi mobil boleh menyusul. (6) Aturan format NIP dan no HP. (7) Tooling Vite+ (oxlint + oxfmt), font Inter lokal, bahasa `lang/id`. (8) Rencana pengerjaan menjadi 8 fase. |
 
 ---
 
@@ -52,6 +53,7 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 **Tidak termasuk:**
 
 - Akun atau login untuk karyawan peminjam.
+- Registrasi akun, lupa password mandiri lewat email, verifikasi email, dan login dengan passkey.
 - Pengajuan mandiri oleh karyawan dan alur persetujuan (approve/tolak).
 - Pencatatan odometer dan perhitungan jarak tempuh.
 - Notifikasi di luar aplikasi (WhatsApp, email, push notification).
@@ -77,11 +79,11 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 
 | Kode  | Requirement | Prioritas |
 | ----- | ----------- | --------- |
-| FR-01 | Pengelola dan Admin login menggunakan email dan password. Hanya akun berstatus aktif yang dapat login. Tidak ada fitur registrasi. | Must Have |
-| FR-02 | Tersedia autentikasi dua faktor (2FA, aplikasi authenticator) per akun. Disarankan wajib untuk Pengelola. | Should Have |
+| FR-01 | Pengelola dan Admin login menggunakan email dan password. Hanya akun berstatus aktif yang dapat login. Tidak ada fitur registrasi, lupa password lewat email, verifikasi email, maupun passkey. | Must Have |
+| FR-02 | Tersedia autentikasi dua faktor (2FA, aplikasi authenticator) per akun, opsional secara default. Dengan konfigurasi `FLEET_REQUIRE_2FA_FOR_MANAGER=true`, Pengelola wajib mengaktifkan 2FA sebelum dapat memakai aplikasi (diarahkan ke halaman pengaturan keamanan). | Should Have |
 | FR-03 | Setiap petugas dapat mengubah nama dan mengganti password sendiri lewat halaman Profil. Email hanya dapat diubah oleh Pengelola. | Should Have |
-| FR-04 | Pengelola dapat menambah, mengedit, menonaktifkan/mengaktifkan akun petugas, dan mereset password ke password sementara. Pemilik akun wajib mengganti password sementara saat login berikutnya. | Must Have |
-| FR-05 | Pengelola tidak dapat menonaktifkan akunnya sendiri, dan sistem menjaga minimal 1 akun Pengelola aktif. Akun yang dinonaktifkan langsung keluar dari sesi yang sedang berjalan. | Must Have |
+| FR-04 | Pengelola dapat menambah, mengedit, menonaktifkan/mengaktifkan akun petugas, dan mereset password ke password sementara. Pemilik akun wajib mengganti password sementara saat login berikutnya. Reset password hanya dilakukan Pengelola (tidak ada lupa password lewat email). Daftar akun menampilkan status 2FA setiap akun. | Must Have |
+| FR-05 | Pengelola tidak dapat menonaktifkan akunnya sendiri, dan sistem menjaga minimal 1 akun Pengelola aktif. Akun yang dinonaktifkan langsung keluar dari sesi yang sedang berjalan. Jika tidak ada Pengelola yang dapat login, password Pengelola dapat direset lewat perintah artisan di PC/server aplikasi. | Must Have |
 
 #### Data Master
 
@@ -89,22 +91,22 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 | ----- | ----------- | --------- |
 | FR-06 | Admin dapat menambah, mengedit, dan menonaktifkan/mengaktifkan data mobil (plat nomor unik, merk, tipe). Mobil tidak dapat dihapus permanen dari aplikasi. | Must Have |
 | FR-07 | Admin dapat mengubah status operasional mobil menjadi **Operasional** atau **Maintenance**. Mobil yang sedang dipinjam tidak dapat diubah ke Maintenance. Jika mobil punya jadwal mendatang, sistem menampilkan daftar jadwal tersebut sebagai peringatan. | Must Have |
-| FR-08 | Setiap mobil memiliki 2 foto referensi (tampak depan/samping dan tampak belakang/interior) yang dapat dilihat lewat galeri popup dengan navigasi sebelumnya/selanjutnya. | Must Have |
-| FR-09 | Admin dapat menambah, mengedit, dan menonaktifkan/mengaktifkan data karyawan (NIP unik, nama, divisi, no HP). | Must Have |
+| FR-08 | Setiap mobil memiliki slot 2 foto referensi (tampak depan/samping dan tampak belakang/interior) yang dapat dilihat lewat galeri popup (dialog) dengan navigasi sebelumnya/selanjutnya. Foto boleh menyusul: mobil dapat dibuat tanpa foto; slot kosong menampilkan placeholder, dan mobil diberi penanda **Foto belum lengkap** di daftar dan detail. | Must Have |
+| FR-09 | Admin dapat menambah, mengedit, dan menonaktifkan/mengaktifkan data karyawan (NIP unik, nama, divisi, no HP). Aturan format NIP dan no HP ada di section 5.4. | Must Have |
 | FR-10 | Karyawan atau mobil yang masih memiliki peminjaman berjalan (status Dijadwalkan atau Aktif) tidak dapat dinonaktifkan. Sistem menampilkan peminjaman yang menghalangi. | Must Have |
 
 #### Peminjaman
 
 | Kode  | Requirement | Prioritas |
 | ----- | ----------- | --------- |
-| FR-11 | Admin dapat menjadwalkan peminjaman: memilih karyawan aktif, mobil aktif dan operasional, waktu mulai, rencana waktu kembali, serta tujuan/keperluan. Dropdown mobil menampilkan ketersediaan pada rentang waktu yang dipilih. | Must Have |
+| FR-11 | Admin dapat menjadwalkan peminjaman: memilih karyawan aktif, mobil aktif dan operasional, waktu mulai, rencana waktu kembali, serta tujuan/keperluan. Waktu mulai tidak boleh di masa lalu, kecuali dalam toleransi (default 15 menit, diatur di `config/fleet.php`) untuk karyawan yang datang langsung. Karyawan dan mobil dipilih lewat kotak pilihan yang dapat dicari; daftar mobil menampilkan ketersediaan pada rentang waktu yang dipilih. | Must Have |
 | FR-12 | Sistem menolak jadwal yang bentrok dengan peminjaman lain untuk mobil yang sama dan menampilkan peminjaman yang bertabrakan. Pengecekan aman terhadap input bersamaan oleh dua petugas. | Must Have |
-| FR-13 | Admin dapat mengedit jadwal selama status masih Dijadwalkan. Pengecekan bentrok dijalankan ulang. | Should Have |
+| FR-13 | Admin dapat mengedit jadwal selama status masih Dijadwalkan: mobil, karyawan, waktu mulai, rencana kembali, dan tujuan. Pengecekan bentrok dijalankan ulang setiap kali mobil atau waktu berubah; toleransi waktu mulai hanya diperiksa bila waktu mulai diubah. Nilai sebelum/sesudah dicatat di log aktivitas. | Should Have |
 | FR-14 | Admin dapat membatalkan peminjaman berstatus Dijadwalkan dengan alasan wajib diisi. Peminjaman Aktif tidak dapat dibatalkan. | Must Have |
-| FR-15 | **Serah terima ambil:** Admin mengambil 1 foto kondisi mobil (webcam atau unggah file). Setelah foto tersimpan, status menjadi Aktif. | Must Have |
+| FR-15 | **Serah terima ambil:** Admin mengambil 1 foto kondisi mobil (webcam atau unggah file). Setelah foto tersimpan, status menjadi Aktif. Serah terima boleh dilakukan sebelum waktu mulai (`start_at` tetap sebagai rencana, `picked_up_at` mencatat waktu aktual), tetapi ditolak jika mobil sedang Maintenance atau masih dalam peminjaman Aktif lain yang belum dikembalikan. | Must Have |
 | FR-16 | **Serah terima kembali:** Admin mengambil 1 foto kondisi mobil dan dapat menambahkan catatan kondisi (misalnya kerusakan baru). Status menjadi Selesai. | Must Have |
 | FR-17 | Setiap foto bukti diberi timestamp otomatis dari server saat disimpan. | Must Have |
-| FR-18 | **Perpanjangan:** Admin dapat memperpanjang rencana waktu kembali pada peminjaman Aktif dengan alasan wajib diisi. Sistem mengecek bentrok dan menyimpan riwayat setiap perpanjangan. | Should Have |
+| FR-18 | **Perpanjangan:** Admin dapat memperpanjang rencana waktu kembali pada peminjaman Aktif dengan alasan wajib diisi. Rencana kembali yang baru wajib lebih lambat dari rencana kembali saat ini (tidak dapat memperpendek). Sistem mengecek bentrok dan menyimpan riwayat setiap perpanjangan. | Should Have |
 | FR-19 | Detail peminjaman menampilkan foto sebelum dan sesudah secara berdampingan. | Should Have |
 
 #### Monitoring
@@ -114,7 +116,7 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 | FR-20 | Dashboard menampilkan ringkasan armada (Tersedia, Dipinjam, Maintenance, Nonaktif), jadwal ambil dan kembali hari ini, daftar Terlambat, dan daftar Belum Diambil. | Must Have |
 | FR-21 | Peminjaman Aktif yang melewati rencana waktu kembali otomatis ditampilkan sebagai **Terlambat** beserta lama keterlambatan dan no HP karyawan. Jumlahnya tampil sebagai badge di menu dan diperbarui berkala tanpa memuat ulang halaman. | Must Have |
 | FR-22 | Peminjaman Dijadwalkan yang melewati waktu mulai tetapi belum diserahterimakan ditampilkan sebagai **Belum Diambil**. Sistem tidak membatalkan otomatis. | Should Have |
-| FR-23 | Jika mobil belum kembali dan mobil itu sudah punya jadwal berikutnya, jadwal berikutnya diberi peringatan agar Admin dapat memindahkan ke mobil lain. | Should Have |
+| FR-23 | Jika mobil belum kembali dan mobil itu sudah punya jadwal berikutnya, jadwal berikutnya diberi peringatan agar Admin dapat memindahkan ke mobil lain. Serah terima ambil jadwal berikutnya itu ditolak sampai mobil dikembalikan. | Should Have |
 | FR-24 | Halaman **Jadwal Armada** menampilkan timeline mingguan per mobil: siapa memakai mobil apa, pada tanggal berapa. | Should Have |
 
 #### Riwayat, Laporan & Audit
@@ -142,10 +144,10 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 | NFR-05 | Data dan foto disimpan minimal 1 tahun untuk audit. Tidak ada penghapusan permanen data transaksi dari aplikasi. Backup otomatis harian dengan retensi minimal 30 hari. |
 | NFR-06 | Aplikasi otomatis tersedia kembali setelah PC menyala ulang (Laragon autostart). |
 | NFR-07 | Halaman daftar tetap merespons ≤1 detik dengan 10.000 transaksi (pagination di server dan index database). |
-| NFR-08 | Kode mengikuti standar format (Pint, ESLint, Prettier), lolos analisis statis (Larastan), dan aturan bisnis utama tercakup feature test. |
+| NFR-08 | Kode mengikuti standar format (Pint untuk PHP; oxlint + oxfmt lewat Vite+ untuk frontend), lolos analisis statis (Larastan) dan cek TypeScript, dan aturan bisnis utama tercakup feature test. |
 | NFR-09 | Semua konfigurasi yang berbeda antara lokal dan server diatur lewat `.env`, tanpa perubahan kode. |
 | NFR-10 | Kontras warna memadai di light dan dark mode. Status tidak hanya dibedakan lewat warna, tetapi juga teks/ikon. |
-| NFR-11 | Antarmuka berbahasa Indonesia. Zona waktu aplikasi `Asia/Jakarta`. Format tanggal Indonesia (mis. 16 Okt 2026, 14.30). |
+| NFR-11 | Antarmuka, pesan validasi, dan nama field berbahasa Indonesia (`lang/id`, ditulis manual). Zona waktu aplikasi `Asia/Jakarta` lewat `APP_TIMEZONE` dan dipakai konsisten untuk semua perhitungan waktu (Terlambat, Belum Diambil, toleransi waktu mulai). Format tanggal Indonesia (mis. 16 Okt 2026, 14.30). |
 
 ---
 
@@ -153,7 +155,7 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 
 ### 3.1 Penjadwalan Peminjaman
 
-Admin mencatat permintaan karyawan: memilih karyawan, mobil, waktu mulai, rencana kembali, dan tujuan. Saat rentang waktu dipilih, dropdown mobil hanya menandai mobil yang tersedia pada rentang itu. Jika bentrok, sistem menolak dan menunjukkan peminjaman yang bertabrakan. Peminjaman berstatus **Dijadwalkan** masih bisa diedit atau dibatalkan (dengan alasan).
+Admin mencatat permintaan karyawan: memilih karyawan dan mobil (kotak pilihan yang dapat dicari), waktu mulai dan rencana kembali (input tanggal-waktu bawaan browser), serta tujuan. Waktu mulai tidak boleh di masa lalu, kecuali dalam toleransi 15 menit untuk karyawan yang datang langsung (diperiksa saat jadwal dibuat atau saat waktu mulainya diubah). Saat rentang waktu dipilih, daftar mobil menandai mobil yang tersedia pada rentang itu. Jika bentrok, sistem menolak dan menunjukkan peminjaman yang bertabrakan. Peminjaman berstatus **Dijadwalkan** masih bisa diedit (mobil, karyawan, waktu, tujuan) atau dibatalkan (dengan alasan).
 
 ### 3.2 Serah Terima & Foto Bukti (Fitur Utama)
 
@@ -162,11 +164,13 @@ Satu form serah terima yang menyesuaikan status:
 - **Dijadwalkan → Serah Terima Ambil:** 1 foto kondisi mobil, status menjadi **Aktif**.
 - **Aktif → Serah Terima Kembali:** 1 foto kondisi mobil + catatan kondisi opsional, status menjadi **Selesai**.
 
+Serah terima ambil boleh dilakukan lebih awal dari waktu mulai, tetapi ditolak selama mobil sedang Maintenance atau masih dipakai peminjaman lain yang belum dikembalikan.
+
 Foto dapat diambil langsung dengan **webcam** atau **diunggah dari file**. Foto dikompresi di browser, diproses ulang di server, disimpan di penyimpanan privat, dan diberi timestamp server. Detail peminjaman menampilkan foto sebelum dan sesudah berdampingan.
 
 ### 3.3 Perpanjangan
 
-Jika karyawan mengabari akan kembali lebih lambat, Admin memperpanjang rencana kembali dengan alasan wajib. Sistem mengecek bentrok dengan jadwal lain, dan setiap perpanjangan tercatat (waktu lama, waktu baru, alasan, petugas).
+Jika karyawan mengabari akan kembali lebih lambat, Admin memperpanjang rencana kembali dengan alasan wajib. Rencana kembali baru wajib lebih lambat dari rencana saat ini. Sistem mengecek bentrok dengan jadwal lain, dan setiap perpanjangan tercatat (waktu lama, waktu baru, alasan, petugas).
 
 ### 3.4 Keterlambatan & Belum Diambil
 
@@ -181,11 +185,11 @@ Dashboard berisi ringkasan armada, jadwal ambil/kembali hari ini, daftar Terlamb
 
 ### 3.6 Data Mobil
 
-Plat nomor, merk, tipe, status operasional (Operasional/Maintenance), status aktif, dan 2 foto referensi dengan galeri popup. Mobil tidak dihapus permanen, tetapi dinonaktifkan.
+Plat nomor, merk, tipe, status operasional (Operasional/Maintenance), status aktif, dan 2 foto referensi dengan galeri popup (dialog dengan tombol sebelumnya/selanjutnya). Foto boleh menyusul; selama belum lengkap, tampil placeholder dan penanda **Foto belum lengkap**. Mobil tidak dihapus permanen, tetapi dinonaktifkan.
 
 ### 3.7 Data Karyawan
 
-NIP, nama, divisi, dan no HP. Daftar divisi (awal: Keuangan, SDM, Teknik) disimpan di file konfigurasi aplikasi. Karyawan dinonaktifkan, bukan dihapus.
+NIP (huruf/angka tanpa spasi, maks. 30 karakter, disimpan dalam huruf besar), nama, divisi, dan no HP (disimpan dalam format `08xx`). Daftar divisi (awal: Keuangan, SDM, Teknik) disimpan di file konfigurasi aplikasi. Karyawan dinonaktifkan, bukan dihapus.
 
 ### 3.8 Riwayat & Laporan
 
@@ -277,6 +281,8 @@ baru.start_at < lama.akhir  DAN  baru.planned_return_at > lama.start_at
 - Untuk peminjaman `active` yang terlambat, `lama.akhir` = waktu sekarang (mobil dianggap terpakai sampai benar-benar kembali). Untuk lainnya, `lama.akhir` = `planned_return_at`.
 - Pengecekan dan penyimpanan dilakukan dalam satu transaksi database dengan penguncian baris mobil (`lockForUpdate`), sehingga dua petugas yang menjadwalkan mobil yang sama secara bersamaan tidak bisa sama-sama berhasil.
 - Berlaku untuk penjadwalan baru, edit jadwal, dan perpanjangan.
+- Konsekuensi yang disengaja: mobil yang terlambat hanya memblokir jadwal yang dimulai sebelum mobil benar-benar kembali. Jadwal yang dimulai di masa mendatang tetap boleh dibuat dengan peringatan FR-23, tetapi serah terima ambilnya ditolak sampai peminjaman sebelumnya dikembalikan.
+- Semua perbandingan waktu memakai waktu server aplikasi (`now()` dari PHP, zona `Asia/Jakarta`), bukan fungsi waktu MySQL.
 
 ### 5.3 Status Tampilan Mobil
 
@@ -290,9 +296,16 @@ Status mobil yang tampil di aplikasi diturunkan dengan urutan prioritas berikut 
 ### 5.4 Aturan Lain
 
 - Waktu rencana kembali harus setelah waktu mulai.
-- Mobil Nonaktif atau Maintenance tidak dapat dipilih untuk jadwal baru, dan serah terima ambil ditolak jika mobil sedang Maintenance.
+- Waktu mulai tidak boleh lebih awal dari waktu sekarang dikurangi toleransi (default 15 menit, diatur di `config/fleet.php`). Berlaku untuk jadwal baru, dan untuk edit jadwal **hanya bila waktu mulai diubah**. Peminjaman yang sudah Belum Diambil tetap dapat diedit (tujuan, karyawan, mobil, rencana kembali) tanpa mengubah waktu mulai.
+- Mobil Nonaktif atau Maintenance tidak dapat dipilih untuk jadwal baru.
 - Karyawan Nonaktif tidak dapat dipilih untuk jadwal baru.
+- Edit jadwal (hanya saat `scheduled`) boleh mengganti mobil, karyawan, waktu mulai, rencana kembali, dan tujuan. Pengecekan bentrok dijalankan ulang setiap kali mobil, waktu mulai, atau rencana kembali berubah; nilai sebelum/sesudah dicatat di log aktivitas.
+- Serah terima ambil boleh sebelum `start_at` (`picked_up_at` = waktu aktual), tetapi ditolak jika mobil sedang Maintenance atau masih memiliki peminjaman `active` lain.
+- Perpanjangan: rencana kembali baru wajib lebih lambat dari `planned_return_at` saat ini.
 - Serah terima ambil dan kembali wajib menyertakan tepat 1 foto.
+- Mobil boleh dibuat tanpa foto referensi (0–2 foto); slot kosong menampilkan placeholder dan penanda **Foto belum lengkap**.
+- NIP: wajib, unik, hanya huruf A–Z/a–z dan angka 0–9 tanpa spasi, maksimal 30 karakter, tanpa pola khusus. Disimpan dalam **huruf besar**, sehingga keunikan tidak terpengaruh perbedaan huruf besar/kecil. (Aturan ini akan direvisi bila format NIP kantor ternyata memakai titik atau tanda hubung.)
+- No HP: wajib, diterima dalam format `08xx` atau `+62xx`, lalu dinormalisasi dan disimpan dalam format `08xx`. Panjang 10–15 digit dihitung **setelah** dinormalisasi ke `08xx`.
 - Penonaktifan karyawan/mobil ditolak jika masih ada peminjaman `scheduled` atau `active` (FR-10).
 - Tidak ada penghapusan permanen untuk peminjaman, foto bukti, karyawan, mobil, atau akun petugas.
 - Setiap peminjaman memiliki kode unik yang mudah dibaca, format `PMJ-YYYYMM-NNNN` (contoh: `PMJ-202610-0007`).
@@ -366,6 +379,8 @@ flowchart TB
 | Petugas | `CreateStaffAccount`, `UpdateStaffAccount`, `ResetStaffPassword`, `DeactivateStaffAccount`, `ActivateStaffAccount` |
 | Laporan | `ExportBookings` |
 
+Selain Action, tersedia perintah artisan (`app/Console/Commands/`) untuk mereset password Pengelola yang terkunci.
+
 ### 6.3 Struktur Folder
 
 ```
@@ -375,17 +390,20 @@ app/
 │   ├── Car/
 │   ├── Employee/
 │   └── Staff/
+├── Console/Commands/    # perintah artisan, mis. reset password Pengelola yang terkunci
 ├── Enums/               # BookingStatus, CarOperationalStatus, PhotoStage, PhotoSource, StaffRole
 ├── Exports/             # BookingsExport (Excel & CSV)
 ├── Http/
 │   ├── Controllers/
-│   ├── Middleware/      # EnsureAccountIsActive, EnsurePasswordChanged, SecurityHeaders
+│   ├── Middleware/      # EnsureAccountIsActive, EnsurePasswordChanged, EnsureTwoFactorEnabled, SecurityHeaders
 │   └── Requests/
 ├── Models/
 ├── Policies/
 └── Support/             # ImageProcessor, BookingCodeGenerator
 config/
-└── fleet.php            # daftar divisi, batas ukuran foto, interval polling
+└── fleet.php            # daftar divisi, batas ukuran foto, interval polling, toleransi waktu mulai, opsi keamanan (2FA Pengelola, cek password bocor)
+lang/
+└── id/                  # validation, auth, passwords, pagination + nama atribut (ditulis manual)
 resources/
 ├── css/app.css          # token tema (light & dark) + token status tambahan
 └── js/
@@ -596,10 +614,10 @@ erDiagram
 
 | Tabel | Catatan |
 | ----- | ------- |
-| `users` | Akun petugas (Pengelola & Admin). Memakai tabel bawaan Laravel agar kompatibel dengan Fortify. Nilai `role`: `manager` (label: Pengelola), `admin` (label: Admin). |
-| `employees` | Data master karyawan peminjam, tanpa kredensial login. `division` disimpan sebagai teks; pilihan valid diatur di `config/fleet.php`. |
+| `users` | Akun petugas (Pengelola & Admin). Memakai tabel bawaan Laravel agar kompatibel dengan Fortify. Nilai `role`: `manager` (label: Pengelola), `admin` (label: Admin). Tabel `passkeys` bawaan starter kit dihapus lewat migration baru karena passkey tidak dipakai. |
+| `employees` | Data master karyawan peminjam, tanpa kredensial login. `division` disimpan sebagai teks; pilihan valid diatur di `config/fleet.php`. `employee_number` disimpan dalam huruf besar; `phone` disimpan ternormalisasi dalam format `08xx`. |
 | `cars` | `operational_status` hanya menyimpan kondisi operasional. Status "Dipinjam" diturunkan dari peminjaman aktif (section 5.3). |
-| `car_photos` | Maksimal 2 baris per mobil, unik pada (`car_id`, `position`). Disimpan di disk publik. |
+| `car_photos` | 0–2 baris per mobil (foto boleh menyusul), unik pada (`car_id`, `position`). Disimpan di disk publik. |
 | `bookings` | `code` unik format `PMJ-YYYYMM-NNNN`. `planned_return_at` selalu berisi nilai terbaru setelah perpanjangan. |
 | `booking_photos` | Maksimal 2 baris per peminjaman, unik pada (`booking_id`, `stage`). Disimpan di disk privat. `taken_at` = waktu server saat disimpan. |
 | `booking_extensions` | Riwayat setiap perpanjangan. |
@@ -637,14 +655,16 @@ Hak akses diterapkan di Policy dan middleware, bukan hanya dengan menyembunyikan
 
 ### 10.1 Autentikasi & Sesi
 
-- Autentikasi memakai Laravel Fortify bawaan starter kit; fitur registrasi dinonaktifkan.
-- Password di-hash (bcrypt/argon2) dengan kebijakan minimal 10 karakter, kombinasi huruf dan angka.
+- Autentikasi memakai Laravel Fortify bawaan starter kit. Fitur registrasi, lupa password lewat email, verifikasi email, dan passkey dinonaktifkan seluruhnya (route, UI, tautan, dan konfigurasi). Paket `@laravel/passkeys` dihapus.
+- Password di-hash (bcrypt/argon2) dengan kebijakan minimal 10 karakter, kombinasi huruf dan angka, berlaku sama di semua environment. Pengecekan password bocor (HIBP, butuh internet) dapat diaktifkan lewat `FLEET_PASSWORD_CHECK_UNCOMPROMISED` (default `false`).
 - Rate limit login: 5 percobaan per menit per kombinasi email + IP.
-- 2FA (TOTP) tersedia; disarankan wajib untuk Pengelola.
+- 2FA (TOTP) tersedia dan opsional. `FLEET_REQUIRE_2FA_FOR_MANAGER=true` (default `false`) mewajibkannya untuk Pengelola: Pengelola tanpa 2FA aktif diarahkan ke halaman pengaturan keamanan sampai 2FA diaktifkan.
+- Kedua opsi `FLEET_*` di atas dibaca lewat `config/fleet.php` dan **disarankan `true` bila sistem dapat diakses dari internet**.
 - Sesi berakhir setelah 120 menit tidak aktif. Session ID diregenerasi saat login.
 - Middleware memeriksa `is_active` di setiap request; akun yang dinonaktifkan langsung keluar.
 - Password sementara memaksa penggantian password saat login berikutnya.
 - Akun Pengelola pertama dibuat lewat seeder/perintah artisan dengan password yang wajib diganti.
+- Reset password hanya oleh Pengelola (password sementara yang wajib diganti). Pengelola yang terkunci direset lewat perintah artisan (tersedia sejak Fase 2), dan hasilnya juga wajib diganti saat login berikutnya.
 
 ### 10.2 Otorisasi
 
@@ -662,14 +682,14 @@ Hak akses diterapkan di Policy dan middleware, bukan hanya dengan menyembunyikan
 ### 10.4 Lapisan Web
 
 - CSRF ditangani otomatis oleh Laravel + Inertia.
-- XSS dicegah oleh escaping bawaan React; `dangerouslySetInnerHTML` tidak digunakan.
+- XSS dicegah oleh escaping bawaan React; `dangerouslySetInnerHTML` tidak digunakan, termasuk untuk QR 2FA (ditampilkan sebagai gambar `data:` URI).
 - SQL injection dicegah dengan Eloquent/query builder (parameter binding); tidak ada raw query dengan input pengguna.
-- Middleware security headers: `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (kamera hanya untuk origin sendiri).
+- Middleware security headers: `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (kamera hanya untuk origin sendiri). Tidak ada aset dari CDN eksternal (font dibundel lokal), sehingga CSP cukup mengizinkan origin sendiri.
 
 ### 10.5 Konfigurasi & Data
 
 - `.env` tidak masuk Git; `APP_DEBUG=false` di luar development.
-- MySQL memakai user khusus aplikasi dengan hak akses hanya ke database aplikasi, **bukan `root`**.
+- MySQL memakai user khusus aplikasi dengan hak akses hanya ke database aplikasi, **bukan `root`**. Pemakaian `root` saat ini sengaja dan sementara untuk development lokal; diganti di Fase 8 sebelum dipakai.
 - Pemeriksaan kerentanan dependensi rutin: `composer audit` dan `npm audit`.
 - Backup harian database + folder foto ke drive terpisah; uji restore minimal sekali sebulan.
 - Log aktivitas tidak dapat diubah atau dihapus dari aplikasi.
@@ -684,6 +704,7 @@ Hak akses diterapkan di Policy dan middleware, bukan hanya dengan menyembunyikan
 - Preset diterapkan sekali di awal project lewat `npx shadcn@latest apply --preset b1PzeK`, sebelum komponen apa pun dimodifikasi.
 - Warna biru (primary) dipakai untuk aksi utama, elemen aktif, focus ring, dan chart. Latar, kartu, border, dan teks memakai warna netral.
 - Ikon: Lucide.
+- Font: **Inter** yang dibundel lokal (`@fontsource-variable/inter`), tanpa pemanggilan font dari CDN eksternal.
 
 ### 11.2 Light & Dark Mode
 
@@ -714,9 +735,9 @@ Badge status selalu menampilkan teks (dan ikon), tidak hanya warna.
 | Jadwal Armada | Timeline mingguan per mobil | Semua |
 | Peminjaman | Daftar peminjaman berjalan + aksi sesuai status; form jadwal; detail + foto sebelum-sesudah | Semua |
 | Riwayat | Pencarian, filter, ekspor Excel/CSV | Semua |
-| Data Mobil | Daftar, form, foto referensi, galeri | Semua |
+| Data Mobil | Daftar, form, foto referensi (boleh menyusul, penanda Foto belum lengkap), galeri | Semua |
 | Data Karyawan | Daftar, form, aktif/nonaktif | Semua |
-| Kelola Petugas | Daftar akun, form, reset password, aktif/nonaktif | Pengelola |
+| Kelola Petugas | Daftar akun (termasuk status 2FA), form, reset password, aktif/nonaktif | Pengelola |
 | Log Aktivitas | Daftar aktivitas dengan filter | Pengelola |
 | Pengaturan | Profil, password, 2FA, tampilan | Semua |
 
@@ -728,6 +749,9 @@ Badge status selalu menampilkan teks (dan ikon), tidak hanya warna.
 - Pesan sukses/gagal memakai toast (Sonner).
 - Tabel memakai pagination server, pencarian, dan filter.
 - Empty state yang jelas di setiap daftar.
+- Input waktu memakai `datetime-local` bawaan browser.
+- Pemilihan karyawan dan mobil memakai combobox yang dapat dicari (shadcn `command`).
+- Galeri foto referensi memakai dialog dengan tombol sebelumnya/selanjutnya, tanpa komponen carousel.
 
 ### 11.6 Pengambilan Foto
 
@@ -744,8 +768,10 @@ Komponen `PhotoCapture` menyediakan dua pilihan: **Ambil dengan Kamera** (webcam
 | Backend | Laravel 13 (PHP sesuai syarat Laravel 13) | Framework utama |
 | Frontend | React + TypeScript (strict) via Inertia.js | Versi mengikuti starter kit resmi React Laravel |
 | Routing frontend | Laravel Wayfinder (bawaan starter kit) | Fungsi TypeScript bertipe untuk route Laravel |
-| UI | shadcn/ui (preset Nova + Neutral + Blue), Tailwind CSS v4, Lucide | |
-| Autentikasi | Laravel Fortify (bawaan starter kit) | Login, 2FA, ganti password |
+| UI | shadcn/ui (preset Nova + Neutral + Blue), Tailwind CSS v4, Lucide | Combobox lewat shadcn `command` (`cmdk`) |
+| Font | Inter (`@fontsource-variable/inter`) | Dibundel lokal, tanpa CDN |
+| Bahasa | `lang/id` ditulis manual | Tanpa paket terjemahan |
+| Autentikasi | Laravel Fortify (bawaan starter kit) | Login, 2FA, ganti password; tanpa registrasi, lupa password, verifikasi email, dan passkey |
 | Database | MySQL 8 (Laragon) | |
 | Penyimpanan file | Laravel Filesystem — disk `local` (privat) & `public` | Dapat dialihkan ke S3/MinIO lewat `.env` |
 | Kompresi foto (client) | `browser-image-compression` | |
@@ -753,8 +779,8 @@ Komponen `PhotoCapture` menyediakan dua pilihan: **Ambil dengan Kamera** (webcam
 | Ekspor | `maatwebsite/excel` | Excel (.xlsx) & CSV |
 | Log aktivitas | `spatie/laravel-activitylog` | |
 | Backup | `spatie/laravel-backup` | Database + folder foto |
-| Testing | Pest | Feature & unit test |
-| Kualitas kode | Laravel Pint, Larastan, ESLint, Prettier | |
+| Testing | Pest | Feature & unit test, memakai database MySQL terpisah `peminjaman_mobil_test` |
+| Kualitas kode | Laravel Pint, Larastan, oxlint + oxfmt (Vite+, bawaan starter kit) | Tanpa ESLint/Prettier |
 | Server lokal | Laragon (Windows) | Apache/Nginx + PHP + MySQL |
 | Version control | Git + GitHub/GitLab | CI: test & lint di setiap push |
 
@@ -767,6 +793,9 @@ Komponen `PhotoCapture` menyediakan dua pilihan: **Ambil dengan Kamera** (webcam
 ### 13.1 Lingkungan Lokal (Saat Ini)
 
 - Aplikasi berjalan di satu PC kantor dengan Laragon, diakses dari browser di PC tersebut.
+- Pengembangan: `composer run dev`, diakses di `http://localhost:8000` (`APP_URL=http://localhost:8000`).
+- Pemakaian di PC kantor (disiapkan di Fase 8): SSL Laragon dengan domain `.test` agar webcam berfungsi. Folder project diganti nama menjadi `sistem-peminjaman-mobil` karena garis bawah tidak valid untuk hostname, sehingga alamatnya `https://sistem-peminjaman-mobil.test`. Langkah rename folder dicatat di README.
+- `APP_TIMEZONE=Asia/Jakarta` dipakai konsisten di semua lingkungan, karena aturan Terlambat, Belum Diambil, dan toleransi waktu mulai bergantung pada jam server.
 - Laragon diatur **autostart** saat Windows menyala.
 - Antrean dan scheduler dijalankan lewat Windows Task Scheduler (`php artisan schedule:run` setiap menit).
 - Backup harian (`spatie/laravel-backup`) ke drive terpisah atau penyimpanan jaringan kantor; retensi minimal 30 hari.
@@ -784,6 +813,10 @@ Semua perbedaan lingkungan dikendalikan lewat `.env`:
 | Scheduler | Windows Task Scheduler | cron `schedule:run` |
 | HTTPS | SSL lokal Laragon / `localhost` | Wajib (mis. Let's Encrypt) |
 | Cookie sesi | Default | `SESSION_SECURE_COOKIE=true` |
+| `APP_URL` | `http://localhost:8000` (pengembangan) / `https://sistem-peminjaman-mobil.test` (PC kantor) | Domain server dengan HTTPS |
+| `APP_TIMEZONE` | `Asia/Jakarta` | `Asia/Jakarta` |
+| `FLEET_REQUIRE_2FA_FOR_MANAGER` | `false` | `true` disarankan bila dapat diakses dari internet |
+| `FLEET_PASSWORD_CHECK_UNCOMPROMISED` | `false` | `true` disarankan bila dapat diakses dari internet (server butuh akses internet) |
 
 Langkah pindah server: `git clone/pull` → isi `.env` → `composer install --no-dev` → `npm ci && npm run build` → `php artisan migrate --force` → pindahkan folder foto → `php artisan optimize`.
 
@@ -791,8 +824,9 @@ Langkah pindah server: `git clone/pull` → isi `.env` → `composer install --n
 
 README project wajib berisi:
 
-- Cara instalasi dari nol di Laragon.
-- Cara membuat akun Pengelola pertama dan mereset password Pengelola jika terkunci.
+- Cara instalasi dari nol di Laragon, termasuk rename folder ke `sistem-peminjaman-mobil` dan mengaktifkan SSL Laragon.
+- Cara membuat akun Pengelola pertama dan mereset password Pengelola jika terkunci (perintah artisan).
+- Bagian **Pindah ke server**, termasuk anjuran `FLEET_REQUIRE_2FA_FOR_MANAGER=true` dan `FLEET_PASSWORD_CHECK_UNCOMPROMISED=true` bila sistem dapat diakses dari internet.
 - Lokasi folder foto dan cara backup serta restore.
 - Daftar perintah perawatan rutin.
 - Cara menambah pilihan divisi di `config/fleet.php`.
@@ -813,13 +847,21 @@ README project wajib berisi:
 - Akun nonaktif tidak dapat login dan sesinya berakhir.
 - Pengelola terakhir tidak dapat dinonaktifkan.
 - Ekspor menghasilkan data sesuai filter.
+- Waktu mulai di masa lalu ditolak, kecuali dalam toleransi; peminjaman Belum Diambil tetap dapat diedit tanpa mengubah waktu mulai.
+- Serah terima ambil ditolak selama mobil masih dipakai peminjaman Aktif lain.
+- Perpanjangan yang tidak lebih lambat dari rencana kembali saat ini ditolak.
+- Edit jadwal mencatat nilai sebelum/sesudah di log aktivitas.
+- Route registrasi, lupa password, verifikasi email, dan passkey tidak tersedia.
+- Pengelola tanpa 2FA diarahkan ke halaman keamanan saat `FLEET_REQUIRE_2FA_FOR_MANAGER=true`.
+- No HP dinormalisasi ke format `08xx` dan panjangnya dihitung setelah normalisasi; NIP berisi spasi atau simbol ditolak; NIP disimpan huruf besar dan NIP yang hanya berbeda huruf besar/kecil ditolak sebagai duplikat.
 
 ### 14.2 Standar
 
-- Pint dan ESLint/Prettier lolos sebelum commit.
-- Larastan minimal level 6.
+- Pint (PHP) dan Vite+ (`npm run check`: oxlint + oxfmt) lolos sebelum commit.
+- Larastan minimal level 6 (saat ini level 7).
 - TypeScript mode strict, tanpa `any` yang tidak beralasan.
-- CI (GitHub Actions) menjalankan test, Larastan, dan lint di setiap push.
+- Test memakai database MySQL terpisah `peminjaman_mobil_test` (diatur di `phpunit.xml`), tidak pernah database aplikasi.
+- CI (GitHub Actions) menjalankan Pint, Larastan, test (dengan service MySQL), `npm run check`, dan `npm run types:check` di setiap push.
 
 ---
 
@@ -841,6 +883,10 @@ README project wajib berisi:
 | **Divisi di file konfigurasi, bukan tabel** | Daftar jarang berubah; menghindari halaman kelola tambahan. Perubahan cukup di satu file. |
 | **Polling untuk badge, bukan realtime/websocket** | Cukup untuk beberapa petugas; tanpa server tambahan. |
 | **Tidak ada notifikasi WhatsApp/email** | Sistem lokal; pemberitahuan cukup di dalam aplikasi. |
+| **Tanpa lupa password lewat email, verifikasi email, dan passkey** | Sistem tidak mengirim email; reset dilakukan Pengelola (perintah artisan untuk Pengelola yang terkunci). Passkey menambah permukaan serangan tanpa kebutuhan nyata. |
+| **2FA dan cek password bocor diatur lewat `.env`** | Default longgar untuk PC kantor yang offline; dapat diperketat tanpa ubah kode saat sistem bisa diakses dari internet. |
+| **Tooling Vite+ (oxlint + oxfmt) bawaan starter kit** | Menghindari dependensi tambahan ESLint/Prettier. |
+| **Font Inter lokal, input waktu `datetime-local`, galeri tanpa carousel** | Tetap berfungsi tanpa internet, CSP lebih ketat, dan tanpa dependensi tambahan. |
 | **Tanpa microservices, repository pattern berlapis, atau Docker di awal** | Skala kecil; kompleksitas tambahan justru mempersulit perawatan. Struktur tetap siap dikembangkan. |
 
 ---
@@ -849,12 +895,16 @@ README project wajib berisi:
 
 | Fase | Cakupan |
 | ---- | ------- |
-| 1. Fondasi | Project Laravel 13 + starter kit React, preset shadcn (Nova + Blue), token status, light/dark mode, tooling (Pint, Larastan, Pest, ESLint, Prettier), auth tanpa registrasi, role, middleware akun aktif & security headers, seeder Pengelola |
-| 2. Data master | Data Mobil (+ foto referensi & galeri), Data Karyawan, Kelola Petugas |
-| 3. Inti peminjaman | Penjadwalan + cek bentrok, edit, batal, serah terima ambil/kembali + foto, perpanjangan, detail + perbandingan foto |
-| 4. Monitoring | Dashboard, badge Terlambat/Belum Diambil, Jadwal Armada |
-| 5. Riwayat & audit | Riwayat + filter, ekspor Excel/CSV, log aktivitas |
-| 6. Operasional | Backup otomatis, autostart, README serah terima, uji restore |
+| 1. Fondasi | Penyesuaian starter kit: nonaktifkan registrasi, lupa password, verifikasi email, dan passkey (+ hapus `@laravel/passkeys`, migration drop `passkeys`); role & kolom akun; middleware akun aktif, ganti password, 2FA Pengelola, security headers; kebijakan password & opsi `FLEET_*`; zona waktu & `lang/id`; token status + `StatusBadge`; font Inter lokal; layout & menu Indonesia; `config/fleet.php`; seeder Pengelola; workflow CI |
+| 2. Akun Petugas | Kelola Petugas (termasuk status 2FA), password sementara, nonaktif + akhiri sesi, minimal 1 Pengelola aktif, profil, perintah artisan reset password Pengelola, mulai pencatatan log aktivitas |
+| 3. Data Master | Data Mobil (+ status operasional, foto referensi yang boleh menyusul, galeri), Data Karyawan (validasi NIP & no HP) |
+| 4. Inti Peminjaman | Penjadwalan + cek bentrok, edit, batal, serah terima ambil/kembali + foto, perpanjangan, detail + perbandingan foto |
+| 5. Monitoring | Dashboard, badge Terlambat/Belum Diambil, peringatan jadwal berikutnya, Jadwal Armada |
+| 6. Riwayat & Laporan | Riwayat + filter, ekspor Excel/CSV, halaman Log Aktivitas |
+| 7. Audit Kualitas & Keamanan | Kepatuhan PRD/AGENTS, matriks test hak akses, review keamanan, performa, `composer audit`/`npm audit` |
+| 8. Operasional & Serah Terima | Backup otomatis, scheduler, autostart, SSL Laragon + rename folder, user MySQL khusus, README & panduan pengguna, uji restore |
+
+Prompt rinci tiap fase ada di `PROMPTS.md`.
 
 ---
 
@@ -865,7 +915,7 @@ README project wajib berisi:
 | Must Have | Login petugas, kelola petugas + proteksi, data mobil (+ status operasional, foto referensi & galeri), data karyawan, proteksi nonaktif, penjadwalan + cek bentrok, pembatalan, serah terima ambil & kembali (1 foto), timestamp foto, dashboard, indikator Terlambat, riwayat + filter, ekspor Excel & CSV |
 | Should Have | 2FA, profil & ganti password, edit jadwal, perpanjangan, perbandingan foto, Belum Diambil, peringatan konflik jadwal berikutnya, Jadwal Armada, log aktivitas, light/dark mode |
 | Could Have | — |
-| Won't Have (versi ini) | Login karyawan, approval, odometer & jarak tempuh, tanda tangan digital, notifikasi WhatsApp/email, ekspor PDF |
+| Won't Have (versi ini) | Login karyawan, approval, odometer & jarak tempuh, tanda tangan digital, notifikasi WhatsApp/email, ekspor PDF, registrasi, lupa password lewat email, verifikasi email, passkey |
 
 ## Lampiran B: Pemetaan dari PRD v1.5
 
