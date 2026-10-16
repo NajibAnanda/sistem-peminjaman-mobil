@@ -10,11 +10,15 @@ namespace App\Enums;
 enum ActivityLogName: string
 {
     case Staff = 'staff';
+    case Car = 'car';
+    case Employee = 'employee';
 
     public function label(): string
     {
         return match ($this) {
             self::Staff => 'Akun Petugas',
+            self::Car => 'Data Mobil',
+            self::Employee => 'Data Karyawan',
         };
     }
 }

@@ -179,6 +179,12 @@ return [
         'password' => [
             'different' => 'Password baru harus berbeda dari password saat ini.',
         ],
+        'plate_number' => [
+            'regex' => 'Format plat nomor tidak valid. Tulis kode wilayah, angka, lalu huruf akhiran. Contoh: B 1234 ABC atau AB 12 CD.',
+        ],
+        'employee_number' => [
+            'alpha_num' => 'NIP hanya boleh berisi huruf dan angka, tanpa spasi atau simbol.',
+        ],
     ],
 
     /*

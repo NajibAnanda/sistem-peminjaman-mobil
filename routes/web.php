@@ -1,10 +1,19 @@
 <?php
 
+use App\Http\Controllers\CarActivationController;
+use App\Http\Controllers\CarController;
+use App\Http\Controllers\CarDeactivationController;
+use App\Http\Controllers\CarOperationalStatusController;
+use App\Http\Controllers\CarPhotoController;
+use App\Http\Controllers\EmployeeActivationController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeDeactivationController;
 use App\Http\Controllers\StaffActivationController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffDeactivationController;
 use App\Http\Controllers\StaffPasswordResetController;
 use App\Http\Controllers\TemporaryPasswordController;
+use App\Models\Car;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard')->name('home');
@@ -22,8 +31,33 @@ Route::middleware('auth')->group(function () {
     Route::inertia('schedule', 'coming-soon', ['title' => 'Jadwal Armada'])->name('schedule.index');
     Route::inertia('bookings', 'coming-soon', ['title' => 'Peminjaman'])->name('bookings.index');
     Route::inertia('history', 'coming-soon', ['title' => 'Riwayat'])->name('history.index');
-    Route::inertia('cars', 'coming-soon', ['title' => 'Data Mobil'])->name('cars.index');
-    Route::inertia('employees', 'coming-soon', ['title' => 'Data Karyawan'])->name('employees.index');
+    // Data Mobil (Pengelola & Admin; otorisasi lewat CarPolicy).
+    Route::get('cars', [CarController::class, 'index'])->name('cars.index');
+    Route::post('cars', [CarController::class, 'store'])->name('cars.store');
+    Route::get('cars/{car}', [CarController::class, 'show'])->name('cars.show');
+    Route::put('cars/{car}', [CarController::class, 'update'])->name('cars.update');
+    Route::put('cars/{car}/operational-status', CarOperationalStatusController::class)
+        ->name('cars.operational-status');
+    Route::post('cars/{car}/photos/{position}', CarPhotoController::class)
+        ->whereIn('position', array_map('strval', Car::PHOTO_POSITIONS))
+        ->name('cars.photos.store');
+    Route::post('cars/{car}/deactivate', CarDeactivationController::class)
+        ->can('deactivate', 'car')
+        ->name('cars.deactivate');
+    Route::post('cars/{car}/activate', CarActivationController::class)
+        ->can('activate', 'car')
+        ->name('cars.activate');
+
+    // Data Karyawan (Pengelola & Admin; otorisasi lewat EmployeePolicy).
+    Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+    Route::post('employees/{employee}/deactivate', EmployeeDeactivationController::class)
+        ->can('deactivate', 'employee')
+        ->name('employees.deactivate');
+    Route::post('employees/{employee}/activate', EmployeeActivationController::class)
+        ->can('activate', 'employee')
+        ->name('employees.activate');
 
     // Kelola Petugas (khusus Pengelola; otorisasi per aksi lewat UserPolicy).
     Route::get('staff', [StaffController::class, 'index'])->name('staff.index');

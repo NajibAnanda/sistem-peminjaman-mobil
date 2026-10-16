@@ -14,5 +14,10 @@ final class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(InitialManagerSeeder::class);
+
+        // Data contoh hanya untuk pengembangan lokal, tidak pernah di server.
+        if (app()->environment('local')) {
+            $this->call(DevelopmentSeeder::class);
+        }
     }
 }

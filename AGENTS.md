@@ -167,7 +167,8 @@ Satu controller per resource; untuk aksi non-CRUD gunakan controller terpisah sa
 13. **Edit jadwal** (hanya `scheduled`) boleh mengganti mobil, karyawan, `start_at`, `planned_return_at`, dan tujuan. Cek bentrok dijalankan ulang setiap kali `car_id`, `start_at`, atau `planned_return_at` berubah; nilai sebelum/sesudah dicatat di activity log.
 14. **Perpanjangan:** rencana kembali baru wajib `>` `planned_return_at` saat ini. Tidak boleh memperpendek.
 15. **Foto referensi mobil** boleh menyusul (0–2 foto). Slot kosong menampilkan placeholder, dan mobil diberi penanda "Foto belum lengkap" di daftar dan detail.
-16. **Data karyawan:** NIP wajib, unik, hanya A–Z/a–z/0–9 tanpa spasi (`alpha_num:ascii`), maks. 30 karakter, tanpa pola khusus; dinormalisasi ke **huruf besar** sebelum validasi unik dan disimpan huruf besar. No HP wajib, diterima sebagai `08xx` atau `+62xx`, dinormalisasi dan disimpan sebagai `08xx`; panjang 10–15 digit dihitung **setelah** normalisasi.
+16. **Plat nomor** disimpan dalam satu format baku: huruf besar dengan spasi pemisah (`App\Support\PlateNumber::normalize`, mis. "B 1234 ABC"), divalidasi pola Indonesia (kode wilayah 1–2 huruf, 1–4 angka, akhiran 0–3 huruf), dan keunikan dicek pada format baku itu. Tampilkan nilai baku yang tersimpan apa adanya di **semua** tempat (tabel, detail, dropdown, laporan Excel/CSV); jangan memformat ulang di frontend.
+17. **Data karyawan:** NIP wajib, unik, hanya A–Z/a–z/0–9 tanpa spasi (`alpha_num:ascii`), maks. 30 karakter, tanpa pola khusus; dinormalisasi ke **huruf besar** sebelum validasi unik dan disimpan huruf besar. No HP wajib, diterima sebagai `08xx` atau `+62xx`, dinormalisasi dan disimpan sebagai `08xx`; panjang 10–15 digit dihitung **setelah** normalisasi.
 
 ---
 
