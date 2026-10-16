@@ -5,6 +5,7 @@ export type * from './dashboard';
 export type * from './employee';
 export type * from './navigation';
 export type * from './pagination';
+export type * from './report';
 export type * from './staff';
 export type * from './table';
 export type * from './ui';

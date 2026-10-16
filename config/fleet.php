@@ -73,6 +73,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Ekspor Laporan
+    |--------------------------------------------------------------------------
+    |
+    | Pemisah kolom CSV mengikuti pemisah daftar di pengaturan Region Windows
+    | komputer yang membuka file ("," English, ";" Indonesia). File CSV diberi
+    | BOM UTF-8 agar huruf non-ASCII terbaca benar di Excel.
+    |
+    */
+
+    'export' => [
+        'csv_delimiter' => env('FLEET_CSV_DELIMITER', ','),
+        'chunk_size' => 500,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Keamanan
     |--------------------------------------------------------------------------
     |

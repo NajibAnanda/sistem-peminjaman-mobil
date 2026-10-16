@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BookingCancellationController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingExtensionController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeActivationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDeactivationController;
+use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\HistoryExportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StaffActivationController;
 use App\Http\Controllers\StaffController;
@@ -48,8 +51,11 @@ Route::middleware('auth')->group(function () {
     Route::post('bookings/{booking}/extend', [BookingExtensionController::class, 'store'])->name('bookings.extend');
     Route::post('bookings/{booking}/cancel', [BookingCancellationController::class, 'store'])->name('bookings.cancel');
     Route::get('bookings/{booking}/photos/{stage}', [BookingPhotoController::class, 'show'])->name('bookings.photos.show');
-    // Halaman yang belum dibangun; diganti controller sungguhan di Fase 6 (PROMPTS.md).
-    Route::inertia('history', 'coming-soon', ['title' => 'Riwayat'])->name('history.index');
+    // Riwayat & ekspor laporan (otorisasi lewat HistoryIndexRequest/ExportHistoryRequest → BookingPolicy).
+    Route::get('history', HistoryController::class)->name('history.index');
+    Route::get('history/export', HistoryExportController::class)
+        ->middleware('throttle:10,1')
+        ->name('history.export');
     // Data Mobil (Pengelola & Admin; otorisasi lewat CarPolicy).
     Route::get('cars', [CarController::class, 'index'])->name('cars.index');
     Route::post('cars', [CarController::class, 'store'])->name('cars.store');
@@ -92,7 +98,8 @@ Route::middleware('auth')->group(function () {
         ->can('resetPassword', 'user')
         ->name('staff.reset-password');
 
-    Route::inertia('activity-log', 'coming-soon', ['title' => 'Log Aktivitas'])
+    // Log Aktivitas (khusus Pengelola; hanya baca).
+    Route::get('activity-log', ActivityLogController::class)
         ->middleware('can:view-activity-log')
         ->name('activity-log.index');
 });

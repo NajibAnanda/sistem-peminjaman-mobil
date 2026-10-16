@@ -10,6 +10,9 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { UseTableQueryReturn } from '@/hooks/use-table-query';
@@ -40,27 +43,57 @@ export function DataTableFilter({ table, groups }: Props) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-                {groups.map((group, index) => (
-                    <Fragment key={group.key}>
-                        {index > 0 && <DropdownMenuSeparator />}
-                        <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-                        {group.options.map((option) => (
-                            <DropdownMenuCheckboxItem
-                                key={option.value}
-                                checked={(
-                                    table.filters[group.key] ?? []
-                                ).includes(option.value)}
-                                onCheckedChange={() =>
-                                    table.toggleFilter(group.key, option.value)
-                                }
-                                // Dropdown tetap terbuka agar beberapa opsi bisa dicentang.
-                                onSelect={(event) => event.preventDefault()}
-                            >
-                                {option.label}
-                            </DropdownMenuCheckboxItem>
-                        ))}
-                    </Fragment>
-                ))}
+                {groups.map((group, index) => {
+                    const items = group.options.map((option) => (
+                        <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={(table.filters[group.key] ?? []).includes(
+                                option.value,
+                            )}
+                            onCheckedChange={() =>
+                                table.toggleFilter(group.key, option.value)
+                            }
+                            // Dropdown tetap terbuka agar beberapa opsi bisa dicentang.
+                            onSelect={(event) => event.preventDefault()}
+                        >
+                            {option.label}
+                        </DropdownMenuCheckboxItem>
+                    ));
+                    const selected = (table.filters[group.key] ?? []).length;
+
+                    return (
+                        <Fragment key={group.key}>
+                            {index > 0 && <DropdownMenuSeparator />}
+                            {group.submenu ? (
+                                // Daftar panjang (mis. karyawan) dibuka di submenu
+                                // bergulir; ketik huruf awal untuk melompat.
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        {group.label}
+                                        {selected > 0 && (
+                                            <Badge
+                                                variant="secondary"
+                                                className="ml-auto tabular-nums"
+                                            >
+                                                {selected}
+                                            </Badge>
+                                        )}
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-72 w-64 overflow-y-auto">
+                                        {items}
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            ) : (
+                                <>
+                                    <DropdownMenuLabel>
+                                        {group.label}
+                                    </DropdownMenuLabel>
+                                    {items}
+                                </>
+                            )}
+                        </Fragment>
+                    );
+                })}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     disabled={count === 0}

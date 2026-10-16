@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { DataTableFilter } from '@/components/data-table/data-table-filter';
+import { DataTablePeriod } from '@/components/data-table/data-table-period';
 import { EDGE_X } from '@/components/data-table/layout';
 import type { DataTableFilterGroup } from '@/components/data-table/types';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,8 @@ type Props = {
 };
 
 /**
- * Header card tabel: judul (kiri) dan pencarian + Filter (kanan). Bila card
+ * Header card tabel: judul (kiri) dan pencarian + Periode (bila tabel
+ * memakainya) + Filter (kanan). Bila card
  * sempit, pencarian/filter turun ke bawah judul dan melebar penuh. Memakai
  * container query (lebar card), bukan lebar layar, karena sidebar ikut
  * memakan ruang.
@@ -43,8 +45,8 @@ export function DataTableHeader({
                 )}
             </div>
 
-            <div className="flex w-full items-center gap-2 @2xl/table:w-auto">
-                <div className="relative flex-1 @2xl/table:w-64 @2xl/table:flex-none">
+            <div className="flex w-full flex-wrap items-center gap-2 @2xl/table:w-auto @2xl/table:flex-nowrap">
+                <div className="relative min-w-48 flex-1 @2xl/table:w-64 @2xl/table:flex-none">
                     <Search
                         className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
                         aria-hidden="true"
@@ -61,6 +63,7 @@ export function DataTableHeader({
                         data-test="table-search"
                     />
                 </div>
+                {table.hasPeriod && <DataTablePeriod table={table} />}
                 {filterGroups.length > 0 && (
                     <DataTableFilter table={table} groups={filterGroups} />
                 )}

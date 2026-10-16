@@ -18,6 +18,8 @@ export type DataTableFilterGroup = {
     key: string;
     label: string;
     options: Option[];
+    /** Tampilkan sebagai submenu bergulir untuk daftar panjang (mis. karyawan). */
+    submenu?: boolean;
 };
 
 export type DataTableEmptyState = {

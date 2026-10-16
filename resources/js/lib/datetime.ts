@@ -62,30 +62,34 @@ const MINUTES_PER_HOUR = 60;
 const HOURS_PER_DAY = 24;
 
 /**
- * Lama waktu antara dua titik, mis. lama keterlambatan: "2 hari 3 jam",
- * "3 jam 15 menit", atau "15 menit".
+ * Lama waktu dalam menit: "2 hari 3 jam", "3 jam 15 menit", atau "15 menit".
+ * Sama dengan App\Support\DateFormat::duration() di server.
  */
-export function formatDuration(from: DateInput, to: DateInput): string {
-    const totalMinutes = Math.max(
-        1,
-        Math.floor((toDate(to).getTime() - toDate(from).getTime()) / MINUTE_MS),
-    );
+export function formatMinutes(minutes: number): string {
+    const totalMinutes = Math.max(1, Math.floor(minutes));
     const totalHours = Math.floor(totalMinutes / MINUTES_PER_HOUR);
     const days = Math.floor(totalHours / HOURS_PER_DAY);
     const hours = totalHours % HOURS_PER_DAY;
-    const minutes = totalMinutes % MINUTES_PER_HOUR;
+    const rest = totalMinutes % MINUTES_PER_HOUR;
 
     if (days > 0) {
         return hours > 0 ? `${days} hari ${hours} jam` : `${days} hari`;
     }
 
     if (totalHours > 0) {
-        return minutes > 0
-            ? `${totalHours} jam ${minutes} menit`
+        return rest > 0
+            ? `${totalHours} jam ${rest} menit`
             : `${totalHours} jam`;
     }
 
-    return `${minutes} menit`;
+    return `${rest} menit`;
+}
+
+/** Lama waktu antara dua titik, mis. lama keterlambatan. */
+export function formatDuration(from: DateInput, to: DateInput): string {
+    return formatMinutes(
+        (toDate(to).getTime() - toDate(from).getTime()) / MINUTE_MS,
+    );
 }
 
 /**
@@ -100,4 +104,45 @@ export function formatWeekday(date: string, timeZone: string): string {
         month: 'short',
         timeZone,
     }).format(new Date(`${date}T12:00:00Z`));
+}
+
+const DAY_MS = 86_400_000;
+
+function parseDate(date: string): Date {
+    return new Date(`${date}T00:00:00Z`);
+}
+
+function toDateString(date: Date): string {
+    return date.toISOString().slice(0, 10);
+}
+
+/** Tanggal hari ini (Y-m-d) di zona waktu aplikasi. */
+export function todayDate(timeZone: string): string {
+    return toDateTimeLocal(new Date(), timeZone).slice(0, 10);
+}
+
+/** Menggeser tanggal "Y-m-d" sejumlah hari (boleh negatif). */
+export function shiftDate(date: string, days: number): string {
+    return toDateString(new Date(parseDate(date).getTime() + days * DAY_MS));
+}
+
+/** Tanggal pertama & terakhir bulan dari tanggal "Y-m-d"; `offset` -1 = bulan lalu. */
+export function monthRange(
+    date: string,
+    offset = 0,
+): { from: string; to: string } {
+    const base = parseDate(date);
+    const first = new Date(
+        Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + offset, 1),
+    );
+    const last = new Date(
+        Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + offset + 1, 0),
+    );
+
+    return { from: toDateString(first), to: toDateString(last) };
+}
+
+/** Label tanggal "Y-m-d" dari server, mis. "16 Okt 2026". */
+export function formatDateOnly(date: string, timeZone: string): string {
+    return formatDate(new Date(`${date}T12:00:00Z`), timeZone);
 }

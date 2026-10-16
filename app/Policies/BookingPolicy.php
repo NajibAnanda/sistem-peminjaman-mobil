@@ -29,6 +29,14 @@ final class BookingPolicy
         return true;
     }
 
+    /**
+     * Ekspor Riwayat (FR-26): Admin dan Pengelola (prd.md section 9).
+     */
+    public function export(User $user): bool
+    {
+        return true;
+    }
+
     public function update(User $user, Booking $booking): bool
     {
         return true;

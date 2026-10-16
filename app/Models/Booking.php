@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\BookingDisplayStatus;
 use App\Enums\BookingStatus;
+use App\Enums\LatenessFilter;
 use App\Support\TableQuery;
 use Carbon\CarbonInterface;
 use Database\Factories\BookingFactory;
@@ -296,15 +297,77 @@ final class Booking extends Model
     public function scopeForTable(Builder $query, TableQuery $table): void
     {
         $query
-            ->when($table->search, fn (Builder $query, string $term) => $query->where(
-                fn (Builder $query) => $query
-                    ->where('code', 'like', "%{$term}%")
-                    ->orWhereHas('employee', fn (Builder $query) => $query
-                        ->where('name', 'like', "%{$term}%")
-                        ->orWhere('employee_number', 'like', "%{$term}%"))
-                    ->orWhereHas('car', fn (Builder $query) => $query->where('plate_number', 'like', "%{$term}%")),
-            ))
+            ->when($table->search, fn (Builder $query, string $term) => $query->search($term))
             ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereDisplayStatus($statuses));
+    }
+
+    /**
+     * Pencarian kode, nama/NIP karyawan, atau plat nomor.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeSearch(Builder $query, string $term): void
+    {
+        $query->where(fn (Builder $query) => $query
+            ->where('code', 'like', "%{$term}%")
+            ->orWhereHas('employee', fn (Builder $query) => $query
+                ->where('name', 'like', "%{$term}%")
+                ->orWhere('employee_number', 'like', "%{$term}%"))
+            ->orWhereHas('car', fn (Builder $query) => $query->where('plate_number', 'like', "%{$term}%")));
+    }
+
+    /**
+     * Pencarian dan filter Riwayat (FR-25). Dipakai bersama oleh tabel dan
+     * ekspor (FR-26) agar isi file selalu sama dengan data yang tampil.
+     * Periode dihitung dari waktu mulai.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeForHistory(Builder $query, TableQuery $table, ?CarbonInterface $now = null): void
+    {
+        $now ??= now();
+
+        $query
+            ->when($table->search, fn (Builder $query, string $term) => $query->search($term))
+            ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereDisplayStatus($statuses))
+            ->when($table->filter('car'), fn (Builder $query, array $ids) => $query->whereIn('car_id', $ids))
+            ->when($table->filter('employee'), fn (Builder $query, array $ids) => $query->whereIn('employee_id', $ids))
+            ->when($table->filter('division'), fn (Builder $query, array $divisions) => $query
+                ->whereHas('employee', fn (Builder $query) => $query->whereIn('division', $divisions)))
+            ->when($table->filter('lateness'), fn (Builder $query, array $values) => $query->where(
+                function (Builder $query) use ($values, $now): void {
+                    foreach ($values as $value) {
+                        $query->orWhere(fn (Builder $query) => match (LatenessFilter::from($value)) {
+                            LatenessFilter::Late => $query->where(fn (Builder $query) => $query
+                                ->completedLate()
+                                ->orWhere(fn (Builder $query) => $query->overdue($now))),
+                            LatenessFilter::OnTime => $query->where('status', BookingStatus::Completed)
+                                ->whereColumn('returned_at', '<=', 'planned_return_at'),
+                        });
+                    }
+                },
+            ))
+            ->when($table->from, fn (Builder $query, CarbonInterface $from) => $query->where('start_at', '>=', $from))
+            ->when($table->to, fn (Builder $query, CarbonInterface $to) => $query->where('start_at', '<=', $to));
+    }
+
+    /**
+     * Lama keterlambatan dalam menit: Selesai setelah rencana kembali, atau
+     * masih Terlambat sampai sekarang. Null bila tidak terlambat.
+     */
+    public function latenessMinutes(?CarbonInterface $now = null): ?int
+    {
+        $end = match ($this->status) {
+            BookingStatus::Completed => $this->returned_at,
+            BookingStatus::Active => $now ?? now(),
+            default => null,
+        };
+
+        if ($end === null || ! $end->greaterThan($this->planned_return_at)) {
+            return null;
+        }
+
+        return (int) $this->planned_return_at->diffInMinutes($end);
     }
 
     public function displayStatus(?CarbonInterface $now = null): BookingDisplayStatus

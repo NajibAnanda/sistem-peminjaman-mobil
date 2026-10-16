@@ -6,6 +6,11 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 type Filters = Record<string, string[]>;
 
+/** Rentang tanggal (Y-m-d); string kosong = tidak dibatasi. */
+export type TablePeriod = { from: string; to: string };
+
+const EMPTY_PERIOD: TablePeriod = { from: '', to: '' };
+
 type Options = {
     /** URL halaman daftar, mis. index.url() dari Wayfinder. */
     url: string;
@@ -24,14 +29,26 @@ export type UseTableQueryReturn = {
     resetAll: () => void;
     goToPage: (page: number) => void;
     activeFilterCount: number;
-    /** Hasil saat ini dibatasi pencarian/filter (menurut server). */
+    /** Tabel ini memakai filter periode (server mengirim `query.period`). */
+    hasPeriod: boolean;
+    period: TablePeriod;
+    setPeriod: (period: TablePeriod) => void;
+    /** Hasil saat ini dibatasi pencarian/filter/periode (menurut server). */
     isFiltered: boolean;
     loading: boolean;
 };
 
+function serverPeriod(query: TableQueryState): TablePeriod {
+    return {
+        from: query.period?.from ?? '',
+        to: query.period?.to ?? '',
+    };
+}
+
 function buildParams(
     search: string,
     filters: Filters,
+    period: TablePeriod,
     page?: number,
 ): Record<string, string | string[] | number> {
     const params: Record<string, string | string[] | number> = {};
@@ -44,6 +61,14 @@ function buildParams(
         if (values.length > 0) {
             params[key] = values;
         }
+    }
+
+    if (period.from !== '') {
+        params.from = period.from;
+    }
+
+    if (period.to !== '') {
+        params.to = period.to;
     }
 
     if (page !== undefined && page > 1) {
@@ -61,9 +86,9 @@ function countFilters(filters: Filters): number {
 }
 
 /**
- * Menyelaraskan pencarian, filter, dan halaman tabel dengan query string
- * (?search=&role[]=&page=). Semua pemrosesan terjadi di server; setiap
- * perubahan pencarian/filter kembali ke halaman 1.
+ * Menyelaraskan pencarian, filter, periode, dan halaman tabel dengan query
+ * string (?search=&role[]=&from=&to=&page=). Semua pemrosesan terjadi di
+ * server; setiap perubahan pencarian/filter/periode kembali ke halaman 1.
  */
 export function useTableQuery({
     url,
@@ -72,32 +97,43 @@ export function useTableQuery({
 }: Options): UseTableQueryReturn {
     const [search, setSearch] = useState(query.search ?? '');
     const [filters, setFilters] = useState<Filters>(query.filters);
+    const [period, setPeriodState] = useState<TablePeriod>(serverPeriod(query));
     const [loading, setLoading] = useState(false);
 
     // Server adalah sumber kebenaran: bila query dari server berubah (mis.
-    // tombol back browser), centang filter lokal ikut disesuaikan.
-    const serverFiltersKey = JSON.stringify(query.filters);
-    const [syncedFiltersKey, setSyncedFiltersKey] = useState(serverFiltersKey);
+    // tombol back browser), centang filter dan periode lokal ikut disesuaikan.
+    const serverStateKey = JSON.stringify([query.filters, query.period]);
+    const [syncedStateKey, setSyncedStateKey] = useState(serverStateKey);
 
-    if (syncedFiltersKey !== serverFiltersKey) {
-        setSyncedFiltersKey(serverFiltersKey);
+    if (syncedStateKey !== serverStateKey) {
+        setSyncedStateKey(serverStateKey);
         setFilters(query.filters);
+        setPeriodState(serverPeriod(query));
     }
 
     const onlyKey = only.join(',');
 
     const visit = useCallback(
-        (nextSearch: string, nextFilters: Filters, page?: number) => {
-            router.get(url, buildParams(nextSearch, nextFilters, page), {
-                preserveState: true,
-                preserveScroll: true,
-                // Pencarian/filter mengganti entri riwayat; pindah halaman tidak,
-                // agar tombol back browser kembali ke halaman sebelumnya.
-                replace: page === undefined,
-                only: onlyKey.split(','),
-                onStart: () => setLoading(true),
-                onFinish: () => setLoading(false),
-            });
+        (
+            nextSearch: string,
+            nextFilters: Filters,
+            nextPeriod: TablePeriod,
+            page?: number,
+        ) => {
+            router.get(
+                url,
+                buildParams(nextSearch, nextFilters, nextPeriod, page),
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    // Pencarian/filter mengganti entri riwayat; pindah halaman tidak,
+                    // agar tombol back browser kembali ke halaman sebelumnya.
+                    replace: page === undefined,
+                    only: onlyKey.split(','),
+                    onStart: () => setLoading(true),
+                    onFinish: () => setLoading(false),
+                },
+            );
         },
         [url, onlyKey],
     );
@@ -110,12 +146,12 @@ export function useTableQuery({
         }
 
         const timeout = setTimeout(
-            () => visit(search, filters),
+            () => visit(search, filters, period),
             SEARCH_DEBOUNCE_MS,
         );
 
         return () => clearTimeout(timeout);
-    }, [search, serverSearch, filters, visit]);
+    }, [search, serverSearch, filters, period, visit]);
 
     const toggleFilter = (key: string, value: string) => {
         const current = filters[key] ?? [];
@@ -127,7 +163,7 @@ export function useTableQuery({
         };
 
         setFilters(next);
-        visit(search, next);
+        visit(search, next, period);
     };
 
     const emptyFilters = (): Filters =>
@@ -137,7 +173,12 @@ export function useTableQuery({
         const next = emptyFilters();
 
         setFilters(next);
-        visit(search, next);
+        visit(search, next, period);
+    };
+
+    const setPeriod = (next: TablePeriod) => {
+        setPeriodState(next);
+        visit(search, filters, next);
     };
 
     const resetAll = () => {
@@ -145,10 +186,14 @@ export function useTableQuery({
 
         setSearch('');
         setFilters(next);
-        visit('', next);
+        setPeriodState(EMPTY_PERIOD);
+        visit('', next, EMPTY_PERIOD);
     };
 
-    const goToPage = (page: number) => visit(serverSearch, query.filters, page);
+    const goToPage = (page: number) =>
+        visit(serverSearch, query.filters, serverPeriod(query), page);
+
+    const activePeriod = serverPeriod(query);
 
     return {
         search,
@@ -159,7 +204,14 @@ export function useTableQuery({
         resetAll,
         goToPage,
         activeFilterCount: countFilters(filters),
-        isFiltered: serverSearch !== '' || countFilters(query.filters) > 0,
+        hasPeriod: query.period !== undefined,
+        period,
+        setPeriod,
+        isFiltered:
+            serverSearch !== '' ||
+            countFilters(query.filters) > 0 ||
+            activePeriod.from !== '' ||
+            activePeriod.to !== '',
         loading,
     };
 }

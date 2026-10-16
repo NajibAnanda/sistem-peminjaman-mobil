@@ -21,6 +21,7 @@ enum ActivityEvent: string
     case PickedUp = 'picked_up';
     case Extended = 'extended';
     case Returned = 'returned';
+    case Exported = 'exported';
 
     public function label(): string
     {
@@ -37,6 +38,7 @@ enum ActivityEvent: string
             self::PasswordChanged => 'Password diganti',
             self::OperationalStatusChanged => 'Status operasional diubah',
             self::PhotoUpdated => 'Foto diperbarui',
+            self::Exported => 'Diekspor',
         };
     }
 }

@@ -64,7 +64,7 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
             id: 'status',
             header: 'Status',
             cell: (booking) => (
-                <div className="grid justify-items-start gap-1">
+                <div className="flex flex-col items-start gap-1">
                     <StatusBadge status={booking.display_status} />
                     {booking.awaiting_return_code && (
                         <AwaitingReturnHint

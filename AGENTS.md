@@ -284,11 +284,13 @@ Setiap daftar data (Kelola Petugas, Data Mobil, Data Karyawan, Peminjaman, Riway
 
 **Server (satu cara konsisten):**
 - FormRequest daftar menyediakan `tableQuery(): TableQuery` dengan **whitelist** nilai filter per kunci (`App\Support\TableQuery::fromRequest`). Nilai tak dikenal **diabaikan**, bukan error.
+- **Filter periode** (Riwayat, Log Aktivitas): `TableQuery::fromRequest(..., withPeriod: true)` membaca `?from=&to=` (Y-m-d, inklusif; tidak valid diabaikan, terbalik ditukar). Bila server mengirim `query.period`, header tabel otomatis menampilkan tombol **Periode** — tidak ada prop tambahan di `DataTableCard`.
+- Grup filter dengan daftar panjang (mis. Mobil, Karyawan, Petugas) memakai `submenu: true` agar tampil sebagai submenu bergulir di dalam dropdown Filter.
 - Model menyediakan scope `scopeForTable(Builder, TableQuery)` untuk pencarian & filter.
 - Controller memakai trait `PaginatesForTable::paginateForTable()` dan mengirim `API Resource` yang field-nya dibatasi (bukan model utuh), plus `query` (`TableQuery::toArray()`) dan opsi filter (`Enum::options()` atau dari config).
 - Test wajib per tabel: pencarian & filter mengembalikan data yang benar, parameter tidak valid diabaikan, dan nomor urut halaman 2 dimulai dari 11 (`meta.from`).
 
-**Grup filter acuan:** Data Mobil — Status (Tersedia, Dipinjam, Maintenance, Nonaktif); Data Karyawan — Divisi (dari config), Status (Aktif, Nonaktif); Peminjaman — Status (Dijadwalkan, Aktif, Terlambat, Belum Diambil); Riwayat — Status, Divisi, Keterlambatan + filter periode; Log Aktivitas — Jenis data, Petugas + filter periode.
+**Grup filter acuan:** Data Mobil — Status (Tersedia, Dipinjam, Maintenance, Nonaktif); Data Karyawan — Divisi (dari config), Status (Aktif, Nonaktif); Peminjaman — Status (Dijadwalkan, Aktif, Terlambat, Belum Diambil); Riwayat — Status, Keterlambatan, Divisi, Mobil, Karyawan + filter periode; Log Aktivitas — Jenis data, Petugas + filter periode.
 
 ---
 
