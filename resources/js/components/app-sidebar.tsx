@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, usePoll } from '@inertiajs/react';
 import {
     CalendarRange,
     CarFront,
@@ -10,6 +10,10 @@ import {
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
+import {
+    BookingAlertBadge,
+    bookingAlertTooltip,
+} from '@/components/booking-alert-badge';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -31,17 +35,29 @@ import { index as schedule } from '@/routes/schedule';
 import { index as staff } from '@/routes/staff';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    { title: 'Jadwal Armada', href: schedule(), icon: CalendarRange },
-    { title: 'Peminjaman', href: bookings(), icon: ClipboardList },
-    { title: 'Riwayat', href: history(), icon: History },
-    { title: 'Data Mobil', href: cars(), icon: CarFront },
-    { title: 'Data Karyawan', href: employees(), icon: Users },
-];
+const SECOND_MS = 1000;
 
 export function AppSidebar() {
-    const { auth } = usePage().props;
+    const { auth, alerts, pollingIntervalSeconds } = usePage().props;
+
+    // Badge Terlambat/Belum Diambil diperbarui tanpa memuat ulang halaman;
+    // hanya prop `alerts` yang diminta ke server (prd.md 7.3).
+    usePoll(pollingIntervalSeconds * SECOND_MS, { only: ['alerts'] });
+
+    const mainNavItems: NavItem[] = [
+        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+        { title: 'Jadwal Armada', href: schedule(), icon: CalendarRange },
+        {
+            title: 'Peminjaman',
+            href: bookings(),
+            icon: ClipboardList,
+            badge: <BookingAlertBadge alerts={alerts} />,
+            tooltip: bookingAlertTooltip(alerts),
+        },
+        { title: 'Riwayat', href: history(), icon: History },
+        { title: 'Data Mobil', href: cars(), icon: CarFront },
+        { title: 'Data Karyawan', href: employees(), icon: Users },
+    ];
 
     // Menyembunyikan menu hanya untuk kenyamanan; hak akses tetap dicek di server.
     const managerNavItems: NavItem[] = [

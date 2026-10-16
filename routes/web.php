@@ -11,9 +11,11 @@ use App\Http\Controllers\CarController;
 use App\Http\Controllers\CarDeactivationController;
 use App\Http\Controllers\CarOperationalStatusController;
 use App\Http\Controllers\CarPhotoController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeActivationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDeactivationController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StaffActivationController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffDeactivationController;
@@ -25,16 +27,15 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware('auth')->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('change-password', [TemporaryPasswordController::class, 'edit'])->name('password.change');
     Route::put('change-password', [TemporaryPasswordController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('password.change.update');
 
-    // Halaman fitur yang belum dibangun. Masing-masing diganti controller
-    // sungguhan pada fasenya (lihat PROMPTS.md).
-    Route::inertia('schedule', 'coming-soon', ['title' => 'Jadwal Armada'])->name('schedule.index');
+    // Jadwal Armada (otorisasi lewat ScheduleIndexRequest → BookingPolicy).
+    Route::get('schedule', ScheduleController::class)->name('schedule.index');
     // Peminjaman (Pengelola & Admin; otorisasi lewat BookingPolicy).
     Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
     Route::get('bookings/create', [BookingController::class, 'create'])->name('bookings.create');
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::post('bookings/{booking}/extend', [BookingExtensionController::class, 'store'])->name('bookings.extend');
     Route::post('bookings/{booking}/cancel', [BookingCancellationController::class, 'store'])->name('bookings.cancel');
     Route::get('bookings/{booking}/photos/{stage}', [BookingPhotoController::class, 'show'])->name('bookings.photos.show');
+    // Halaman yang belum dibangun; diganti controller sungguhan di Fase 6 (PROMPTS.md).
     Route::inertia('history', 'coming-soon', ['title' => 'Riwayat'])->name('history.index');
     // Data Mobil (Pengelola & Admin; otorisasi lewat CarPolicy).
     Route::get('cars', [CarController::class, 'index'])->name('cars.index');

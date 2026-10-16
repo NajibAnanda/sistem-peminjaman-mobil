@@ -60,6 +60,18 @@ const statuses: Record<
     inactive: { label: 'Nonaktif', tone: 'muted', icon: CircleOff },
 };
 
+/**
+ * Kelas warna sebuah status, untuk elemen selain badge (mis. blok di Jadwal
+ * Armada) agar pemetaan warnanya tetap satu sumber.
+ */
+export function statusToneClasses(status: StatusKey): string {
+    return toneClasses[statuses[status].tone];
+}
+
+export function statusLabel(status: StatusKey): string {
+    return statuses[status].label;
+}
+
 type Props = {
     status: StatusKey;
     className?: string;

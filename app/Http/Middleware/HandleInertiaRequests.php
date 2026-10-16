@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\BookingAlerts;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -53,6 +54,10 @@ final class HandleInertiaRequests extends Middleware
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            // Closure: hanya dihitung saat dibutuhkan, dan dapat dimuat ulang
+            // sendirian lewat polling (only: ['alerts']).
+            'alerts' => fn (): ?array => $user instanceof User ? BookingAlerts::counts() : null,
+            'pollingIntervalSeconds' => (int) config('fleet.polling_interval_seconds'),
         ];
     }
 

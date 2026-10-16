@@ -182,6 +182,79 @@ final class Booking extends Model
     }
 
     /**
+     * FR-23: menambahkan kolom `awaiting_return_code`, yaitu kode peminjaman
+     * Terlambat lain yang masih memakai mobil yang sama. Dihitung dalam satu
+     * query (subquery) agar daftar tidak N+1.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeWithAwaitingReturn(Builder $query, ?CarbonInterface $now = null): void
+    {
+        $query->addSelect([
+            'awaiting_return_code' => self::query()
+                ->from('bookings', 'previous')
+                ->select('previous.code')
+                ->whereColumn('previous.car_id', 'bookings.car_id')
+                ->whereColumn('previous.id', '!=', 'bookings.id')
+                ->where('previous.status', BookingStatus::Active)
+                ->where('previous.planned_return_at', '<', $now ?? now())
+                ->orderBy('previous.planned_return_at')
+                ->limit(1),
+        ]);
+    }
+
+    /**
+     * Kode peminjaman Terlambat yang menahan mobil untuk jadwal ini (FR-23).
+     * Hanya terisi bila query memakai scope withAwaitingReturn() dan booking
+     * masih Dijadwalkan.
+     */
+    public function awaitingReturnCode(): ?string
+    {
+        $code = $this->getAttributes()['awaiting_return_code'] ?? null;
+
+        return $this->status === BookingStatus::Scheduled && is_string($code) ? $code : null;
+    }
+
+    /**
+     * Kandidat peminjaman yang tampil di Jadwal Armada pada [$start, $end).
+     * Dibatalkan tidak ditampilkan. Penyaringan tepat dilakukan dengan
+     * timelineRange() karena waktu aktual (ambil/kembali) bisa berbeda dari
+     * rencana.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeVisibleOnTimeline(Builder $query, CarbonInterface $start, CarbonInterface $end): void
+    {
+        // Dua bagian digabung UNION agar masing-masing memakai index-nya
+        // sendiri; satu query dengan OR lintas kolom memindai seluruh riwayat.
+        // Peminjaman berjalan jumlahnya sedikit, termasuk yang Terlambat
+        // (tetap memakai mobil sampai dikembalikan).
+        $query->ongoing()
+            ->where(fn (Builder $query) => $query
+                ->where('start_at', '<', $end)
+                ->orWhere('picked_up_at', '<', $end))
+            ->union(self::query()
+                ->where('status', BookingStatus::Completed)
+                ->where('returned_at', '>', $start)
+                ->where('picked_up_at', '<', $end));
+    }
+
+    /**
+     * Rentang pemakaian mobil di timeline: waktu aktual bila sudah ada, dan
+     * peminjaman Terlambat dianggap berlangsung sampai sekarang.
+     *
+     * @return array{0: CarbonInterface, 1: CarbonInterface}
+     */
+    public function timelineRange(CarbonInterface $now): array
+    {
+        $start = $this->picked_up_at ?? $this->start_at;
+        $end = $this->returned_at
+            ?? ($this->status === BookingStatus::Active && $this->planned_return_at->lessThan($now) ? $now : $this->planned_return_at);
+
+        return [$start, $end];
+    }
+
+    /**
      * Selesai terlambat: dikembalikan setelah rencana kembali (AGENTS.md 5.2).
      *
      * @param  Builder<self>  $query

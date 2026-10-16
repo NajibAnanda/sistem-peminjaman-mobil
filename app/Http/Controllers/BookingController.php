@@ -39,6 +39,7 @@ final class BookingController extends Controller
         $bookings = $this->paginateForTable(
             Booking::query()
                 ->with(['employee', 'car'])
+                ->withAwaitingReturn()
                 ->ongoing()
                 ->forTable($table)
                 ->orderBy('start_at'),
@@ -72,6 +73,8 @@ final class BookingController extends Controller
     {
         Gate::authorize('view', $booking);
 
+        // Dimuat ulang dengan scope FR-23 (peringatan mobil belum kembali).
+        $booking = Booking::query()->withAwaitingReturn()->findOrFail($booking->id);
         $booking->load([
             'employee', 'car', 'creator', 'pickedUpBy', 'returnedBy', 'cancelledBy',
             'photos.uploader', 'extensions.extender',

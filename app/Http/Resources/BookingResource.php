@@ -33,6 +33,8 @@ class BookingResource extends JsonResource
             'start_at' => $this->start_at->toIso8601String(),
             'planned_return_at' => $this->planned_return_at->toIso8601String(),
             'picked_up_at' => $this->picked_up_at?->toIso8601String(),
+            // FR-23: mobil masih dipakai peminjaman Terlambat lain.
+            'awaiting_return_code' => $this->resource->awaitingReturnCode(),
             'returned_at' => $this->returned_at?->toIso8601String(),
             'employee' => [
                 'id' => $this->employee->id,

@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { BookingAlerts } from '@/types/booking';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -13,6 +14,9 @@ declare module '@inertiajs/core' {
             timezone: string;
             auth: Auth;
             sidebarOpen: boolean;
+            /** Jumlah untuk badge menu; null bila belum login. */
+            alerts: BookingAlerts | null;
+            pollingIntervalSeconds: number;
             [key: string]: unknown;
         };
     }

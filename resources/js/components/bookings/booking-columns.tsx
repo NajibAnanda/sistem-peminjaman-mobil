@@ -1,3 +1,4 @@
+import { AwaitingReturnHint } from '@/components/bookings/awaiting-return-notice';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { StatusBadge } from '@/components/status-badge';
 import { useDateFormat } from '@/hooks/use-date-format';
@@ -62,7 +63,16 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
         {
             id: 'status',
             header: 'Status',
-            cell: (booking) => <StatusBadge status={booking.display_status} />,
+            cell: (booking) => (
+                <div className="grid justify-items-start gap-1">
+                    <StatusBadge status={booking.display_status} />
+                    {booking.awaiting_return_code && (
+                        <AwaitingReturnHint
+                            code={booking.awaiting_return_code}
+                        />
+                    )}
+                </div>
+            ),
         },
     ];
 }

@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Ban, CalendarPlus, KeyRound, Pencil, Undo2 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { AwaitingReturnAlert } from '@/components/bookings/awaiting-return-notice';
 import { BookingActionDialogs } from '@/components/bookings/booking-action-dialogs';
 import { BookingPhotoComparison } from '@/components/bookings/booking-photo-comparison';
 import { StatusBadge } from '@/components/status-badge';
@@ -90,6 +91,10 @@ export default function BookingShow({
                         )}
                     </div>
                 </div>
+
+                {booking.awaiting_return_code && (
+                    <AwaitingReturnAlert code={booking.awaiting_return_code} />
+                )}
 
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">

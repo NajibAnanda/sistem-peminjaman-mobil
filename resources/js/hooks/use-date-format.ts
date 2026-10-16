@@ -3,6 +3,7 @@ import {
     formatDate,
     formatDateTime,
     formatTime,
+    formatWeekday,
     toDateTimeLocal,
 } from '@/lib/datetime';
 
@@ -13,6 +14,8 @@ export type UseDateFormatReturn = {
     formatTime: (value: DateInput) => string;
     formatDateTime: (value: DateInput) => string;
     toDateTimeLocal: (value: DateInput) => string;
+    /** Label hari dari tanggal "Y-m-d", mis. "Sen, 13 Okt". */
+    formatWeekday: (date: string) => string;
 };
 
 export function useDateFormat(): UseDateFormatReturn {
@@ -23,5 +26,6 @@ export function useDateFormat(): UseDateFormatReturn {
         formatTime: (value) => formatTime(value, timezone),
         formatDateTime: (value) => formatDateTime(value, timezone),
         toDateTimeLocal: (value) => toDateTimeLocal(value, timezone),
+        formatWeekday: (date) => formatWeekday(date, timezone),
     };
 }

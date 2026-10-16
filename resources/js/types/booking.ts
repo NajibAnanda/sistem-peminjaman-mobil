@@ -29,6 +29,8 @@ export type Booking = {
     start_at: string;
     planned_return_at: string;
     picked_up_at: string | null;
+    /** Kode peminjaman Terlambat yang masih memakai mobil ini (FR-23). */
+    awaiting_return_code: string | null;
     returned_at: string | null;
     employee: {
         id: number;
@@ -101,6 +103,12 @@ export type CarOption = {
     model: string;
     available: boolean | null;
     reason: string | null;
+};
+
+/** Sinkron dengan App\Support\BookingAlerts::counts(). */
+export type BookingAlerts = {
+    overdue: number;
+    not_picked_up: number;
 };
 
 export type BookingIndexProps = {
