@@ -1,24 +1,17 @@
 import { Head, router } from '@inertiajs/react';
-import { SearchX, UserPlus, Users } from 'lucide-react';
+import { UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { EmptyState } from '@/components/empty-state';
-import Heading from '@/components/heading';
-import { PaginationNav } from '@/components/pagination-nav';
+import { DataTableCard } from '@/components/data-table/data-table-card';
+import { PageHeader } from '@/components/page-header';
 import type { StaffAction } from '@/components/staff/staff-actions-menu';
-import {
-    hasActiveFilters,
-    StaffFilters,
-} from '@/components/staff/staff-filters';
+import { StaffActionsMenu } from '@/components/staff/staff-actions-menu';
+import { useStaffColumns } from '@/components/staff/staff-columns';
 import { StaffFormDialog } from '@/components/staff/staff-form-dialog';
-import { StaffTable } from '@/components/staff/staff-table';
 import { TemporaryPasswordDialog } from '@/components/staff/temporary-password-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
 import { useFlashData } from '@/hooks/use-flash-data';
-import { useNavigationLoading } from '@/hooks/use-navigation-loading';
-import { cn } from '@/lib/utils';
+import { useTableQuery } from '@/hooks/use-table-query';
 import { activate, deactivate, index, resetPassword } from '@/routes/staff';
 import type {
     StaffIndexProps,
@@ -64,8 +57,18 @@ const confirmations: Record<
     },
 };
 
-export default function StaffIndex({ staff, filters, roles }: StaffIndexProps) {
-    const loading = useNavigationLoading();
+export default function StaffIndex({
+    staff,
+    query,
+    roles,
+    statuses,
+}: StaffIndexProps) {
+    const table = useTableQuery({
+        url: index.url(),
+        query,
+        only: ['staff', 'query'],
+    });
+    const columns = useStaffColumns();
     const [credentials, clearCredentials] =
         useFlashData<TemporaryPasswordFlash>('temporaryPassword');
 
@@ -116,57 +119,46 @@ export default function StaffIndex({ staff, filters, roles }: StaffIndexProps) {
         <>
             <Head title="Kelola Petugas" />
 
-            <div className="flex flex-1 flex-col gap-4 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <Heading
-                        title="Kelola Petugas"
-                        description="Akun Pengelola dan Admin yang dapat memakai aplikasi."
-                    />
-                    <Button
-                        onClick={() => openForm(null)}
-                        data-test="add-staff-button"
-                    >
-                        <UserPlus aria-hidden="true" />
-                        Tambah Petugas
-                    </Button>
-                </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
+                <PageHeader
+                    title="Kelola Petugas"
+                    description="Akun Pengelola dan Admin yang dapat memakai aplikasi."
+                    actions={
+                        <Button
+                            onClick={() => openForm(null)}
+                            data-test="add-staff-button"
+                        >
+                            <UserPlus aria-hidden="true" />
+                            Tambah Petugas
+                        </Button>
+                    }
+                />
 
-                <StaffFilters filters={filters} roles={roles} />
-
-                <Card className="relative py-0" aria-busy={loading}>
-                    <CardContent
-                        className={cn(
-                            'px-0 transition-opacity',
-                            loading && 'opacity-60',
-                        )}
-                    >
-                        {staff.data.length > 0 ? (
-                            <StaffTable
-                                staff={staff.data}
-                                onAction={handleAction}
-                            />
-                        ) : hasActiveFilters(filters) ? (
-                            <EmptyState
-                                icon={SearchX}
-                                title="Tidak ada petugas yang cocok"
-                                description="Coba ubah kata kunci pencarian atau filter."
-                            />
-                        ) : (
-                            <EmptyState
-                                icon={Users}
-                                title="Belum ada akun petugas"
-                                description="Tambahkan akun untuk petugas GA yang akan memakai aplikasi."
-                            />
-                        )}
-                    </CardContent>
-                    {loading && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <Spinner />
-                        </div>
+                <DataTableCard
+                    title="Daftar Petugas"
+                    description="Status akun, autentikasi dua faktor, dan login terakhir."
+                    table={table}
+                    data={staff}
+                    columns={columns}
+                    rowKey={(member) => member.id}
+                    rowActions={(member) => (
+                        <StaffActionsMenu
+                            staff={member}
+                            onAction={handleAction}
+                        />
                     )}
-                </Card>
-
-                <PaginationNav pagination={staff} />
+                    searchPlaceholder="Cari nama atau email..."
+                    filterGroups={[
+                        { key: 'role', label: 'Peran', options: roles },
+                        { key: 'status', label: 'Status', options: statuses },
+                    ]}
+                    emptyState={{
+                        icon: Users,
+                        title: 'Belum ada akun petugas',
+                        description:
+                            'Tambahkan akun untuk petugas GA yang akan memakai aplikasi.',
+                    }}
+                />
             </div>
 
             <StaffFormDialog

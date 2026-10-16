@@ -6,14 +6,15 @@ namespace App\Http\Controllers;
 
 use App\Actions\Staff\CreateStaffAccount;
 use App\Actions\Staff\UpdateStaffAccount;
+use App\Enums\ActiveStatus;
 use App\Enums\StaffRole;
 use App\Http\Controllers\Concerns\FlashesTemporaryPassword;
+use App\Http\Controllers\Concerns\PaginatesForTable;
 use App\Http\Requests\Staff\StaffIndexRequest;
 use App\Http\Requests\Staff\StoreStaffRequest;
 use App\Http\Requests\Staff\UpdateStaffRequest;
 use App\Http\Resources\StaffResource;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,30 +22,21 @@ use Inertia\Response;
 final class StaffController extends Controller
 {
     use FlashesTemporaryPassword;
+    use PaginatesForTable;
 
     public function index(StaffIndexRequest $request): Response
     {
-        $filters = $request->filters();
+        $table = $request->tableQuery();
 
-        $staff = User::query()
-            ->search($filters['search'])
-            ->when($filters['role'], fn (Builder $query, string $role) => $query->where('role', $role))
-            ->when($filters['status'], fn (Builder $query, string $status) => $query->where(
-                'is_active',
-                $status === StaffIndexRequest::STATUS_ACTIVE,
-            ))
-            ->orderByDesc('is_active')
-            ->orderBy('name')
-            ->paginate((int) config('fleet.per_page'))
-            ->withQueryString();
+        $staff = $this->paginateForTable(
+            User::query()->forTable($table)->orderByDesc('is_active')->orderBy('name'),
+        );
 
         return Inertia::render('staff/index', [
             'staff' => StaffResource::collection($staff),
-            'filters' => $filters,
-            'roles' => array_map(
-                fn (StaffRole $role): array => ['value' => $role->value, 'label' => $role->label()],
-                StaffRole::cases(),
-            ),
+            'query' => $table->toArray(),
+            'roles' => StaffRole::options(),
+            'statuses' => ActiveStatus::options(),
         ]);
     }
 

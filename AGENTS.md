@@ -253,6 +253,42 @@ Keamanan adalah syarat, bukan fitur tambahan. Setiap perubahan harus mematuhi da
 - Galeri foto referensi mobil: Dialog dengan tombol sebelumnya/selanjutnya, tanpa carousel/embla. Slot foto kosong menampilkan placeholder dan penanda "Foto belum lengkap".
 - Komponen `PhotoCapture`: opsi kamera (`getUserMedia`) dan unggah file, pratinjau, ambil ulang, kompresi `browser-image-compression` sebelum kirim.
 
+### 8.4 Pola Tabel (wajib untuk SEMUA tabel)
+
+Setiap daftar data (Kelola Petugas, Data Mobil, Data Karyawan, Peminjaman, Riwayat, Log Aktivitas) **wajib** memakai komponen `resources/js/components/data-table/` dan hook `useTableQuery`. Jangan membuat tabel, filter, atau pagination sendiri. Contoh acuan: `pages/staff/index.tsx`.
+
+**Struktur halaman daftar:**
+```
+┌─ PageHeader: Judul halaman + deskripsi ............ [Aksi utama] ─┐   ← di LUAR card
+┌─ DataTableCard ────────────────────────────────────────────────────┐
+│ Judul tabel / deskripsi              [🔍 Cari...] [Filter 2]       │   ← header card, border-b
+├────────────────────────────────────────────────────────────────────┤
+│ #  Kolom ...                                              ⋯        │   ← tabel
+├────────────────────────────────────────────────────────────────────┤
+│ Menampilkan 11–20 dari 47 data                    « ‹ 1 2 3 4 5 › » │   ← footer, border-t
+└────────────────────────────────────────────────────────────────────┘
+```
+1. **Header halaman** (`PageHeader`): judul + deskripsi di kiri, **aksi utama** (mis. "Tambah Petugas") di kanan — di luar dan di atas card. Card tabel **tidak** berisi tombol aksi utama.
+2. **Header card:** kiri = judul tabel (mis. "Daftar Petugas") + deskripsi opsional satu baris (`text-muted-foreground`); kanan = input pencarian lalu tombol **Filter**. Sejajar vertikal di tengah; bila card sempit (container query `@container/table`, bukan lebar layar, karena sidebar ikut memakan ruang) pencarian/filter turun ke bawah judul dan melebar penuh. Dipisah dari tabel dengan `border-b`. Filter = satu `DropdownMenu` berisi grup `DropdownMenuLabel` + `DropdownMenuCheckboxItem` (multi-pilih, tidak menutup saat dicentang), dipisah `DropdownMenuSeparator`, diakhiri "Reset filter"; tombol menampilkan badge jumlah filter aktif.
+3. **Tabel:** kolom pertama `#` = nomor urut berlanjut antar halaman (`(halaman − 1) × per_halaman + indeks + 1`, rata kanan, `text-muted-foreground`); kolom aksi `⋯` di paling kanan. Empty state berbeda untuk "belum ada data" dan "tidak ada hasil pencarian/filter" (dengan tombol reset). Skeleton saat memuat. Tabel bergeser horizontal di layar sempit tanpa melebarkan halaman.
+4. **Footer** (`border-t`): kiri "Menampilkan 11–20 dari 47 data" (atau "0 data"); kanan navigasi « ‹ [maks. 5 nomor, jendela bergeser] › » dengan aria-label & tooltip Bahasa Indonesia; tetap tampil (nonaktif) bila hanya satu halaman.
+
+**Jarak horizontal seragam:** satu nilai tepi (`EDGE_X`/`EDGE_LEFT`/`EDGE_RIGHT` = `px-6`, di `components/data-table/layout.ts`) dipakai header card, sel pertama & terakhir tabel (header kolom dan baris), dan footer. Garis kiri: judul tabel = kolom `#` = info halaman. Garis kanan: tombol Filter = kolom aksi = tombol ». Sel lain memakai padding normal komponen `Table`. Jangan memakai `CardHeader`/`CardContent` di dalam card tabel (padding ganda).
+
+**Konfigurasi per halaman:** `DataTableCard` hanya menerima `title`, `description?`, `table` (dari `useTableQuery`), `data` (paginate), `columns`, `rowKey`, `rowActions?`, `searchPlaceholder`, `filterGroups?`, `emptyState`. Halaman **tidak boleh** mengatur padding atau tata letak tabel sendiri.
+
+**Perilaku:**
+- Pencarian, filter, dan pagination diproses di **server** (`paginate()`), disimpan di query string (`?search=&{filter}[]=&page=`), dikirim lewat Inertia dengan `preserveState` + `preserveScroll`. Pencarian di-debounce ±300 ms; setiap perubahan pencarian/filter kembali ke halaman 1.
+- Jumlah baris per halaman dari `config('fleet.per_page')` (default 10).
+
+**Server (satu cara konsisten):**
+- FormRequest daftar menyediakan `tableQuery(): TableQuery` dengan **whitelist** nilai filter per kunci (`App\Support\TableQuery::fromRequest`). Nilai tak dikenal **diabaikan**, bukan error.
+- Model menyediakan scope `scopeForTable(Builder, TableQuery)` untuk pencarian & filter.
+- Controller memakai trait `PaginatesForTable::paginateForTable()` dan mengirim `API Resource` yang field-nya dibatasi (bukan model utuh), plus `query` (`TableQuery::toArray()`) dan opsi filter (`Enum::options()` atau dari config).
+- Test wajib per tabel: pencarian & filter mengembalikan data yang benar, parameter tidak valid diabaikan, dan nomor urut halaman 2 dimulai dari 11 (`meta.from`).
+
+**Grup filter acuan:** Data Mobil — Status (Tersedia, Dipinjam, Maintenance, Nonaktif); Data Karyawan — Divisi (dari config), Status (Aktif, Nonaktif); Peminjaman — Status (Dijadwalkan, Aktif, Terlambat, Belum Diambil); Riwayat — Status, Divisi, Keterlambatan + filter periode; Log Aktivitas — Jenis data, Petugas + filter periode.
+
 ---
 
 ## 9. Pengujian

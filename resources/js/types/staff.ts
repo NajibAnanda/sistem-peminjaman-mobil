@@ -1,5 +1,6 @@
 import type { StaffRole } from '@/types/auth';
 import type { Option, Paginated } from '@/types/pagination';
+import type { TableQueryState } from '@/types/table';
 
 /**
  * Sinkron dengan App\Http\Resources\StaffResource.
@@ -17,18 +18,11 @@ export type StaffMember = {
     is_self: boolean;
 };
 
-export type StaffStatusFilter = 'active' | 'inactive';
-
-export type StaffFilters = {
-    search: string | null;
-    role: StaffRole | null;
-    status: StaffStatusFilter | null;
-};
-
 export type StaffIndexProps = {
     staff: Paginated<StaffMember>;
-    filters: StaffFilters;
+    query: TableQueryState;
     roles: Option<StaffRole>[];
+    statuses: Option[];
 };
 
 /**

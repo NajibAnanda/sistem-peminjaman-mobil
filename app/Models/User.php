@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ActiveStatus;
 use App\Enums\StaffRole;
+use App\Support\TableQuery;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -57,22 +59,23 @@ final class User extends Authenticatable
     }
 
     /**
-     * Pencarian nama atau email untuk daftar Kelola Petugas.
+     * Pencarian dan filter tabel Kelola Petugas (pola tabel standar).
      *
      * @param  Builder<self>  $query
      */
-    public function scopeSearch(Builder $query, ?string $term): void
+    public function scopeForTable(Builder $query, TableQuery $table): void
     {
-        $term = trim((string) $term);
-
-        if ($term === '') {
-            return;
-        }
-
-        $query->where(function (Builder $query) use ($term): void {
-            $query->where('name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%");
-        });
+        $query
+            ->when($table->search, fn (Builder $query, string $term) => $query->where(
+                fn (Builder $query) => $query
+                    ->where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%"),
+            ))
+            ->when($table->filter('role'), fn (Builder $query, array $roles) => $query->whereIn('role', $roles))
+            ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereIn(
+                'is_active',
+                array_map(fn (string $status): bool => ActiveStatus::from($status)->isActive(), $statuses),
+            ));
     }
 
     public function isManager(): bool
