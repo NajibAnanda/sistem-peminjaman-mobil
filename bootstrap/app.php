@@ -45,8 +45,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // sebagai toast dan kembali ke halaman sebelumnya.
         $exceptions->dontReport(BusinessRuleException::class);
         $exceptions->render(function (BusinessRuleException $exception, Request $request) {
+            $field = $exception->field();
+
             if ($request->expectsJson()) {
-                return response()->json(['message' => $exception->getMessage()], 422);
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    'errors' => $field === null ? [] : [$field => [$exception->getMessage()]],
+                ], 422);
+            }
+
+            // Terkait satu field form (mis. bentrok jadwal pada pilihan mobil):
+            // tampil di bawah field agar form tetap terbuka dan isinya tidak hilang.
+            if ($field !== null) {
+                return back()->withErrors([$field => $exception->getMessage()])->withInput();
             }
 
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);

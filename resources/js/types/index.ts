@@ -1,4 +1,5 @@
 export type * from './auth';
+export type * from './booking';
 export type * from './car';
 export type * from './employee';
 export type * from './navigation';

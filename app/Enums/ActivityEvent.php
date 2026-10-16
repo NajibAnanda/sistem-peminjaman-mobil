@@ -17,10 +17,18 @@ enum ActivityEvent: string
     case PasswordChanged = 'password_changed';
     case OperationalStatusChanged = 'operational_status_changed';
     case PhotoUpdated = 'photo_updated';
+    case Cancelled = 'cancelled';
+    case PickedUp = 'picked_up';
+    case Extended = 'extended';
+    case Returned = 'returned';
 
     public function label(): string
     {
         return match ($this) {
+            self::Cancelled => 'Dibatalkan',
+            self::PickedUp => 'Serah terima ambil',
+            self::Extended => 'Diperpanjang',
+            self::Returned => 'Serah terima kembali',
             self::Created => 'Dibuat',
             self::Updated => 'Diubah',
             self::Deactivated => 'Dinonaktifkan',

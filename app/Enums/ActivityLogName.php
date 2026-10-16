@@ -12,6 +12,7 @@ enum ActivityLogName: string
     case Staff = 'staff';
     case Car = 'car';
     case Employee = 'employee';
+    case Booking = 'booking';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum ActivityLogName: string
             self::Staff => 'Akun Petugas',
             self::Car => 'Data Mobil',
             self::Employee => 'Data Karyawan',
+            self::Booking => 'Peminjaman',
         };
     }
 }

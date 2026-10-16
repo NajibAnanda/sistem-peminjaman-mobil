@@ -7,8 +7,7 @@ namespace App\Enums;
 use App\Enums\Concerns\HasOptions;
 
 /**
- * Status peminjaman yang disimpan (prd.md section 5.1). Aturan transisi
- * (canTransitionTo) ditambahkan bersama logika peminjaman di Fase 4.
+ * Status peminjaman yang disimpan (prd.md section 5.1).
  */
 enum BookingStatus: string
 {
@@ -28,6 +27,18 @@ enum BookingStatus: string
     public static function ongoing(): array
     {
         return [self::Scheduled, self::Active];
+    }
+
+    /**
+     * Satu-satunya transisi yang sah (AGENTS.md 5.1); selain ini ditolak.
+     */
+    public function canTransitionTo(self $next): bool
+    {
+        return match ($this) {
+            self::Scheduled => in_array($next, [self::Active, self::Cancelled], true),
+            self::Active => $next === self::Completed,
+            self::Completed, self::Cancelled => false,
+        };
     }
 
     public function label(): string

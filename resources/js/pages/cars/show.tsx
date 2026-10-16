@@ -1,4 +1,4 @@
-import { Head, setLayoutProps } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { CalendarClock, Pencil, Power, PowerOff, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import { carActivationConfirmation } from '@/components/cars/car-confirmations';
@@ -35,13 +35,6 @@ export default function CarShow({
     const [formOpen, setFormOpen] = useState(false);
     const [formKey, setFormKey] = useState(0);
     const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
-
-    setLayoutProps({
-        breadcrumbs: [
-            { title: 'Data Mobil', href: index() },
-            { title: car.plate_number, href: show(car.id) },
-        ],
-    });
 
     const openForm = () => {
         setFormKey((key) => key + 1);
@@ -272,3 +265,12 @@ function statusConfirmation(
         data: { operational_status: 'maintenance' },
     };
 }
+
+// Breadcrumb dihitung dari props saat render (bukan setLayoutProps di dalam
+// komponen) agar hasil SSR sama dengan klien dan tidak terjadi hydration mismatch.
+CarShow.layout = ({ car }: CarShowProps) => ({
+    breadcrumbs: [
+        { title: 'Data Mobil', href: index() },
+        { title: car.plate_number, href: show(car.id) },
+    ],
+});

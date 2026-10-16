@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\BookingCancellationController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingExtensionController;
+use App\Http\Controllers\BookingPhotoController;
+use App\Http\Controllers\BookingPickupController;
+use App\Http\Controllers\BookingReturnController;
 use App\Http\Controllers\CarActivationController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\CarDeactivationController;
@@ -29,7 +35,18 @@ Route::middleware('auth')->group(function () {
     // Halaman fitur yang belum dibangun. Masing-masing diganti controller
     // sungguhan pada fasenya (lihat PROMPTS.md).
     Route::inertia('schedule', 'coming-soon', ['title' => 'Jadwal Armada'])->name('schedule.index');
-    Route::inertia('bookings', 'coming-soon', ['title' => 'Peminjaman'])->name('bookings.index');
+    // Peminjaman (Pengelola & Admin; otorisasi lewat BookingPolicy).
+    Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::get('bookings/create', [BookingController::class, 'create'])->name('bookings.create');
+    Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
+    Route::get('bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
+    Route::get('bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
+    Route::put('bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
+    Route::post('bookings/{booking}/pickup', [BookingPickupController::class, 'store'])->name('bookings.pickup');
+    Route::post('bookings/{booking}/return', [BookingReturnController::class, 'store'])->name('bookings.return');
+    Route::post('bookings/{booking}/extend', [BookingExtensionController::class, 'store'])->name('bookings.extend');
+    Route::post('bookings/{booking}/cancel', [BookingCancellationController::class, 'store'])->name('bookings.cancel');
+    Route::get('bookings/{booking}/photos/{stage}', [BookingPhotoController::class, 'show'])->name('bookings.photos.show');
     Route::inertia('history', 'coming-soon', ['title' => 'Riwayat'])->name('history.index');
     // Data Mobil (Pengelola & Admin; otorisasi lewat CarPolicy).
     Route::get('cars', [CarController::class, 'index'])->name('cars.index');

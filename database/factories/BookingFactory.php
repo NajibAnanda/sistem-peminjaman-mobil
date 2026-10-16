@@ -9,18 +9,18 @@ use App\Models\Booking;
 use App\Models\Car;
 use App\Models\Employee;
 use App\Models\User;
+use App\Support\BookingCodeGenerator;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\DB;
 
 /**
- * Kode dibuat urut sederhana; pembuat kode resmi (BookingCodeGenerator)
- * ditambahkan di Fase 4.
+ * Kode dibuat lewat BookingCodeGenerator agar tidak pernah bentrok dengan
+ * booking yang dijadwalkan lewat aplikasi di test yang sama.
  *
  * @extends Factory<Booking>
  */
 final class BookingFactory extends Factory
 {
-    private static int $sequence = 0;
-
     /**
      * @return array<string, mixed>
      */
@@ -29,7 +29,7 @@ final class BookingFactory extends Factory
         $start = now()->addDays(fake()->numberBetween(1, 14))->setTime(fake()->numberBetween(7, 15), 0);
 
         return [
-            'code' => sprintf('PMJ-%s-%04d', $start->format('Ym'), ++self::$sequence),
+            'code' => fn (): string => DB::transaction(fn (): string => app(BookingCodeGenerator::class)->next()),
             'employee_id' => Employee::factory(),
             'car_id' => Car::factory(),
             'purpose' => fake()->randomElement([

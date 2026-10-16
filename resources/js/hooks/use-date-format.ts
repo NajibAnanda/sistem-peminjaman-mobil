@@ -1,5 +1,10 @@
 import { usePage } from '@inertiajs/react';
-import { formatDate, formatDateTime, formatTime } from '@/lib/datetime';
+import {
+    formatDate,
+    formatDateTime,
+    formatTime,
+    toDateTimeLocal,
+} from '@/lib/datetime';
 
 type DateInput = string | number | Date;
 
@@ -7,6 +12,7 @@ export type UseDateFormatReturn = {
     formatDate: (value: DateInput) => string;
     formatTime: (value: DateInput) => string;
     formatDateTime: (value: DateInput) => string;
+    toDateTimeLocal: (value: DateInput) => string;
 };
 
 export function useDateFormat(): UseDateFormatReturn {
@@ -16,5 +22,6 @@ export function useDateFormat(): UseDateFormatReturn {
         formatDate: (value) => formatDate(value, timezone),
         formatTime: (value) => formatTime(value, timezone),
         formatDateTime: (value) => formatDateTime(value, timezone),
+        toDateTimeLocal: (value) => toDateTimeLocal(value, timezone),
     };
 }
