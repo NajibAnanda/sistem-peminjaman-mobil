@@ -1,9 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
-import InputError from '@/components/input-error';
+import { FormField } from '@/components/form/form-field';
 import PasswordInput from '@/components/password-input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingButton } from '@/components/loading-button';
 import { store } from '@/routes/password/confirm';
 
 export default function ConfirmPassword() {
@@ -14,28 +12,30 @@ export default function ConfirmPassword() {
             <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (
                     <div className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                        <FormField
+                            id="password"
+                            label="Password"
+                            required
+                            error={errors.password}
+                        >
                             <PasswordInput
+                                required
                                 id="password"
                                 name="password"
                                 placeholder="Password"
                                 autoComplete="current-password"
                                 autoFocus
                             />
-
-                            <InputError message={errors.password} />
-                        </div>
+                        </FormField>
 
                         <div className="flex items-center">
-                            <Button
+                            <LoadingButton
                                 className="w-full"
-                                disabled={processing}
+                                loading={processing}
                                 data-test="confirm-password-button"
                             >
-                                {processing && <Spinner />}
                                 Konfirmasi password
-                            </Button>
+                            </LoadingButton>
                         </div>
                     </div>
                 )}
@@ -47,5 +47,5 @@ export default function ConfirmPassword() {
 ConfirmPassword.layout = {
     title: 'Konfirmasi password',
     description:
-        'Halaman ini berisi pengaturan keamanan. Masukkan password Anda untuk melanjutkan.',
+        'Masukkan password Anda untuk melanjutkan ke pengaturan keamanan akun.',
 };

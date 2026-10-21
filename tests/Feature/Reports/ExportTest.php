@@ -19,6 +19,9 @@ const EXPORT_HEADINGS = [
     'Jumlah Perpanjangan', 'Durasi Keterlambatan', 'Petugas Pencatat',
 ];
 
+// Ekspor wajib berperiode (config fleet.export.max_range_days).
+const EXPORT_PERIOD = ['from' => '2026-09-01', 'to' => '2026-10-31'];
+
 beforeEach(function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-20 12:00:00'));
     $this->user = User::factory()->admin()->create(['name' => 'Sari Petugas']);
@@ -80,9 +83,9 @@ function csvRows(TestResponse $response, string $delimiter = ','): array
 
 test('CSV berisi kolom laporan lengkap dengan tanggal dan teks Indonesia', function () {
     $response = $this->actingAs($this->user)
-        ->get(route('history.export', ['format' => 'csv', 'status' => ['completed']]))
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv', 'status' => ['completed']]))
         ->assertOk()
-        ->assertDownload('riwayat-peminjaman_semua-periode_diekspor-2026-10-20-1200.csv');
+        ->assertDownload('riwayat-peminjaman_2026-09-01_sd_2026-10-31_diekspor-2026-10-20-1200.csv');
 
     expect(csvRows($response))->toBe([
         EXPORT_HEADINGS,
@@ -98,9 +101,9 @@ test('CSV berisi kolom laporan lengkap dengan tanggal dan teks Indonesia', funct
 test('ekspor mengikuti filter dan periode yang sama dengan tabel', function () {
     $this->actingAs($this->user);
 
-    $all = csvRows($this->get(route('history.export', ['format' => 'csv'])));
+    $all = csvRows($this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv'])));
     $scheduledOnly = csvRows($this->get(route('history.export', ['format' => 'csv', 'from' => '2026-10-01', 'to' => '2026-10-31'])));
-    $none = csvRows($this->get(route('history.export', ['format' => 'csv', 'search' => 'tidak-ada'])));
+    $none = csvRows($this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv', 'search' => 'tidak-ada'])));
 
     // Urutan sama dengan tabel Riwayat: terbaru di atas.
     expect(array_column(array_slice($all, 1), 0))->toBe(['PMJ-202610-9001', 'PMJ-202609-9001'])
@@ -119,7 +122,7 @@ test('ekspor mengikuti filter dan periode yang sama dengan tabel', function () {
 test('pemisah CSV mengikuti config', function () {
     config(['fleet.export.csv_delimiter' => ';']);
 
-    $rows = csvRows($this->actingAs($this->user)->get(route('history.export', ['format' => 'csv', 'status' => ['scheduled']])), ';');
+    $rows = csvRows($this->actingAs($this->user)->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv', 'status' => ['scheduled']])), ';');
 
     expect($rows[0])->toBe(EXPORT_HEADINGS)
         ->and($rows[1][0])->toBe('PMJ-202610-9001');
@@ -127,9 +130,9 @@ test('pemisah CSV mengikuti config', function () {
 
 test('file Excel berisi judul tebal dan NIP tersimpan sebagai teks', function () {
     $response = $this->actingAs($this->user)
-        ->get(route('history.export', ['format' => 'xlsx', 'status' => ['completed']]))
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'xlsx', 'status' => ['completed']]))
         ->assertOk()
-        ->assertDownload('riwayat-peminjaman_semua-periode_diekspor-2026-10-20-1200.xlsx');
+        ->assertDownload('riwayat-peminjaman_2026-09-01_sd_2026-10-31_diekspor-2026-10-20-1200.xlsx');
 
     $sheet = IOFactory::load(exportedFile($response))->getActiveSheet();
 
@@ -140,16 +143,16 @@ test('file Excel berisi judul tebal dan NIP tersimpan sebagai teks', function ()
         ->and($sheet->getCell('C2')->getDataType())->toBe(DataType::TYPE_STRING)
         ->and($sheet->getCell('H2')->getValue())->toBe('10 Sep 2026, 08.00')
         ->and($sheet->getCell('M2')->getValue())->toBe(2)
-        ->and(IOFactory::load(exportedFile($this->get(route('history.export', ['format' => 'xlsx', 'status' => ['scheduled']]))))
+        ->and(IOFactory::load(exportedFile($this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'xlsx', 'status' => ['scheduled']]))))
             ->getActiveSheet()->getCell('M2')->getValue())->toBe(0)
         ->and($sheet->getCell('N2')->getValue())->toBe('1 hari 3 jam');
 });
 
 test('ekspor besar dibaca bertahap tanpa baris hilang atau ganda', function () {
     config(['fleet.export.chunk_size' => 3]);
-    Booking::factory()->count(7)->historical()->create();
+    Booking::factory()->count(7)->historical(now()->subDays(10))->create();
 
-    $rows = csvRows($this->actingAs($this->user)->get(route('history.export', ['format' => 'csv'])));
+    $rows = csvRows($this->actingAs($this->user)->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv'])));
     $codes = array_column(array_slice($rows, 1), 0);
 
     expect($codes)->toHaveCount(9)
@@ -157,7 +160,7 @@ test('ekspor besar dibaca bertahap tanpa baris hilang atau ganda', function () {
 });
 
 test('ekspor tercatat di log aktivitas', function () {
-    $this->actingAs($this->user)->get(route('history.export', ['format' => 'xlsx', 'status' => ['completed']]));
+    $this->actingAs($this->user)->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'xlsx', 'status' => ['completed']]));
 
     $activity = lastActivity();
 
@@ -171,20 +174,52 @@ test('ekspor tercatat di log aktivitas', function () {
 
 test('format tidak dikenal ditolak', function (?string $format) {
     $this->actingAs($this->user)
-        ->get(route('history.export', array_filter(['format' => $format])))
+        ->get(route('history.export', [...EXPORT_PERIOD, ...array_filter(['format' => $format])]))
         ->assertSessionHasErrors('format');
 })->with(['pdf', null]);
 
 test('tamu dan akun nonaktif tidak dapat mengekspor', function () {
-    $this->get(route('history.export', ['format' => 'csv']))->assertRedirect(route('login'));
+    $this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv']))->assertRedirect(route('login'));
 
     $this->actingAs(User::factory()->inactive()->create())
-        ->get(route('history.export', ['format' => 'csv']))
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv']))
         ->assertRedirect(route('login'));
 });
 
 test('Pengelola juga dapat mengekspor', function () {
     $this->actingAs(User::factory()->manager()->create())
-        ->get(route('history.export', ['format' => 'csv']))
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv']))
         ->assertOk();
+});
+
+test('ekspor tanpa periode ditolak', function () {
+    $this->actingAs($this->user)
+        ->get(route('history.export', ['format' => 'csv']))
+        ->assertSessionHasErrors(['period' => 'Pilih periode terlebih dahulu (maksimal 366 hari) sebelum mengekspor.']);
+
+    $this->get(route('history.export', ['format' => 'csv', 'from' => '2026-10-01']))
+        ->assertSessionHasErrors('period');
+});
+
+test('rentang periode ekspor dibatasi config', function () {
+    $this->actingAs($this->user);
+
+    // 1 Nov 2025 – 1 Nov 2026 = 366 hari (inklusif): masih boleh.
+    $this->get(route('history.export', ['format' => 'csv', 'from' => '2025-11-01', 'to' => '2026-11-01']))
+        ->assertOk();
+
+    $this->get(route('history.export', ['format' => 'csv', 'from' => '2025-10-31', 'to' => '2026-11-01']))
+        ->assertSessionHasErrors(['period' => 'Rentang periode ekspor maksimal 366 hari, sedangkan periode yang dipilih 367 hari. Persempit periodenya.']);
+
+    config(['fleet.export.max_range_days' => 31]);
+
+    $this->get(route('history.export', ['format' => 'csv', 'from' => '2026-09-01', 'to' => '2026-10-31']))
+        ->assertSessionHasErrors('period');
+});
+
+test('permintaan ekspor JSON yang ditolak mengembalikan pesan untuk ditampilkan', function () {
+    $this->actingAs($this->user)
+        ->getJson(route('history.export', ['format' => 'csv']))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['period']);
 });

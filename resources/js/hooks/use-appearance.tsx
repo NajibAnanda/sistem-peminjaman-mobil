@@ -68,7 +68,15 @@ const mediaQuery = (): MediaQueryList | null => {
     return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
-const handleSystemThemeChange = (): void => applyTheme(currentAppearance);
+// Saat pengaturan "Ikuti Sistem", komponen yang menampilkan mode aktif (mis.
+// ikon Sun/Moon di top bar) ikut diperbarui ketika tema sistem berubah.
+const handleSystemThemeChange = (): void => {
+    applyTheme(currentAppearance);
+    notify();
+};
+
+const resolveAppearance = (): ResolvedAppearance =>
+    isDarkMode(currentAppearance) ? 'dark' : 'light';
 
 export function initializeTheme(): void {
     if (typeof window === 'undefined') {
@@ -94,9 +102,13 @@ export function useAppearance(): UseAppearanceReturn {
         () => 'system',
     );
 
-    const resolvedAppearance: ResolvedAppearance = isDarkMode(appearance)
-        ? 'dark'
-        : 'light';
+    // Snapshot server selalu 'light' agar hydration cocok dengan HTML hasil
+    // SSR; nilai sebenarnya dipakai segera setelah hydration.
+    const resolvedAppearance: ResolvedAppearance = useSyncExternalStore(
+        subscribe,
+        resolveAppearance,
+        () => 'light',
+    );
 
     const updateAppearance = (mode: Appearance): void => {
         currentAppearance = mode;

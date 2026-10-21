@@ -25,12 +25,12 @@ final class CarException extends BusinessRuleException
 
     public static function alreadyInactive(): self
     {
-        return new self('Mobil ini sudah nonaktif.');
+        return new self('Mobil ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 
     public static function alreadyActive(): self
     {
-        return new self('Mobil ini sudah aktif.');
+        return new self('Mobil ini sudah aktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 
     public static function inactiveCannotChangeStatus(): self

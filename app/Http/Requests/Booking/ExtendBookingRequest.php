@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Requests\Booking;
 
 use App\Models\Booking;
+use App\Support\BookingDuration;
 use App\Support\DateFormat;
+use App\Support\DateInput;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
+use Throwable;
 
 final class ExtendBookingRequest extends FormRequest
 {
@@ -25,7 +29,33 @@ final class ExtendBookingRequest extends FormRequest
         return [
             // AGENTS.md 5.14: wajib lebih lambat dari rencana kembali saat ini.
             'new_planned_return_at' => ['required', 'date', 'after:'.$this->booking()->planned_return_at->format('Y-m-d H:i:s')],
-            'reason' => ['required', 'string', 'max:500'],
+            'reason' => ['required', 'string', 'min:'.config('fleet.booking.reason_min_length'), 'max:500'],
+        ];
+    }
+
+    /**
+     * Durasi total (waktu mulai → rencana kembali baru) tetap dalam batas.
+     *
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->has('new_planned_return_at')) {
+                    return;
+                }
+
+                try {
+                    $message = BookingDuration::violation($this->booking()->start_at, $this->newPlannedReturn());
+                } catch (Throwable) {
+                    return;
+                }
+
+                if ($message !== null) {
+                    $validator->errors()->add('new_planned_return_at', $message);
+                }
+            },
         ];
     }
 
@@ -47,7 +77,7 @@ final class ExtendBookingRequest extends FormRequest
 
     public function newPlannedReturn(): CarbonImmutable
     {
-        return CarbonImmutable::parse($this->string('new_planned_return_at')->value(), (string) config('app.timezone'))->startOfMinute();
+        return DateInput::parse($this->string('new_planned_return_at')->value());
     }
 
     public function reason(): string

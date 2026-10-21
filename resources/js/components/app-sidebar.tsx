@@ -80,8 +80,16 @@ export function AppSidebar() {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                        <SidebarMenuButton
+                            size="lg"
+                            asChild
+                            className="justify-center"
+                        >
+                            <Link
+                                href={dashboard()}
+                                prefetch
+                                aria-label="Dashboard"
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

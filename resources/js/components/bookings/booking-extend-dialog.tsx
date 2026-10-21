@@ -1,20 +1,13 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { FormDialog } from '@/components/form-dialog';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { DateTimePicker } from '@/components/date-picker/date-time-picker';
+import { FormField } from '@/components/form/form-field';
 import { Textarea } from '@/components/ui/textarea';
 import { useDateFormat } from '@/hooks/use-date-format';
+import { useLongBookingConfirm } from '@/hooks/use-long-booking-confirm';
+import { toZonedIso } from '@/lib/datetime';
 import { extend } from '@/routes/bookings';
 import type { Booking } from '@/types';
 
@@ -34,6 +27,7 @@ type ExtendForm = {
  * saat ini dan disertai alasan.
  */
 export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
+    const { timezone, bookingRules } = usePage().props;
     const { formatDateTime, toDateTimeLocal } = useDateFormat();
     const current = toDateTimeLocal(booking.planned_return_at);
     const form = useForm<ExtendForm>({
@@ -41,93 +35,99 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
         reason: '',
     });
 
-    const submit = (event: FormEvent) => {
-        event.preventDefault();
+    const longBooking = useLongBookingConfirm();
 
+    const save = () => {
+        form.transform((data) => ({
+            ...data,
+            new_planned_return_at: toZonedIso(
+                data.new_planned_return_at,
+                timezone,
+            ),
+        }));
         form.submit(extend(booking.id), {
             preserveScroll: true,
             onSuccess: () => onOpenChange(false),
         });
     };
 
+    // Durasi total dihitung dari waktu mulai sampai rencana kembali baru.
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        longBooking.confirmIfLong(
+            toDateTimeLocal(booking.start_at),
+            form.data.new_planned_return_at,
+            save,
+        );
+    };
+
     return (
-        <Dialog
-            open={open}
-            onOpenChange={(next) => !form.processing && onOpenChange(next)}
-        >
-            <DialogContent
-                className="sm:max-w-md"
-                onInteractOutside={(event) => event.preventDefault()}
+        <>
+            <FormDialog
+                open={open}
+                onOpenChange={onOpenChange}
+                title="Perpanjang Peminjaman"
+                description={
+                    <>
+                        Rencana kembali {booking.code} (
+                        {booking.car.plate_number}) saat ini{' '}
+                        {formatDateTime(booking.planned_return_at)}; pilih waktu
+                        baru beserta alasannya.
+                    </>
+                }
+                onSubmit={submit}
+                submitLabel="Simpan Perpanjangan"
+                processing={form.processing}
+                submitTestId="extend-submit"
             >
-                <form onSubmit={submit} className="grid gap-6">
-                    <DialogHeader>
-                        <DialogTitle>Perpanjang Peminjaman</DialogTitle>
-                        <DialogDescription>
-                            {booking.code} · {booking.car.plate_number}. Rencana
-                            kembali saat ini{' '}
-                            {formatDateTime(booking.planned_return_at)}.
-                        </DialogDescription>
-                    </DialogHeader>
+                <div className="grid gap-5">
+                    <FormField
+                        id="extend-return-at"
+                        label="Rencana kembali baru"
+                        required
+                        error={form.errors.new_planned_return_at}
+                        hint={
+                            bookingRules.maxDurationDays === null
+                                ? 'Harus lebih lambat dari rencana kembali saat ini.'
+                                : `Harus lebih lambat dari rencana saat ini; durasi total maksimal ${bookingRules.maxDurationDays} hari.`
+                        }
+                    >
+                        <DateTimePicker
+                            id="extend-return-at"
+                            value={form.data.new_planned_return_at}
+                            min={current}
+                            onChange={(value) =>
+                                form.setData('new_planned_return_at', value)
+                            }
+                            invalid={!!form.errors.new_planned_return_at}
+                            aria-describedby="extend-return-at-hint"
+                        />
+                    </FormField>
 
-                    <div className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="extend-return-at">
-                                Rencana kembali baru
-                            </Label>
-                            <Input
-                                id="extend-return-at"
-                                type="datetime-local"
-                                value={form.data.new_planned_return_at}
-                                min={current}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'new_planned_return_at',
-                                        e.target.value,
-                                    )
-                                }
-                                required
-                            />
-                            <InputError
-                                message={form.errors.new_planned_return_at}
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="extend-reason">Alasan</Label>
-                            <Textarea
-                                id="extend-reason"
-                                value={form.data.reason}
-                                onChange={(e) =>
-                                    form.setData('reason', e.target.value)
-                                }
-                                required
-                                maxLength={500}
-                                placeholder="Misalnya: rapat dengan klien diperpanjang"
-                            />
-                            <InputError message={form.errors.reason} />
-                        </div>
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            disabled={form.processing}
-                        >
-                            Batal
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={form.processing}
-                            data-test="extend-submit"
-                        >
-                            {form.processing && <Spinner />}
-                            Simpan Perpanjangan
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                    <FormField
+                        id="extend-reason"
+                        label="Alasan"
+                        required
+                        error={form.errors.reason}
+                        hint={`Minimal ${bookingRules.reasonMinLength} karakter.`}
+                    >
+                        <Textarea
+                            id="extend-reason"
+                            value={form.data.reason}
+                            onChange={(e) =>
+                                form.setData('reason', e.target.value)
+                            }
+                            required
+                            minLength={bookingRules.reasonMinLength}
+                            maxLength={500}
+                            placeholder="Misalnya: rapat dengan klien diperpanjang"
+                            aria-invalid={!!form.errors.reason || undefined}
+                            aria-describedby="extend-reason-hint"
+                        />
+                    </FormField>
+                </div>
+            </FormDialog>
+            <ConfirmDialog {...longBooking.dialog} />
+        </>
     );
 }

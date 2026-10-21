@@ -89,7 +89,6 @@ export type EmployeeOption = {
     name: string;
     employee_number: string;
     division: string;
-    is_active: boolean;
 };
 
 /**

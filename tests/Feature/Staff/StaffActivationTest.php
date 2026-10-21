@@ -71,7 +71,7 @@ test('menonaktifkan akun yang sudah nonaktif ditolak', function () {
 
     $this->actingAs(User::factory()->manager()->create())
         ->post(route('staff.deactivate', $staff))
-        ->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Akun ini sudah nonaktif.']);
+        ->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Akun ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.']);
 });
 
 test('Pengelola dapat mengaktifkan kembali akun', function () {
@@ -87,7 +87,7 @@ test('Pengelola dapat mengaktifkan kembali akun', function () {
 test('mengaktifkan akun yang sudah aktif ditolak', function () {
     $this->actingAs(User::factory()->manager()->create())
         ->post(route('staff.activate', User::factory()->create()))
-        ->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Akun ini sudah aktif.']);
+        ->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Akun ini sudah aktif. Muat ulang halaman untuk melihat data terbaru.']);
 });
 
 test('Admin tidak dapat menonaktifkan atau mengaktifkan akun', function (string $routeName, bool $active) {

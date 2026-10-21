@@ -1,12 +1,12 @@
-import { Download, FileSpreadsheet, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { LoadingButton } from '@/components/loading-button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useFileDownload } from '@/hooks/use-file-download';
 import { exportMethod } from '@/routes/history';
 import type { Option, TableQueryState } from '@/types';
 
@@ -17,10 +17,14 @@ type Props = {
 };
 
 /**
- * Ekspor Riwayat (FR-26). Parameter diambil dari query server, bukan isian
- * yang belum diterapkan, agar isi file selalu sama dengan tabel.
+ * Ekspor Riwayat (FR-26), di header card tabel di kanan tombol Filter.
+ * Parameter diambil dari query server, bukan isian yang belum diterapkan,
+ * agar isi file selalu sama dengan tabel. Tombol menampilkan loading sampai
+ * file selesai dibuat.
  */
 export function ExportMenu({ query, formats }: Props) {
+    const { downloading, download } = useFileDownload();
+
     const href = (format: string) =>
         exportMethod.url({
             query: {
@@ -35,29 +39,36 @@ export function ExportMenu({ query, formats }: Props) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" data-test="export-button">
+                <LoadingButton
+                    variant="outline"
+                    loading={downloading !== null}
+                    data-test="export-button"
+                >
                     <Download aria-hidden="true" />
                     Ekspor
-                </Button>
+                    <ChevronDown aria-hidden="true" />
+                </LoadingButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-                <DropdownMenuLabel className="font-normal text-muted-foreground">
-                    Sesuai pencarian, filter, dan periode yang tampil
-                </DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56">
                 {formats.map((format) => (
-                    <DropdownMenuItem key={format.value} asChild>
-                        {/* Unduhan biasa (bukan kunjungan Inertia). */}
-                        <a
-                            href={href(format.value)}
-                            data-test={`export-${format.value}`}
-                        >
-                            {format.value === 'xlsx' ? (
-                                <FileSpreadsheet aria-hidden="true" />
-                            ) : (
-                                <FileText aria-hidden="true" />
-                            )}
-                            {format.label}
-                        </a>
+                    <DropdownMenuItem
+                        key={format.value}
+                        onSelect={() =>
+                            void download(
+                                format.value,
+                                href(format.value),
+                                `riwayat-peminjaman.${format.value}`,
+                            )
+                        }
+                        className="whitespace-nowrap"
+                        data-test={`export-${format.value}`}
+                    >
+                        {format.value === 'xlsx' ? (
+                            <FileSpreadsheet aria-hidden="true" />
+                        ) : (
+                            <FileText aria-hidden="true" />
+                        )}
+                        {format.label}
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>

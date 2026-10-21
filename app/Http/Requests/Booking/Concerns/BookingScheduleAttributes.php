@@ -6,10 +6,14 @@ namespace App\Http\Requests\Booking\Concerns;
 
 use App\Models\Car;
 use App\Models\Employee;
+use App\Support\BookingDuration;
 use App\Support\DateFormat;
+use App\Support\DateInput;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Exists;
+use Illuminate\Validation\Validator;
+use Throwable;
 
 trait BookingScheduleAttributes
 {
@@ -31,7 +35,33 @@ trait BookingScheduleAttributes
             'car_id' => ['required', 'integer', Rule::exists(Car::class, 'id')],
             'start_at' => $startRules,
             'planned_return_at' => ['required', 'date', 'after:start_at'],
-            'purpose' => ['required', 'string', 'max:255'],
+            'purpose' => ['required', 'string', 'min:'.config('fleet.booking.purpose_min_length'), 'max:255'],
+        ];
+    }
+
+    /**
+     * Durasi min./maks. (config/fleet.php) dicek setelah format tanggal lolos.
+     *
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->hasAny(['start_at', 'planned_return_at'])) {
+                    return;
+                }
+
+                try {
+                    $message = BookingDuration::violation($this->dateTimeInput('start_at'), $this->dateTimeInput('planned_return_at'));
+                } catch (Throwable) {
+                    return;
+                }
+
+                if ($message !== null) {
+                    $validator->errors()->add('planned_return_at', $message);
+                }
+            },
         ];
     }
 
@@ -67,12 +97,8 @@ trait BookingScheduleAttributes
         return CarbonImmutable::now()->subMinutes((int) config('fleet.booking.start_tolerance_minutes'));
     }
 
-    /**
-     * Input datetime-local (tanpa zona waktu) dibaca dalam zona waktu aplikasi,
-     * dibulatkan ke menit.
-     */
     private function dateTimeInput(string $key): CarbonImmutable
     {
-        return CarbonImmutable::parse($this->string($key)->value(), (string) config('app.timezone'))->startOfMinute();
+        return DateInput::parse($this->string($key)->value());
     }
 }

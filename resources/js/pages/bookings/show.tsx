@@ -205,8 +205,9 @@ export default function BookingShow({
                             <CardHeader>
                                 <CardTitle>Foto Kondisi Mobil</CardTitle>
                                 <CardDescription>
-                                    Foto sebelum dan sesudah peminjaman. Waktu
-                                    foto dicatat oleh server.
+                                    Foto kondisi mobil saat diambil dan
+                                    dikembalikan, dengan waktu yang dicatat
+                                    otomatis oleh sistem.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>

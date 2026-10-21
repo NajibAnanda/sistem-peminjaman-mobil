@@ -14,6 +14,7 @@ use App\Enums\PhotoStage;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\Car;
+use App\Models\Employee;
 use App\Models\User;
 use App\Support\ImageProcessor;
 use Illuminate\Http\UploadedFile;
@@ -40,6 +41,16 @@ final class PickUpBooking
                 }
 
                 $car = Car::query()->lockForUpdate()->findOrFail($booking->car_id);
+                $employee = Employee::query()->lockForUpdate()->findOrFail($booking->employee_id);
+
+                // Cek ulang saat serah terima: data master bisa berubah sejak dijadwalkan.
+                if (! $employee->is_active) {
+                    throw BookingException::employeeInactiveAtPickup($employee->name);
+                }
+
+                if (! $car->is_active) {
+                    throw BookingException::carInactiveAtPickup($car->plate_number);
+                }
 
                 if ($car->operational_status === CarOperationalStatus::Maintenance) {
                     throw BookingException::carUnderMaintenance($car->plate_number);

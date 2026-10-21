@@ -5,5 +5,13 @@ export type TableQueryState = {
     search: string | null;
     filters: Record<string, string[]>;
     /** Hanya ada pada tabel yang memakai filter periode (Y-m-d). */
-    period?: { from: string | null; to: string | null };
+    period?: {
+        from: string | null;
+        to: string | null;
+        /**
+         * Ada bila periode wajib (Riwayat): periode bawaan saat URL tidak
+         * membawa periode, yaitu bulan berjalan.
+         */
+        default?: { from: string; to: string };
+    };
 };

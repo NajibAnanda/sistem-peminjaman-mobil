@@ -12,6 +12,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 /**
  * @return list<string>
  */
+// Periode yang mencakup seluruh data uji (September–Oktober 2026).
+const HISTORY_ALL = ['from' => '2026-09-01', 'to' => '2026-10-31'];
+
 function historyCodes(Assert $page): array
 {
     return collect($page->toArray()['props']['bookings']['data'])->pluck('code')->sort()->values()->all();
@@ -57,7 +60,7 @@ beforeEach(function () {
 
 test('riwayat berisi semua peminjaman, terbaru di atas, dengan keterlambatan dan jumlah perpanjangan', function () {
     $this->actingAs($this->user)
-        ->get(route('history.index'))
+        ->get(route('history.index', HISTORY_ALL))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('history/index')
@@ -69,7 +72,11 @@ test('riwayat berisi semua peminjaman, terbaru di atas, dengan keterlambatan dan
             ->where('bookings.data.4.display_status', 'completed')
             ->where('bookings.data.1.code', 'PMJ-202610-9002')
             ->where('bookings.data.1.lateness_minutes', 180)
-            ->where('query.period', ['from' => null, 'to' => null])
+            ->where('query.period', [
+                'from' => '2026-09-01',
+                'to' => '2026-10-31',
+                'default' => ['from' => '2026-10-01', 'to' => '2026-10-31'],
+            ])
             ->has('filterOptions.status', 6)
             ->where('filterOptions.car', [
                 ['value' => (string) $this->carA->id, 'label' => 'B 1111 AAA'],
@@ -77,15 +84,15 @@ test('riwayat berisi semua peminjaman, terbaru di atas, dengan keterlambatan dan
             ])
             ->where('filterOptions.employee.0', ['value' => (string) $this->budi->id, 'label' => 'Budi Santoso (KRY002)'])
             ->where('exportFormats', [
-                ['value' => 'xlsx', 'label' => 'Excel (.xlsx)'],
-                ['value' => 'csv', 'label' => 'CSV'],
+                ['value' => 'xlsx', 'label' => 'Microsoft Excel (.xlsx)'],
+                ['value' => 'csv', 'label' => 'CSV (.csv)'],
             ]),
         );
 });
 
 test('pencarian dan filter riwayat mengembalikan data yang benar', function (Closure $query, array $expected) {
     $this->actingAs($this->user)
-        ->get(route('history.index', $query->call($this)))
+        ->get(route('history.index', [...HISTORY_ALL, ...$query->call($this)]))
         ->assertInertia(fn (Assert $page) => expect(historyCodes($page))->toBe($expected));
 })->with([
     'cari kode' => [fn () => ['search' => '202609-9002'], ['PMJ-202609-9002']],
@@ -119,14 +126,44 @@ test('parameter tidak dikenal diabaikan', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->has('bookings.data', 5)
             ->where('query.filters', ['status' => [], 'car' => [], 'employee' => [], 'division' => [], 'lateness' => []])
-            ->where('query.period', ['from' => null, 'to' => null]));
+            ->where('query.period', [
+                'from' => null,
+                'to' => null,
+                'default' => ['from' => '2026-10-01', 'to' => '2026-10-31'],
+            ]));
+});
+
+test('riwayat dibuka dengan periode bulan berjalan bila periode belum dipilih', function () {
+    $this->actingAs($this->user)
+        ->get(route('history.index'))
+        ->assertInertia(function (Assert $page) {
+            expect(historyCodes($page))->toBe(['PMJ-202610-9001', 'PMJ-202610-9002', 'PMJ-202610-9003']);
+
+            $page->where('query.period', [
+                'from' => '2026-10-01',
+                'to' => '2026-10-31',
+                'default' => ['from' => '2026-10-01', 'to' => '2026-10-31'],
+            ]);
+        });
+
+    // Bulan berikutnya, periode bawaan ikut bergeser.
+    $this->travelTo(CarbonImmutable::parse('2026-11-03 08:00:00'));
+
+    $this->get(route('history.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('query.period.from', '2026-11-01')->has('bookings.data', 0));
+});
+
+test('ekspor tidak memakai periode bawaan: tanpa periode tetap ditolak', function () {
+    $this->actingAs($this->user)
+        ->get(route('history.export', ['format' => 'csv']))
+        ->assertSessionHasErrors('period');
 });
 
 test('nomor urut halaman 2 dimulai dari 11', function () {
     Booking::factory()->count(10)->scheduled()->create();
 
     $this->actingAs($this->user)
-        ->get(route('history.index', ['page' => 2]))
+        ->get(route('history.index', ['page' => 2, 'from' => '2026-01-01', 'to' => '2026-12-31']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('bookings.meta.from', 11)
             ->has('bookings.data', 5));

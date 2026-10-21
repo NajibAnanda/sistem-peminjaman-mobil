@@ -1,4 +1,6 @@
-import { ShieldCheck, ShieldOff } from 'lucide-react';
+import { KeyRound, ShieldCheck, ShieldOff } from 'lucide-react';
+import { CellNote } from '@/components/data-table/cell-note';
+import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { StatusBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -13,38 +15,47 @@ export function useStaffColumns(): DataTableColumn<StaffMember>[] {
             id: 'name',
             header: 'Nama',
             cell: (member) => (
-                <>
-                    <div className="flex items-center gap-2 font-medium">
-                        {member.name}
-                        {member.is_self && (
-                            <Badge variant="secondary">Anda</Badge>
-                        )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                        {member.email}
-                    </div>
-                </>
+                <span className="inline-flex max-w-64 items-center gap-2">
+                    <TruncatedText
+                        text={member.name}
+                        className="min-w-0 font-medium"
+                    />
+                    {member.is_self && <Badge variant="secondary">Anda</Badge>}
+                </span>
+            ),
+        },
+        {
+            id: 'email',
+            header: 'Email',
+            cell: (member) => (
+                <TruncatedText text={member.email} className="max-w-64" />
             ),
         },
         {
             id: 'role',
             header: 'Peran',
-            cell: (member) => member.role_label,
+            skeleton: 'badge',
+            cell: (member) => (
+                <Badge variant="secondary">{member.role_label}</Badge>
+            ),
         },
         {
             id: 'status',
             header: 'Status',
+            skeleton: 'badge',
             cell: (member) => (
-                <div className="flex flex-col items-start gap-1">
+                <span className="inline-flex items-center gap-1.5">
                     <StatusBadge
                         status={member.is_active ? 'enabled' : 'inactive'}
                     />
                     {member.must_change_password && (
-                        <span className="text-xs text-muted-foreground">
-                            Belum ganti password sementara
-                        </span>
+                        <CellNote
+                            icon={KeyRound}
+                            tone="muted"
+                            text="Belum ganti password sementara"
+                        />
                     )}
-                </div>
+                </span>
             ),
         },
         {
@@ -66,7 +77,7 @@ export function useStaffColumns(): DataTableColumn<StaffMember>[] {
         {
             id: 'last_login_at',
             header: 'Login terakhir',
-            className: 'whitespace-nowrap',
+            skeleton: 'date',
             cell: (member) =>
                 member.last_login_at ? (
                     formatDateTime(member.last_login_at)

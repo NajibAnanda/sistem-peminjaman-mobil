@@ -45,6 +45,17 @@ test('perpanjangan menyimpan riwayat dan memperbarui rencana kembali', function 
         );
 });
 
+test('rencana kembali baru dengan offset UTC disimpan dalam jam WIB', function () {
+    $this->actingAs($this->user)
+        ->post(route('bookings.extend', $this->active), [
+            'new_planned_return_at' => '2026-10-20T10:00:00Z',
+            'reason' => 'Rapat dengan klien diperpanjang',
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($this->active->refresh()->planned_return_at->format('Y-m-d H:i'))->toBe('2026-10-20 17:00');
+});
+
 test('perpanjangan yang tidak lebih lambat ditolak', function (string $newReturn) {
     $this->actingAs($this->user)
         ->post(route('bookings.extend', $this->active), [

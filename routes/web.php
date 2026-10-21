@@ -16,6 +16,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeActivationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDeactivationController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\HistoryExportController;
 use App\Http\Controllers\ScheduleController;
@@ -31,6 +32,11 @@ Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // Pencarian global (Ctrl+K); hak akses per kategori lewat Policy di GlobalSearch.
+    Route::get('search', GlobalSearchController::class)
+        ->middleware('throttle:60,1')
+        ->name('search');
 
     Route::get('change-password', [TemporaryPasswordController::class, 'edit'])->name('password.change');
     Route::put('change-password', [TemporaryPasswordController::class, 'update'])

@@ -23,6 +23,7 @@ const SECOND_MS = 1000;
 
 export default function Dashboard({
     now,
+    alertListLimit,
     fleet,
     pickupsToday,
     returnsToday,
@@ -59,7 +60,7 @@ export default function Dashboard({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Dashboard"
-                    description={`Selamat datang, ${auth.user.name}. Ringkasan armada per ${formatDate(now)}.`}
+                    description={`Selamat datang, ${auth.user.name}; berikut ringkasan armada dan jadwal peminjaman per ${formatDate(now)}.`}
                     actions={
                         <Button asChild>
                             <Link href={create()}>
@@ -75,11 +76,12 @@ export default function Dashboard({
                 <div className="grid gap-4 lg:grid-cols-2">
                     <BookingListCard
                         title="Terlambat"
-                        description="Mobil yang melewati rencana kembali. Hubungi karyawannya."
+                        description="Peminjaman yang melewati rencana waktu kembali dan perlu segera ditindaklanjuti dengan karyawan."
                         icon={AlarmClockOff}
                         tone="destructive"
                         bookings={overdue}
                         total={alerts?.overdue}
+                        limit={alertListLimit}
                         viewAllHref={bookings({
                             query: { status: ['overdue'] },
                         })}
@@ -107,15 +109,16 @@ export default function Dashboard({
 
                     <BookingListCard
                         title="Belum Diambil"
-                        description="Sudah lewat waktu mulai, tetapi belum diserahterimakan."
+                        description="Peminjaman yang sudah melewati waktu mulai tetapi mobilnya belum diserahterimakan."
                         icon={Clock}
                         tone="warning"
                         bookings={notPickedUp}
                         total={alerts?.not_picked_up}
+                        limit={alertListLimit}
                         viewAllHref={bookings({
                             query: { status: ['not_picked_up'] },
                         })}
-                        emptyText="Semua jadwal yang sudah dimulai telah diambil."
+                        emptyText="Semua peminjaman yang sudah dimulai telah diserahterimakan."
                         renderMeta={(booking) => (
                             <div className="grid gap-0.5 text-xs">
                                 <span className="font-medium text-warning">
@@ -130,7 +133,7 @@ export default function Dashboard({
 
                     <BookingListCard
                         title="Jadwal Ambil Hari Ini"
-                        description="Peminjaman yang dijadwalkan mulai hari ini."
+                        description="Peminjaman terjadwal yang mobilnya akan diserahterimakan kepada karyawan hari ini."
                         icon={KeyRound}
                         bookings={pickupsToday}
                         emptyText="Tidak ada jadwal ambil hari ini."
@@ -144,7 +147,7 @@ export default function Dashboard({
 
                     <BookingListCard
                         title="Jadwal Kembali Hari Ini"
-                        description="Peminjaman aktif yang rencananya kembali hari ini."
+                        description="Peminjaman aktif yang mobilnya direncanakan kembali ke kantor hari ini."
                         icon={Undo2}
                         bookings={returnsToday}
                         emptyText="Tidak ada jadwal kembali hari ini."

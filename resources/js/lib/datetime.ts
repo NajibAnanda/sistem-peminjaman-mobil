@@ -36,8 +36,8 @@ export function formatDateTime(value: DateInput, timeZone: string): string {
 }
 
 /**
- * Nilai untuk `<input type="datetime-local">` ("2026-10-16T14:30") dalam zona
- * waktu aplikasi; server membacanya kembali dengan zona waktu yang sama.
+ * Jam dinding "2026-10-16T14:30" dalam zona waktu aplikasi, format nilai
+ * pemilih tanggal-waktu. Dikirim ke server lewat toZonedIso().
  */
 export function toDateTimeLocal(value: DateInput, timeZone: string): string {
     const parts = Object.fromEntries(
@@ -60,6 +60,52 @@ export function toDateTimeLocal(value: DateInput, timeZone: string): string {
 const MINUTE_MS = 60_000;
 const MINUTES_PER_HOUR = 60;
 const HOURS_PER_DAY = 24;
+
+/** Selisih zona waktu terhadap UTC dalam menit pada saat tertentu (WIB = 420). */
+function offsetMinutes(instant: number, timeZone: string): number {
+    const name =
+        new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            timeZoneName: 'longOffset',
+        })
+            .formatToParts(new Date(instant))
+            .find((part) => part.type === 'timeZoneName')?.value ?? 'GMT';
+    const match = /GMT([+-])(\d{2}):(\d{2})/.exec(name);
+
+    if (!match) {
+        return 0;
+    }
+
+    const minutes = Number(match[2]) * MINUTES_PER_HOUR + Number(match[3]);
+
+    return match[1] === '-' ? -minutes : minutes;
+}
+
+/**
+ * Nilai lokal "2026-10-16T14:30" (jam dinding di zona waktu aplikasi) menjadi
+ * ISO 8601 dengan offset, mis. "2026-10-16T14:30:00+07:00", untuk dikirim ke
+ * server. String kosong tetap kosong agar validasi server yang menolaknya.
+ */
+export function toZonedIso(local: string, timeZone: string): string {
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(local);
+
+    if (!match) {
+        return local;
+    }
+
+    const [, year, month, day, hour, minute] = match.map(Number);
+    const wallClock = Date.UTC(year, month - 1, day, hour, minute);
+    // Offset dihitung pada instan sebenarnya (penting untuk zona ber-DST).
+    const offset = offsetMinutes(
+        wallClock - offsetMinutes(wallClock, timeZone) * MINUTE_MS,
+        timeZone,
+    );
+    const sign = offset < 0 ? '-' : '+';
+    const absolute = Math.abs(offset);
+    const pad = (value: number) => String(value).padStart(2, '0');
+
+    return `${local}:00${sign}${pad(Math.floor(absolute / MINUTES_PER_HOUR))}:${pad(absolute % MINUTES_PER_HOUR)}`;
+}
 
 /**
  * Lama waktu dalam menit: "2 hari 3 jam", "3 jam 15 menit", atau "15 menit".
@@ -126,6 +172,34 @@ export function shiftDate(date: string, days: number): string {
     return toDateString(new Date(parseDate(date).getTime() + days * DAY_MS));
 }
 
+/**
+ * Menggeser tanggal "Y-m-d" sejumlah bulan; tanggal yang tidak ada di bulan
+ * tujuan (mis. 31 Februari) memakai hari terakhir bulan itu.
+ */
+export function shiftMonths(date: string, months: number): string {
+    const base = parseDate(date);
+    const lastDay = new Date(
+        Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + months + 1, 0),
+    ).getUTCDate();
+
+    return toDateString(
+        new Date(
+            Date.UTC(
+                base.getUTCFullYear(),
+                base.getUTCMonth() + months,
+                Math.min(base.getUTCDate(), lastDay),
+            ),
+        ),
+    );
+}
+
+/** 1 Januari – 31 Desember tahun dari tanggal "Y-m-d". */
+export function yearRange(date: string): { from: string; to: string } {
+    const year = date.slice(0, 4);
+
+    return { from: `${year}-01-01`, to: `${year}-12-31` };
+}
+
 /** Tanggal pertama & terakhir bulan dari tanggal "Y-m-d"; `offset` -1 = bulan lalu. */
 export function monthRange(
     date: string,
@@ -140,9 +214,4 @@ export function monthRange(
     );
 
     return { from: toDateString(first), to: toDateString(last) };
-}
-
-/** Label tanggal "Y-m-d" dari server, mis. "16 Okt 2026". */
-export function formatDateOnly(date: string, timeZone: string): string {
-    return formatDate(new Date(`${date}T12:00:00Z`), timeZone);
 }

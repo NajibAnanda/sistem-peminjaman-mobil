@@ -9,9 +9,10 @@ import type {
     DataTableFilterGroup,
 } from '@/components/data-table/types';
 import { EmptyState } from '@/components/empty-state';
+import type { TableSkeletonColumn } from '@/components/skeletons/table-skeleton';
+import { TableSkeleton } from '@/components/skeletons/table-skeleton';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -21,15 +22,16 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useDelayedFlag } from '@/hooks/use-delayed-flag';
 import type { UseTableQueryReturn } from '@/hooks/use-table-query';
 import { rowNumber } from '@/lib/pagination';
 import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
-const SKELETON_MIN_ROWS = 5;
-
-// Kolom "#" selebar isinya agar nomor sejajar dengan judul tabel di kiri.
-const NUMBER_COLUMN = cn('w-px text-right', EDGE_LEFT);
+// Kolom "#" selebar isinya, rata kiri sejajar judul tabel dan info halaman.
+const NUMBER_COLUMN = cn('w-px text-left tabular-nums', EDGE_LEFT);
+// Kolom aksi selebar isinya, rata tengah; tepi kanannya sejajar tombol ».
+const ACTION_COLUMN = cn('w-px text-center', EDGE_RIGHT);
 
 type Props<T> = {
     /** Judul tabel di header card, mis. "Daftar Petugas". */
@@ -39,15 +41,18 @@ type Props<T> = {
     data: Paginated<T>;
     columns: DataTableColumn<T>[];
     rowKey: (row: T) => Key;
+    /** Isi kolom "Aksi"; gunakan komponen RowActions. */
     rowActions?: (row: T) => ReactNode;
     searchPlaceholder: string;
     filterGroups?: DataTableFilterGroup[];
+    /** Aksi tambahan di header card, di kanan tombol Filter (mis. Ekspor). */
+    toolbar?: ReactNode;
     emptyState: DataTableEmptyState;
 };
 
 /**
- * Pola tabel standar aplikasi (AGENTS.md 8.4). Tata letak dan jarak diatur
- * sepenuhnya di sini; halaman hanya mengirim konfigurasi.
+ * Pola tabel standar aplikasi (AGENTS.md 8.4). Tata letak, perataan, dan
+ * jarak diatur sepenuhnya di sini; halaman hanya mengirim konfigurasi.
  */
 export function DataTableCard<T>({
     title,
@@ -59,17 +64,48 @@ export function DataTableCard<T>({
     rowActions,
     searchPlaceholder,
     filterGroups,
+    toolbar,
     emptyState,
 }: Props<T>) {
     const rows = data.data;
-    const isEmpty = !table.loading && rows.length === 0;
+    // Pemuatan singkat tetap menampilkan data lama tanpa skeleton (anti-kedip).
+    const showSkeleton = useDelayedFlag(table.loading);
+    const isEmpty = rows.length === 0 && !showSkeleton;
 
     // Sel terakhir (kolom aksi, atau kolom data terakhir bila tanpa aksi)
     // mendapat jarak tepi kanan yang sama dengan header dan footer.
     const lastColumnIndex = columns.length - 1;
-    const columnClass = (index: number, className?: string) =>
-        cn(className, !rowActions && index === lastColumnIndex && EDGE_RIGHT);
-    const actionClass = cn('w-px text-right', EDGE_RIGHT);
+    const alignOf = (column: DataTableColumn<T>) =>
+        column.align ?? (column.skeleton === 'badge' ? 'center' : 'left');
+    const columnClass = (column: DataTableColumn<T>, index: number) =>
+        cn(
+            alignOf(column) === 'right' && 'text-right tabular-nums',
+            alignOf(column) === 'center' && 'text-center',
+            column.className,
+            !rowActions && index === lastColumnIndex && EDGE_RIGHT,
+        );
+
+    const skeletonColumns: TableSkeletonColumn[] = [
+        { key: '#', className: NUMBER_COLUMN, kind: 'index' },
+        ...columns.map((column, index): TableSkeletonColumn => ({
+            key: column.id,
+            className: columnClass(column, index),
+            align: alignOf(column),
+            kind:
+                column.skeleton ??
+                (column.align === 'right' ? 'number' : 'text'),
+        })),
+        ...(rowActions
+            ? [
+                  {
+                      key: 'actions',
+                      className: ACTION_COLUMN,
+                      align: 'center',
+                      kind: 'action',
+                  } satisfies TableSkeletonColumn,
+              ]
+            : []),
+    ];
 
     return (
         <Card className="@container/table min-w-0 gap-0 py-0">
@@ -79,9 +115,10 @@ export function DataTableCard<T>({
                 table={table}
                 searchPlaceholder={searchPlaceholder}
                 filterGroups={filterGroups}
+                toolbar={toolbar}
             />
 
-            <div aria-busy={table.loading}>
+            <div aria-busy={table.loading} data-test="table-region">
                 {isEmpty ? (
                     table.isFiltered ? (
                         <EmptyState
@@ -112,89 +149,56 @@ export function DataTableCard<T>({
                                 {columns.map((column, index) => (
                                     <TableHead
                                         key={column.id}
-                                        className={columnClass(
-                                            index,
-                                            column.className,
-                                        )}
+                                        className={columnClass(column, index)}
                                     >
                                         {column.header}
                                     </TableHead>
                                 ))}
                                 {rowActions && (
-                                    <TableHead className={actionClass}>
-                                        <span className="sr-only">Aksi</span>
+                                    <TableHead className={ACTION_COLUMN}>
+                                        Aksi
                                     </TableHead>
                                 )}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {table.loading
-                                ? Array.from(
-                                      {
-                                          length: Math.max(
-                                              rows.length,
-                                              SKELETON_MIN_ROWS,
-                                          ),
-                                      },
-                                      (_, rowIndex) => (
-                                          <TableRow
-                                              key={`skeleton-${rowIndex}`}
-                                          >
-                                              <TableCell
-                                                  className={NUMBER_COLUMN}
-                                              >
-                                                  <Skeleton className="ml-auto h-4 w-4" />
-                                              </TableCell>
-                                              {columns.map((column, index) => (
-                                                  <TableCell
-                                                      key={column.id}
-                                                      className={columnClass(
-                                                          index,
-                                                      )}
-                                                  >
-                                                      <Skeleton className="h-4 w-full max-w-40" />
-                                                  </TableCell>
-                                              ))}
-                                              {rowActions && (
-                                                  <TableCell
-                                                      className={actionClass}
-                                                  >
-                                                      <Skeleton className="ml-auto size-7" />
-                                                  </TableCell>
-                                              )}
-                                          </TableRow>
-                                      ),
-                                  )
-                                : rows.map((row, rowIndex) => (
-                                      <TableRow key={rowKey(row)}>
-                                          <TableCell
-                                              className={cn(
-                                                  NUMBER_COLUMN,
-                                                  'text-muted-foreground tabular-nums',
-                                              )}
-                                          >
-                                              {rowNumber(data.meta, rowIndex)}
-                                          </TableCell>
-                                          {columns.map((column, index) => (
-                                              <TableCell
-                                                  key={column.id}
-                                                  className={columnClass(
-                                                      index,
-                                                      column.className,
-                                                  )}
-                                              >
-                                                  {column.cell(row)}
-                                              </TableCell>
-                                          ))}
-                                          {rowActions && (
-                                              <TableCell
-                                                  className={actionClass}
-                                              >
-                                                  {rowActions(row)}
-                                              </TableCell>
-                                          )}
-                                      </TableRow>
-                                  ))}
+                            {showSkeleton ? (
+                                <TableSkeleton
+                                    columns={skeletonColumns}
+                                    rows={data.meta.per_page}
+                                />
+                            ) : (
+                                rows.map((row, rowIndex) => (
+                                    <TableRow key={rowKey(row)}>
+                                        <TableCell
+                                            className={cn(
+                                                NUMBER_COLUMN,
+                                                'text-muted-foreground',
+                                            )}
+                                        >
+                                            {rowNumber(data.meta, rowIndex)}
+                                        </TableCell>
+                                        {columns.map((column, index) => (
+                                            <TableCell
+                                                key={column.id}
+                                                className={columnClass(
+                                                    column,
+                                                    index,
+                                                )}
+                                            >
+                                                {column.cell(row)}
+                                            </TableCell>
+                                        ))}
+                                        {rowActions && (
+                                            <TableCell
+                                                className={ACTION_COLUMN}
+                                            >
+                                                {rowActions(row)}
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 )}

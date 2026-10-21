@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useActivityColumns } from '@/components/activity-log/activity-columns';
 import { ActivityDetailDialog } from '@/components/activity-log/activity-detail-dialog';
 import { DataTableCard } from '@/components/data-table/data-table-card';
+import { RowActions } from '@/components/data-table/row-actions';
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
 import { useTableQuery } from '@/hooks/use-table-query';
 import { index } from '@/routes/activity-log';
 import type { ActivityEntry, ActivityLogIndexProps } from '@/types';
@@ -30,25 +30,27 @@ export default function ActivityLogIndex({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Log Aktivitas"
-                    description="Catatan siapa mengubah apa dan kapan. Log tidak dapat diubah atau dihapus."
+                    description="Pantau siapa mengubah data apa dan kapan; catatan log tidak dapat diubah atau dihapus."
                 />
 
                 <DataTableCard
                     title="Daftar Aktivitas"
-                    description="Terbaru di atas."
+                    description="Rekam jejak seluruh perubahan data oleh petugas, diurutkan dari aktivitas terbaru."
                     table={table}
                     data={activities}
                     columns={columns}
                     rowKey={(activity) => activity.id}
                     rowActions={(activity) => (
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setSelected(activity)}
-                            aria-label={`Lihat rincian: ${activity.description}`}
-                        >
-                            <FileSearch aria-hidden="true" />
-                        </Button>
+                        <RowActions
+                            label={`Aksi untuk: ${activity.description}`}
+                            actions={[
+                                {
+                                    label: 'Lihat rincian',
+                                    icon: FileSearch,
+                                    onSelect: () => setSelected(activity),
+                                },
+                            ]}
+                        />
                     )}
                     searchPlaceholder="Cari aktivitas..."
                     filterGroups={[

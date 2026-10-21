@@ -1,6 +1,7 @@
 import { ChevronsUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { SearchResultSkeleton } from '@/components/skeletons/search-result-skeleton';
 import { Button } from '@/components/ui/button';
 import {
     Command,
@@ -15,6 +16,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { useDelayedFlag } from '@/hooks/use-delayed-flag';
 
 export type ComboboxOption = {
     value: number;
@@ -37,6 +39,8 @@ type Props = {
     emptyText: string;
     invalid?: boolean;
     disabled?: boolean;
+    /** Pilihan sedang dimuat ulang dari server (mis. cek ketersediaan). */
+    loading?: boolean;
 };
 
 /**
@@ -53,8 +57,10 @@ export function SearchableCombobox({
     emptyText,
     invalid = false,
     disabled = false,
+    loading = false,
 }: Props) {
     const [open, setOpen] = useState(false);
+    const showSkeleton = useDelayedFlag(loading);
     const selected = options.find((option) => option.value === value);
 
     return (
@@ -96,40 +102,48 @@ export function SearchableCombobox({
             >
                 <Command>
                     <CommandInput placeholder={searchPlaceholder} />
-                    <CommandList>
-                        <CommandEmpty>{emptyText}</CommandEmpty>
-                        <CommandGroup>
-                            {options.map((option) => (
-                                <CommandItem
-                                    key={option.value}
-                                    // cmdk menyaring berdasarkan value; id disertakan
-                                    // agar unik meskipun ada nama yang sama.
-                                    value={`${option.label} ${option.keywords ?? ''} #${option.value}`}
-                                    disabled={option.disabled}
-                                    data-checked={option.value === value}
-                                    onSelect={() => {
-                                        onChange(option.value);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <span className="flex min-w-0 flex-1 flex-col">
-                                        <span className="truncate">
-                                            {option.label}
-                                        </span>
-                                        {option.description && (
-                                            <span className="truncate text-xs text-muted-foreground">
-                                                {option.description}
+                    <CommandList aria-busy={loading}>
+                        {showSkeleton ? (
+                            <SearchResultSkeleton />
+                        ) : (
+                            <>
+                                <CommandEmpty>{emptyText}</CommandEmpty>
+                                <CommandGroup>
+                                    {options.map((option) => (
+                                        <CommandItem
+                                            key={option.value}
+                                            // cmdk menyaring berdasarkan value; id disertakan
+                                            // agar unik meskipun ada nama yang sama.
+                                            value={`${option.label} ${option.keywords ?? ''} #${option.value}`}
+                                            disabled={option.disabled}
+                                            data-checked={
+                                                option.value === value
+                                            }
+                                            onSelect={() => {
+                                                onChange(option.value);
+                                                setOpen(false);
+                                            }}
+                                        >
+                                            <span className="flex min-w-0 flex-1 flex-col">
+                                                <span className="truncate">
+                                                    {option.label}
+                                                </span>
+                                                {option.description && (
+                                                    <span className="truncate text-xs text-muted-foreground">
+                                                        {option.description}
+                                                    </span>
+                                                )}
                                             </span>
-                                        )}
-                                    </span>
-                                    {option.hint && (
-                                        <span className="shrink-0 text-xs">
-                                            {option.hint}
-                                        </span>
-                                    )}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
+                                            {option.hint && (
+                                                <span className="shrink-0 text-xs">
+                                                    {option.hint}
+                                                </span>
+                                            )}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </>
+                        )}
                     </CommandList>
                 </Command>
             </PopoverContent>

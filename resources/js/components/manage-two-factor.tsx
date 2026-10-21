@@ -1,9 +1,10 @@
 import { Form } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import Heading from '@/components/heading';
+import { FormCard } from '@/components/form/form-card';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
+import { LoadingButton } from '@/components/loading-button';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { disable, enable } from '@/routes/two-factor';
@@ -45,12 +46,10 @@ export default function ManageTwoFactor(props: Props) {
     }
 
     return (
-        <div className="space-y-6">
-            <Heading
-                variant="small"
-                title="Autentikasi dua faktor"
-                description="Lapisan keamanan tambahan saat masuk"
-            />
+        <FormCard
+            title="Autentikasi dua faktor"
+            description="Lapisan keamanan tambahan yang meminta kode dari ponsel Anda setiap kali masuk."
+        >
             {twoFactorEnabled ? (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-sm text-muted-foreground">
@@ -61,13 +60,13 @@ export default function ManageTwoFactor(props: Props) {
                     <div className="relative inline">
                         <Form {...disable.form()}>
                             {({ processing }) => (
-                                <Button
+                                <LoadingButton
                                     variant="destructive"
                                     type="submit"
-                                    disabled={processing}
+                                    loading={processing}
                                 >
                                     Nonaktifkan 2FA
-                                </Button>
+                                </LoadingButton>
                             )}
                         </Form>
                     </div>
@@ -98,9 +97,12 @@ export default function ManageTwoFactor(props: Props) {
                                 onSuccess={() => setShowSetupModal(true)}
                             >
                                 {({ processing }) => (
-                                    <Button type="submit" disabled={processing}>
+                                    <LoadingButton
+                                        type="submit"
+                                        loading={processing}
+                                    >
                                         Aktifkan 2FA
-                                    </Button>
+                                    </LoadingButton>
                                 )}
                             </Form>
                         )}
@@ -119,6 +121,6 @@ export default function ManageTwoFactor(props: Props) {
                 fetchSetupData={fetchSetupData}
                 errors={errors}
             />
-        </div>
+        </FormCard>
     );
 }

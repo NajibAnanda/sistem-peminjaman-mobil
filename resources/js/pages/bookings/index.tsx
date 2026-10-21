@@ -32,7 +32,7 @@ export default function BookingIndex({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Peminjaman"
-                    description="Peminjaman yang dijadwalkan dan sedang berjalan."
+                    description="Kelola peminjaman yang dijadwalkan dan sedang berjalan, termasuk serah terima dan perpanjangannya."
                     actions={
                         <Button asChild data-test="create-booking-button">
                             <Link href={create()}>
@@ -45,7 +45,7 @@ export default function BookingIndex({
 
                 <DataTableCard
                     title="Daftar Peminjaman"
-                    description="Peminjaman yang selesai atau dibatalkan ada di Riwayat."
+                    description="Peminjaman berstatus Dijadwalkan dan Aktif; yang sudah selesai atau dibatalkan tersedia di Riwayat."
                     table={table}
                     data={bookings}
                     columns={columns}

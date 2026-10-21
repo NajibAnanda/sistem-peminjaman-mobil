@@ -1,13 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { Eye, MoreHorizontal, Pencil, Power, PowerOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Eye, Pencil, Power, PowerOff } from 'lucide-react';
+import { RowActions } from '@/components/data-table/row-actions';
 import { show } from '@/routes/cars';
 import type { Car } from '@/types';
 
@@ -24,45 +16,29 @@ type Props = {
  */
 export function CarActionsMenu({ car, onAction }: Props) {
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Aksi untuk ${car.plate_number}`}
-                >
-                    <MoreHorizontal aria-hidden="true" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                    <Link href={show(car.id)}>
-                        <Eye aria-hidden="true" />
-                        Lihat detail
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onAction('edit', car)}>
-                    <Pencil aria-hidden="true" />
-                    Edit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {car.is_active ? (
-                    <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => onAction('deactivate', car)}
-                    >
-                        <PowerOff aria-hidden="true" />
-                        Nonaktifkan
-                    </DropdownMenuItem>
-                ) : (
-                    <DropdownMenuItem
-                        onSelect={() => onAction('activate', car)}
-                    >
-                        <Power aria-hidden="true" />
-                        Aktifkan
-                    </DropdownMenuItem>
-                )}
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions
+            label={`Aksi untuk ${car.plate_number}`}
+            actions={[
+                { label: 'Lihat detail', icon: Eye, href: show(car.id) },
+                {
+                    label: 'Edit',
+                    icon: Pencil,
+                    onSelect: () => onAction('edit', car),
+                },
+                {
+                    label: 'Aktifkan',
+                    icon: Power,
+                    onSelect: () => onAction('activate', car),
+                    hidden: car.is_active,
+                },
+                {
+                    label: 'Nonaktifkan',
+                    icon: PowerOff,
+                    onSelect: () => onAction('deactivate', car),
+                    destructive: true,
+                    hidden: !car.is_active,
+                },
+            ]}
+        />
     );
 }

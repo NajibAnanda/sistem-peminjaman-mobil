@@ -24,7 +24,7 @@ final class CancelBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => ['required', 'string', 'max:500'],
+            'reason' => ['required', 'string', 'min:'.config('fleet.booking.reason_min_length'), 'max:500'],
         ];
     }
 

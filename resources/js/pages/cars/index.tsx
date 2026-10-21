@@ -52,7 +52,7 @@ export default function CarIndex({ cars, query, statuses }: CarIndexProps) {
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Data Mobil"
-                    description="Armada mobil dinas beserta status dan foto referensinya."
+                    description="Daftar armada mobil dinas beserta status ketersediaan dan kondisi operasionalnya."
                     actions={
                         <Button
                             onClick={() => openForm(null)}
@@ -66,7 +66,7 @@ export default function CarIndex({ cars, query, statuses }: CarIndexProps) {
 
                 <DataTableCard
                     title="Daftar Mobil"
-                    description="Status Dipinjam dihitung otomatis dari peminjaman aktif."
+                    description="Status ketersediaan dihitung otomatis dari peminjaman aktif dan status operasional mobil."
                     table={table}
                     data={cars}
                     columns={columns}

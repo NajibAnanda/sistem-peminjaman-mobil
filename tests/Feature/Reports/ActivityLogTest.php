@@ -75,7 +75,7 @@ test('status, aktif/nonaktif, dan keterangan tambahan ditampilkan dengan label',
 });
 
 test('log ekspor menampilkan format dan jumlah baris', function () {
-    $this->actingAs($this->admin)->get(route('history.export', ['format' => 'csv']));
+    $this->actingAs($this->admin)->get(route('history.export', ['format' => 'csv', 'from' => '2026-10-01', 'to' => '2026-10-31']));
 
     $this->actingAs($this->manager)
         ->get(route('activity-log.index'))
@@ -83,7 +83,7 @@ test('log ekspor menampilkan format dan jumlah baris', function () {
             ->where('activities.data.0.type_label', 'Laporan')
             ->where('activities.data.0.event_label', 'Diekspor')
             ->where('activities.data.0.details', fn ($details) => collect($details)->pluck('value', 'label')->only(['Format file', 'Jumlah baris'])->all() === [
-                'Format file' => 'CSV',
+                'Format file' => 'CSV (.csv)',
                 'Jumlah baris' => '0',
             ]));
 });

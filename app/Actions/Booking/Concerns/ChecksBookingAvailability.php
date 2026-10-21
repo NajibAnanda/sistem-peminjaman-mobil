@@ -50,4 +50,24 @@ trait ChecksBookingAvailability
             throw BookingException::conflict($conflicts);
         }
     }
+
+    /**
+     * Satu karyawan tidak boleh memegang dua peminjaman yang waktunya tumpang
+     * tindih, meskipun mobilnya berbeda. Pemanggil wajib sudah mengunci baris
+     * karyawan agar dua penjadwalan bersamaan diproses bergantian.
+     */
+    private function ensureEmployeeFree(Employee $employee, CarbonInterface $start, CarbonInterface $end, ?Booking $except = null): void
+    {
+        $conflicts = Booking::query()
+            ->with('car:id,plate_number')
+            ->where('employee_id', $employee->id)
+            ->overlapping($start, $end)
+            ->when($except, fn ($query, Booking $booking) => $query->whereKeyNot($booking->id))
+            ->orderBy('start_at')
+            ->get();
+
+        if ($conflicts->isNotEmpty()) {
+            throw BookingException::employeeConflict($employee->name, $conflicts);
+        }
+    }
 }

@@ -1,9 +1,13 @@
-import { CalendarPlus } from 'lucide-react';
+import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { StatusBadge } from '@/components/status-badge';
 import { useDateFormat } from '@/hooks/use-date-format';
 import { formatMinutes } from '@/lib/datetime';
 import type { HistoryBooking } from '@/types';
+
+function Empty() {
+    return <span className="text-muted-foreground">—</span>;
+}
 
 export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
     const { formatDateTime } = useDateFormat();
@@ -13,81 +17,103 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
             id: 'code',
             header: 'Kode',
             cell: (booking) => (
-                <div className="max-w-48">
-                    <div className="font-medium tabular-nums">
-                        {booking.code}
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">
-                        {booking.purpose}
-                    </div>
-                </div>
+                <span className="font-medium tabular-nums">{booking.code}</span>
+            ),
+        },
+        {
+            id: 'purpose',
+            header: 'Tujuan',
+            cell: (booking) => (
+                <TruncatedText text={booking.purpose} className="max-w-56" />
             ),
         },
         {
             id: 'employee',
             header: 'Karyawan',
             cell: (booking) => (
-                <div>
-                    <div className="font-medium">{booking.employee.name}</div>
-                    <div className="text-xs text-muted-foreground tabular-nums">
-                        {booking.employee.employee_number} ·{' '}
-                        {booking.employee.division}
-                    </div>
-                </div>
+                <TruncatedText
+                    text={booking.employee.name}
+                    className="max-w-48 font-medium"
+                />
             ),
+        },
+        {
+            id: 'employee_number',
+            header: 'NIP',
+            cell: (booking) => booking.employee.employee_number,
+        },
+        {
+            id: 'division',
+            header: 'Divisi',
+            cell: (booking) => booking.employee.division,
+        },
+        {
+            id: 'plate',
+            header: 'Plat',
+            cell: (booking) => booking.car.plate_number,
         },
         {
             id: 'car',
             header: 'Mobil',
             cell: (booking) => (
-                <div>
-                    <div className="font-medium">
-                        {booking.car.plate_number}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                        {booking.car.brand} {booking.car.model}
-                    </div>
-                </div>
+                <TruncatedText
+                    text={`${booking.car.brand} ${booking.car.model}`}
+                    className="max-w-44"
+                />
             ),
         },
         {
-            id: 'schedule',
-            header: 'Waktu',
-            cell: (booking) => (
-                <div className="text-sm whitespace-nowrap tabular-nums">
-                    <div>{formatDateTime(booking.start_at)}</div>
-                    <div className="text-muted-foreground">
-                        {booking.returned_at
-                            ? `kembali ${formatDateTime(booking.returned_at)}`
-                            : `rencana ${formatDateTime(booking.planned_return_at)}`}
-                    </div>
-                </div>
-            ),
+            id: 'start_at',
+            header: 'Mulai',
+            skeleton: 'date',
+            cell: (booking) => formatDateTime(booking.start_at),
+        },
+        {
+            id: 'planned_return_at',
+            header: 'Rencana kembali',
+            skeleton: 'date',
+            cell: (booking) => formatDateTime(booking.planned_return_at),
+        },
+        {
+            id: 'returned_at',
+            header: 'Dikembalikan',
+            skeleton: 'date',
+            cell: (booking) =>
+                booking.returned_at ? (
+                    formatDateTime(booking.returned_at)
+                ) : (
+                    <Empty />
+                ),
         },
         {
             id: 'status',
             header: 'Status',
-            cell: (booking) => (
-                // flex, bukan grid: badge ber-overflow-hidden di dalam grid
-                // dianggap selebar 0 sehingga menimpa kolom di sebelahnya.
-                <div className="flex flex-col items-start gap-1">
-                    <StatusBadge status={booking.display_status} />
-                    {booking.lateness_minutes !== null && (
-                        <span className="text-xs font-medium text-destructive">
-                            Terlambat {formatMinutes(booking.lateness_minutes)}
-                        </span>
-                    )}
-                    {booking.extensions_count > 0 && (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            <CalendarPlus
-                                className="size-3.5"
-                                aria-hidden="true"
-                            />
-                            Diperpanjang {booking.extensions_count}×
-                        </span>
-                    )}
-                </div>
-            ),
+            skeleton: 'badge',
+            cell: (booking) => <StatusBadge status={booking.display_status} />,
+        },
+        {
+            id: 'lateness',
+            header: 'Keterlambatan',
+            align: 'right',
+            cell: (booking) =>
+                booking.lateness_minutes !== null ? (
+                    <span className="font-medium text-destructive">
+                        {formatMinutes(booking.lateness_minutes)}
+                    </span>
+                ) : (
+                    <Empty />
+                ),
+        },
+        {
+            id: 'extensions',
+            header: 'Perpanjangan',
+            align: 'right',
+            cell: (booking) =>
+                booking.extensions_count > 0 ? (
+                    `${booking.extensions_count}×`
+                ) : (
+                    <Empty />
+                ),
         },
     ];
 }

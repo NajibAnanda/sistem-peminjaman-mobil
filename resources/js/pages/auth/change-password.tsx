@@ -1,9 +1,7 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import InputError from '@/components/input-error';
+import { FormField } from '@/components/form/form-field';
 import PasswordInput from '@/components/password-input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingButton } from '@/components/loading-button';
 import { logout } from '@/routes';
 import { update } from '@/routes/password/change';
 
@@ -24,10 +22,12 @@ export default function ChangePassword({ passwordRules }: Props) {
             >
                 {({ processing, errors }) => (
                     <div className="grid gap-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="current_password">
-                                Password sementara
-                            </Label>
+                        <FormField
+                            id="current_password"
+                            label="Password sementara"
+                            required
+                            error={errors.current_password}
+                        >
                             <PasswordInput
                                 id="current_password"
                                 name="current_password"
@@ -36,11 +36,14 @@ export default function ChangePassword({ passwordRules }: Props) {
                                 autoComplete="current-password"
                                 placeholder="Password dari Pengelola"
                             />
-                            <InputError message={errors.current_password} />
-                        </div>
+                        </FormField>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password baru</Label>
+                        <FormField
+                            id="password"
+                            label="Password baru"
+                            required
+                            error={errors.password}
+                        >
                             <PasswordInput
                                 id="password"
                                 name="password"
@@ -49,13 +52,14 @@ export default function ChangePassword({ passwordRules }: Props) {
                                 placeholder="Minimal 10 karakter, huruf dan angka"
                                 passwordrules={passwordRules}
                             />
-                            <InputError message={errors.password} />
-                        </div>
+                        </FormField>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
-                                Ulangi password baru
-                            </Label>
+                        <FormField
+                            id="password_confirmation"
+                            label="Ulangi password baru"
+                            required
+                            error={errors.password_confirmation}
+                        >
                             <PasswordInput
                                 id="password_confirmation"
                                 name="password_confirmation"
@@ -64,20 +68,16 @@ export default function ChangePassword({ passwordRules }: Props) {
                                 placeholder="Ulangi password baru"
                                 passwordrules={passwordRules}
                             />
-                            <InputError
-                                message={errors.password_confirmation}
-                            />
-                        </div>
+                        </FormField>
 
-                        <Button
+                        <LoadingButton
                             type="submit"
                             className="w-full"
-                            disabled={processing}
+                            loading={processing}
                             data-test="change-password-button"
                         >
-                            {processing && <Spinner />}
                             Simpan password baru
-                        </Button>
+                        </LoadingButton>
 
                         <Link
                             href={logout()}

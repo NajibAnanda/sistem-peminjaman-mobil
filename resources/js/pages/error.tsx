@@ -39,7 +39,7 @@ export default function ErrorPage({ status, title, description }: Props) {
 
             <main className="flex min-h-svh items-center justify-center bg-background p-6">
                 <div className="flex max-w-md flex-col items-center gap-6 text-center">
-                    <AppLogoIcon className="size-10 fill-current text-primary" />
+                    <AppLogoIcon className="size-10" />
                     <div className="flex size-14 items-center justify-center rounded-full bg-muted">
                         <Icon
                             className="size-7 text-muted-foreground"

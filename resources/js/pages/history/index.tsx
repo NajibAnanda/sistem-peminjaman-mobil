@@ -1,10 +1,10 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Eye, History } from 'lucide-react';
 import { DataTableCard } from '@/components/data-table/data-table-card';
+import { RowActions } from '@/components/data-table/row-actions';
 import { ExportMenu } from '@/components/history/export-menu';
 import { useHistoryColumns } from '@/components/history/history-columns';
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
 import { useTableQuery } from '@/hooks/use-table-query';
 import { show } from '@/routes/bookings';
 import { index } from '@/routes/history';
@@ -30,31 +30,31 @@ export default function HistoryIndex({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Riwayat"
-                    description="Semua peminjaman beserta keterlambatannya. Ekspor mengikuti pencarian, filter, dan periode yang dipilih."
-                    actions={
-                        <ExportMenu query={query} formats={exportFormats} />
-                    }
+                    description="Telusuri seluruh peminjaman beserta keterlambatannya dan ekspor laporan sesuai pencarian, filter, dan periode."
                 />
 
                 <DataTableCard
                     title="Riwayat Peminjaman"
-                    description="Periode dihitung dari waktu mulai peminjaman."
+                    description="Seluruh peminjaman dari semua status, dengan filter periode berdasarkan waktu mulai peminjaman."
                     table={table}
                     data={bookings}
                     columns={columns}
                     rowKey={(booking) => booking.id}
                     rowActions={(booking) => (
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            asChild
-                            aria-label={`Lihat detail ${booking.code}`}
-                        >
-                            <Link href={show(booking.id)}>
-                                <Eye aria-hidden="true" />
-                            </Link>
-                        </Button>
+                        <RowActions
+                            label={`Aksi untuk ${booking.code}`}
+                            actions={[
+                                {
+                                    label: 'Lihat detail',
+                                    icon: Eye,
+                                    href: show(booking.id),
+                                },
+                            ]}
+                        />
                     )}
+                    toolbar={
+                        <ExportMenu query={query} formats={exportFormats} />
+                    }
                     searchPlaceholder="Cari kode, karyawan, NIP, atau plat..."
                     filterGroups={[
                         {
@@ -89,7 +89,7 @@ export default function HistoryIndex({
                         icon: History,
                         title: 'Belum ada riwayat peminjaman',
                         description:
-                            'Peminjaman yang dijadwalkan akan tercatat di sini.',
+                            'Setiap peminjaman yang dijadwalkan akan tercatat di sini beserta status akhirnya.',
                     }}
                 />
             </div>

@@ -28,4 +28,13 @@ final class HistoryIndexRequest extends FormRequest
     {
         return [];
     }
+
+    /**
+     * Periode Riwayat wajib (ekspor maks. 366 hari), jadi tabel dibuka dengan
+     * bulan berjalan agar ekspor langsung bisa dipakai.
+     */
+    protected function periodDefaultsToCurrentMonth(): bool
+    {
+        return true;
+    }
 }

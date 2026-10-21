@@ -13,11 +13,14 @@ export type FleetSummaryItem = {
 export type DashboardProps = {
     /** Waktu server, acuan lama keterlambatan. */
     now: string;
-    fleet: FleetSummaryItem[];
+    /** Batas baris daftar Terlambat & Belum Diambil. */
+    alertListLimit: number;
     pickupsToday: Booking[];
     returnsToday: Booking[];
-    overdue: Booking[];
-    notPickedUp: Booking[];
+    /** Deferred: undefined sampai dimuat setelah halaman tampil. */
+    fleet?: FleetSummaryItem[];
+    overdue?: Booking[];
+    notPickedUp?: Booking[];
 };
 
 export type ScheduleCar = {

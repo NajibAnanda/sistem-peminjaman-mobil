@@ -1,10 +1,10 @@
 import { Form, Head, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
+import { FormCard } from '@/components/form/form-card';
+import { FormField } from '@/components/form/form-field';
+import { FormGrid } from '@/components/form/form-grid';
+import { LoadingButton } from '@/components/loading-button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
 
 export default function Profile() {
@@ -14,74 +14,65 @@ export default function Profile() {
         <>
             <Head title="Pengaturan profil" />
 
-            <h1 className="sr-only">Pengaturan profil</h1>
-
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Profil"
-                    description="Perbarui nama yang tampil di aplikasi"
-                />
-
-                <Form
-                    {...ProfileController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    className="space-y-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Nama</Label>
-
+            <Form
+                {...ProfileController.update.form()}
+                options={{
+                    preserveScroll: true,
+                }}
+            >
+                {({ processing, errors }) => (
+                    <FormCard
+                        title="Profil"
+                        description="Perbarui nama yang tampil di aplikasi; email hanya dapat diubah oleh Pengelola."
+                        footer={
+                            <LoadingButton
+                                loading={processing}
+                                data-test="update-profile-button"
+                            >
+                                Simpan
+                            </LoadingButton>
+                        }
+                    >
+                        <FormGrid>
+                            <FormField
+                                id="name"
+                                label="Nama"
+                                required
+                                error={errors.name}
+                            >
                                 <Input
                                     id="name"
-                                    className="mt-1 block w-full"
                                     defaultValue={auth.user.name}
                                     name="name"
                                     required
+                                    maxLength={255}
                                     autoComplete="name"
                                     placeholder="Nama lengkap"
+                                    aria-invalid={!!errors.name || undefined}
                                 />
+                            </FormField>
 
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.name}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
-
+                            <FormField
+                                id="email"
+                                label="Email"
+                                hint="Email hanya dapat diubah oleh Pengelola."
+                            >
                                 {/* Tanpa atribut name: email tidak dikirim dan
                                     hanya dapat diubah Pengelola (FR-03). */}
                                 <Input
                                     id="email"
                                     type="email"
-                                    className="mt-1 block w-full"
                                     value={auth.user.email}
                                     readOnly
                                     disabled
                                     autoComplete="username"
+                                    aria-describedby="email-hint"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    Email hanya dapat diubah oleh Pengelola.
-                                </p>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="update-profile-button"
-                                >
-                                    Simpan
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
+                            </FormField>
+                        </FormGrid>
+                    </FormCard>
+                )}
+            </Form>
         </>
     );
 }

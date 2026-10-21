@@ -1,18 +1,9 @@
 import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/form-dialog';
+import { FormField } from '@/components/form/form-field';
+import { FormGrid } from '@/components/form/form-grid';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { store, update } from '@/routes/cars';
 import type { Car } from '@/types';
 
@@ -47,97 +38,82 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
     };
 
     return (
-        <Dialog
+        <FormDialog
             open={open}
-            onOpenChange={(next) => !form.processing && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            title={isEdit ? 'Edit Data Mobil' : 'Tambah Mobil'}
+            description={
+                isEdit
+                    ? 'Perbarui plat nomor, merk, atau tipe mobil sesuai data kendaraan terbaru.'
+                    : 'Daftarkan mobil dinas baru; foto referensi dapat ditambahkan setelah data disimpan.'
+            }
+            onSubmit={submit}
+            submitLabel={isEdit ? 'Simpan Perubahan' : 'Tambah Mobil'}
+            processing={form.processing}
+            submitTestId="car-form-submit"
         >
-            <DialogContent
-                className="sm:max-w-md"
-                onInteractOutside={(event) => event.preventDefault()}
-            >
-                <form onSubmit={submit} className="grid gap-6">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isEdit ? 'Edit Data Mobil' : 'Tambah Mobil'}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {isEdit
-                                ? 'Perbarui plat nomor, merk, atau tipe mobil.'
-                                : 'Foto referensi dapat ditambahkan setelah mobil disimpan.'}
-                        </DialogDescription>
-                    </DialogHeader>
+            <FormGrid>
+                <FormField
+                    id="car-plate"
+                    label="Plat nomor"
+                    required
+                    error={form.errors.plate_number}
+                    hint="Contoh: B 1234 ABC. Disimpan dalam huruf besar."
+                    span="full"
+                >
+                    <Input
+                        id="car-plate"
+                        value={form.data.plate_number}
+                        onChange={(e) =>
+                            form.setData('plate_number', e.target.value)
+                        }
+                        autoFocus
+                        required
+                        maxLength={15}
+                        autoComplete="off"
+                        placeholder="B 1234 ABC"
+                        className="uppercase"
+                        aria-invalid={!!form.errors.plate_number || undefined}
+                        aria-describedby="car-plate-hint"
+                    />
+                </FormField>
 
-                    <div className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="car-plate">Plat nomor</Label>
-                            <Input
-                                id="car-plate"
-                                value={form.data.plate_number}
-                                onChange={(e) =>
-                                    form.setData('plate_number', e.target.value)
-                                }
-                                autoFocus
-                                required
-                                autoComplete="off"
-                                placeholder="B 1234 ABC"
-                                className="uppercase"
-                            />
-                            <InputError message={form.errors.plate_number} />
-                        </div>
+                <FormField
+                    id="car-brand"
+                    label="Merk"
+                    required
+                    error={form.errors.brand}
+                >
+                    <Input
+                        id="car-brand"
+                        value={form.data.brand}
+                        onChange={(e) => form.setData('brand', e.target.value)}
+                        required
+                        maxLength={50}
+                        autoComplete="off"
+                        placeholder="Toyota"
+                        aria-invalid={!!form.errors.brand || undefined}
+                    />
+                </FormField>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="grid gap-2">
-                                <Label htmlFor="car-brand">Merk</Label>
-                                <Input
-                                    id="car-brand"
-                                    value={form.data.brand}
-                                    onChange={(e) =>
-                                        form.setData('brand', e.target.value)
-                                    }
-                                    required
-                                    autoComplete="off"
-                                    placeholder="Toyota"
-                                />
-                                <InputError message={form.errors.brand} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="car-model">Tipe</Label>
-                                <Input
-                                    id="car-model"
-                                    value={form.data.model}
-                                    onChange={(e) =>
-                                        form.setData('model', e.target.value)
-                                    }
-                                    required
-                                    autoComplete="off"
-                                    placeholder="Avanza"
-                                />
-                                <InputError message={form.errors.model} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            disabled={form.processing}
-                        >
-                            Batal
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={form.processing}
-                            data-test="car-form-submit"
-                        >
-                            {form.processing && <Spinner />}
-                            {isEdit ? 'Simpan Perubahan' : 'Tambah Mobil'}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                <FormField
+                    id="car-model"
+                    label="Tipe"
+                    required
+                    error={form.errors.model}
+                >
+                    <Input
+                        id="car-model"
+                        value={form.data.model}
+                        onChange={(e) => form.setData('model', e.target.value)}
+                        required
+                        maxLength={50}
+                        autoComplete="off"
+                        placeholder="Avanza"
+                        aria-invalid={!!form.errors.model || undefined}
+                    />
+                </FormField>
+            </FormGrid>
+        </FormDialog>
     );
 }

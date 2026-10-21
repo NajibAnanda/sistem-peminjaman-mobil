@@ -14,19 +14,50 @@ final class BookingException extends BusinessRuleException
 {
     private const MAX_LISTED_CONFLICTS = 3;
 
+    private const RELOAD_HINT = 'Data kemungkinan baru saja diubah petugas lain; muat ulang halaman untuk melihat data terbaru.';
+
+    /**
+     * Antarmuka hanya menawarkan transisi yang sah, jadi transisi yang ditolak
+     * hampir selalu berarti data sudah diubah petugas lain (atau klik ganda).
+     */
     public static function invalidTransition(BookingStatus $from, BookingStatus $to): self
     {
-        return new self("Peminjaman berstatus {$from->label()} tidak dapat diubah menjadi {$to->label()}.");
+        return new self("Peminjaman ini sudah berstatus {$from->label()} sehingga tidak dapat diubah menjadi {$to->label()}. ".self::RELOAD_HINT);
     }
 
     public static function notEditable(BookingStatus $status): self
     {
-        return new self("Jadwal hanya dapat diedit selama peminjaman berstatus Dijadwalkan (status saat ini: {$status->label()}).");
+        return new self("Jadwal hanya dapat diedit selama peminjaman berstatus Dijadwalkan (status saat ini: {$status->label()}). ".self::RELOAD_HINT);
     }
 
     public static function notExtendable(BookingStatus $status): self
     {
-        return new self("Hanya peminjaman Aktif yang dapat diperpanjang (status saat ini: {$status->label()}).");
+        return new self("Hanya peminjaman Aktif yang dapat diperpanjang (status saat ini: {$status->label()}). ".self::RELOAD_HINT);
+    }
+
+    /**
+     * @param  Collection<int, Booking>  $conflicts
+     */
+    public static function employeeConflict(string $name, Collection $conflicts): self
+    {
+        $listed = $conflicts->take(self::MAX_LISTED_CONFLICTS)
+            ->map(fn (Booking $booking): string => "{$booking->code} ({$booking->car->plate_number}, ".DateFormat::range($booking->start_at, $booking->planned_return_at).')')
+            ->implode('; ');
+        $remaining = $conflicts->count() - self::MAX_LISTED_CONFLICTS;
+        $suffix = $remaining > 0 ? " dan {$remaining} lainnya" : '';
+
+        return (new self("{$name} sudah memiliki peminjaman lain pada waktu yang sama: {$listed}{$suffix}. Pilih waktu lain."))
+            ->forField('employee_id');
+    }
+
+    public static function employeeInactiveAtPickup(string $name): self
+    {
+        return new self("Karyawan {$name} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti karyawannya lewat Edit Jadwal.");
+    }
+
+    public static function carInactiveAtPickup(string $plateNumber): self
+    {
+        return new self("Mobil {$plateNumber} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain lewat Edit Jadwal.");
     }
 
     /**

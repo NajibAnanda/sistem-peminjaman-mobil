@@ -21,9 +21,10 @@ final class CarAvailability
      */
     public static function forForm(?CarbonInterface $start, ?CarbonInterface $end, ?Booking $except = null): array
     {
+        // Mobil nonaktif disembunyikan sepenuhnya; Maintenance tetap tampil
+        // tetapi tidak dapat dipilih (prd.md 5.4).
         $cars = Car::query()
             ->where('is_active', true)
-            ->when($except, fn ($query, Booking $booking) => $query->orWhere('id', $booking->car_id))
             ->orderBy('plate_number')
             ->get(['id', 'plate_number', 'brand', 'model', 'operational_status', 'is_active']);
 
@@ -39,7 +40,6 @@ final class CarAvailability
 
         return array_values($cars->map(function (Car $car) use ($conflicts, $start): array {
             $reason = match (true) {
-                ! $car->is_active => 'Nonaktif',
                 $car->operational_status === CarOperationalStatus::Maintenance => 'Maintenance',
                 $conflicts->has($car->id) => 'Bentrok dengan '.$conflicts->get($car->id)->pluck('code')->implode(', '),
                 default => null,

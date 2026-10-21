@@ -1,51 +1,64 @@
 import { CircleCheck } from 'lucide-react';
 import { CarPhotoPlaceholder } from '@/components/cars/car-photo-placeholder';
 import { PhotosIncompleteBadge } from '@/components/cars/photos-incomplete-badge';
+import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
+import { LoadingImage } from '@/components/loading-image';
 import { StatusBadge } from '@/components/status-badge';
 import type { Car } from '@/types';
 
 export function useCarColumns(): DataTableColumn<Car>[] {
     return [
         {
-            id: 'car',
-            header: 'Mobil',
+            id: 'thumbnail',
+            header: 'Foto',
+            skeleton: 'thumbnail',
             cell: (car) => {
                 const thumbnail = car.photos.find((photo) => photo.url)?.url;
 
                 return (
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-14 shrink-0 overflow-hidden rounded-md border border-border">
-                            {thumbnail ? (
-                                <img
-                                    src={thumbnail}
-                                    alt=""
-                                    className="size-full bg-muted object-cover"
-                                />
-                            ) : (
-                                <CarPhotoPlaceholder className="size-full" />
-                            )}
-                        </div>
-                        <div>
-                            <div className="font-medium">
-                                {car.plate_number}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                                {car.brand} {car.model}
-                            </div>
-                        </div>
+                    <div className="relative h-10 w-14 overflow-hidden rounded-md border border-border">
+                        {thumbnail ? (
+                            <LoadingImage
+                                src={thumbnail}
+                                alt={`Foto ${car.plate_number}`}
+                                className="size-full object-cover"
+                                compact
+                            />
+                        ) : (
+                            <CarPhotoPlaceholder className="size-full" />
+                        )}
                     </div>
                 );
             },
         },
         {
+            id: 'plate_number',
+            header: 'Plat',
+            cell: (car) => (
+                <span className="font-medium">{car.plate_number}</span>
+            ),
+        },
+        {
+            id: 'model',
+            header: 'Merk & tipe',
+            cell: (car) => (
+                <TruncatedText
+                    text={`${car.brand} ${car.model}`}
+                    className="max-w-56"
+                />
+            ),
+        },
+        {
             id: 'status',
             header: 'Status',
+            skeleton: 'badge',
             cell: (car) => <StatusBadge status={car.display_status} />,
         },
         {
             id: 'photos',
             header: 'Foto referensi',
+            skeleton: 'badge',
             cell: (car) =>
                 car.photos_complete ? (
                     <span className="inline-flex items-center gap-1 text-muted-foreground">

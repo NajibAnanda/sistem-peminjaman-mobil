@@ -3,15 +3,10 @@ import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Check, Copy, ScanLine } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AlertError from '@/components/alert-error';
+import { FormDialog } from '@/components/form-dialog';
 import InputError from '@/components/input-error';
+import { LoadingButton } from '@/components/loading-button';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import {
     InputOTP,
     InputOTPGroup,
@@ -84,7 +79,7 @@ function TwoFactorSetupStep({
                                         className="aspect-square w-full rounded-lg"
                                     />
                                 ) : (
-                                    <Spinner />
+                                    <Spinner aria-label="Memuat kode QR" />
                                 )}
                             </div>
                         </div>
@@ -107,7 +102,7 @@ function TwoFactorSetupStep({
                         <div className="flex w-full items-stretch overflow-hidden rounded-xl border border-border">
                             {!manualSetupKey ? (
                                 <div className="flex h-full w-full items-center justify-center bg-muted p-3">
-                                    <Spinner />
+                                    <Spinner aria-label="Memuat kode" />
                                 </div>
                             ) : (
                                 <>
@@ -209,15 +204,14 @@ function TwoFactorVerificationStep({
                             >
                                 Kembali
                             </Button>
-                            <Button
+                            <LoadingButton
                                 type="submit"
                                 className="flex-1"
-                                disabled={
-                                    processing || code.length < OTP_MAX_LENGTH
-                                }
+                                loading={processing}
+                                disabled={code.length < OTP_MAX_LENGTH}
                             >
                                 Konfirmasi
-                            </Button>
+                            </LoadingButton>
                         </div>
                     </div>
                 </>
@@ -320,36 +314,30 @@ export default function TwoFactorSetupModal({
     }, [isOpen, qrCodeSvg]);
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent
-                className="sm:max-w-md"
-                onInteractOutside={(event) => event.preventDefault()}
-            >
-                <DialogHeader className="flex items-center justify-center">
-                    <GridScanIcon />
-                    <DialogTitle>{modalConfig.title}</DialogTitle>
-                    <DialogDescription className="text-center">
-                        {modalConfig.description}
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="flex flex-col items-center space-y-5">
-                    {showVerificationStep ? (
-                        <TwoFactorVerificationStep
-                            onClose={handleClose}
-                            onBack={() => setShowVerificationStep(false)}
-                        />
-                    ) : (
-                        <TwoFactorSetupStep
-                            qrCodeSvg={qrCodeSvg}
-                            manualSetupKey={manualSetupKey}
-                            buttonText={modalConfig.buttonText}
-                            onNextStep={handleModalNextStep}
-                            errors={errors}
-                        />
-                    )}
-                </div>
-            </DialogContent>
-        </Dialog>
+        <FormDialog
+            open={isOpen}
+            onOpenChange={(open) => !open && handleClose()}
+            title={modalConfig.title}
+            description={modalConfig.description}
+            footer={null}
+        >
+            <div className="flex flex-col items-center space-y-5">
+                <GridScanIcon />
+                {showVerificationStep ? (
+                    <TwoFactorVerificationStep
+                        onClose={handleClose}
+                        onBack={() => setShowVerificationStep(false)}
+                    />
+                ) : (
+                    <TwoFactorSetupStep
+                        qrCodeSvg={qrCodeSvg}
+                        manualSetupKey={manualSetupKey}
+                        buttonText={modalConfig.buttonText}
+                        onNextStep={handleModalNextStep}
+                        errors={errors}
+                    />
+                )}
+            </div>
+        </FormDialog>
     );
 }

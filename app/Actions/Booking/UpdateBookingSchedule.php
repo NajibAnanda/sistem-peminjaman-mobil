@@ -56,12 +56,19 @@ final class UpdateBookingSchedule
                 $this->ensureCarSchedulable($car);
             }
 
-            if ($booking->employee_id !== $data['employee_id']) {
-                $this->ensureEmployeeActive(Employee::query()->lockForUpdate()->findOrFail($data['employee_id']));
+            $employeeChanged = $booking->employee_id !== $data['employee_id'];
+            $employee = Employee::query()->lockForUpdate()->findOrFail($data['employee_id']);
+
+            if ($employeeChanged) {
+                $this->ensureEmployeeActive($employee);
             }
 
             if ($carChanged || $timeChanged) {
                 $this->ensureNoConflict($car, $data['start_at'], $data['planned_return_at'], $booking);
+            }
+
+            if ($employeeChanged || $timeChanged) {
+                $this->ensureEmployeeFree($employee, $data['start_at'], $data['planned_return_at'], $booking);
             }
 
             $before = $booking->only(self::LOGGED_ATTRIBUTES);

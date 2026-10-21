@@ -122,7 +122,7 @@ export default function StaffIndex({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Kelola Petugas"
-                    description="Akun Pengelola dan Admin yang dapat memakai aplikasi."
+                    description="Kelola akun petugas yang dapat mengakses sistem beserta peran dan status aksesnya."
                     actions={
                         <Button
                             onClick={() => openForm(null)}
@@ -136,7 +136,7 @@ export default function StaffIndex({
 
                 <DataTableCard
                     title="Daftar Petugas"
-                    description="Status akun, autentikasi dua faktor, dan login terakhir."
+                    description="Daftar akun petugas lengkap dengan peran, status akun, autentikasi dua faktor, dan login terakhir."
                     table={table}
                     data={staff}
                     columns={columns}

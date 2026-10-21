@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AwaitingReturnHint } from '@/components/bookings/awaiting-return-notice';
+import { ListSkeleton } from '@/components/skeletons/list-skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -13,6 +14,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useDelayedFlag } from '@/hooks/use-delayed-flag';
 import { cn } from '@/lib/utils';
 import { show } from '@/routes/bookings';
 import type { Booking } from '@/types';
@@ -21,9 +23,12 @@ type Props = {
     title: string;
     description: string;
     icon: LucideIcon;
-    bookings: Booking[];
+    /** undefined = masih dimuat (deferred prop). */
+    bookings: Booking[] | undefined;
     /** Jumlah keseluruhan bila daftar dipotong (mis. dari badge). */
     total?: number;
+    /** Batas baris daftar; dipakai untuk jumlah baris skeleton. */
+    limit?: number;
     viewAllHref?: NonNullable<InertiaLinkProps['href']>;
     emptyText: string;
     /** Info utama di kanan tiap baris, mis. jam atau lama keterlambatan. */
@@ -41,7 +46,8 @@ const toneClasses = {
 
 /**
  * Kartu daftar peminjaman di dashboard. Setiap baris tertaut ke detail
- * peminjaman (FR-20).
+ * peminjaman (FR-20). Selama daftar dimuat, skeleton menempati ruang yang
+ * sama: jumlah barisnya diambil dari badge (min(total, limit)).
  */
 export function BookingListCard({
     title,
@@ -49,14 +55,18 @@ export function BookingListCard({
     icon: Icon,
     bookings,
     total,
+    limit,
     viewAllHref,
     emptyText,
     renderMeta,
     renderDetail,
     tone = 'default',
 }: Props) {
-    const count = total ?? bookings.length;
-    const truncated = count > bookings.length;
+    const loading = bookings === undefined;
+    const showSkeleton = useDelayedFlag(loading);
+    const count = total ?? bookings?.length ?? 0;
+    const truncated = !loading && count > bookings.length;
+    const skeletonRows = Math.max(1, Math.min(count, limit ?? count));
 
     return (
         <Card className="gap-0 pb-0">
@@ -87,8 +97,16 @@ export function BookingListCard({
                     </CardAction>
                 )}
             </CardHeader>
-            <CardContent className="px-0">
-                {bookings.length === 0 ? (
+            <CardContent className="px-0" aria-busy={loading}>
+                {loading && count > 0 ? (
+                    // Pemuatan singkat: ruang tetap disiapkan tanpa skeleton.
+                    <div className={cn(!showSkeleton && 'invisible')}>
+                        <ListSkeleton
+                            rows={skeletonRows}
+                            detailLine={renderDetail !== undefined}
+                        />
+                    </div>
+                ) : !bookings || bookings.length === 0 ? (
                     <p className="px-6 py-8 text-center text-sm text-muted-foreground">
                         {emptyText}
                     </p>

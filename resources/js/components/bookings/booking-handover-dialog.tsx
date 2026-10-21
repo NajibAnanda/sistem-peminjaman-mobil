@@ -1,20 +1,10 @@
 import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
+import { FormDialog } from '@/components/form-dialog';
+import { FormField } from '@/components/form/form-field';
 import type { CapturedPhoto } from '@/components/photo-capture';
 import { PhotoCapture } from '@/components/photo-capture';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { pickup, returnMethod } from '@/routes/bookings';
 import type { Booking, PhotoSource } from '@/types';
@@ -94,79 +84,54 @@ export function BookingHandoverDialog({
     };
 
     return (
-        <Dialog
+        <FormDialog
             open={open}
-            onOpenChange={(next) => !form.processing && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            title={text.title}
+            description={
+                <>
+                    {booking.code} · {booking.car.plate_number} ·{' '}
+                    {booking.employee.name}. {text.result}
+                </>
+            }
+            onSubmit={submit}
+            submitLabel={text.submit}
+            processing={form.processing}
+            submitTestId="handover-submit"
         >
-            <DialogContent
-                className="sm:max-w-lg"
-                onInteractOutside={(event) => event.preventDefault()}
-            >
-                <form onSubmit={submit} className="grid gap-6">
-                    <DialogHeader>
-                        <DialogTitle>{text.title}</DialogTitle>
-                        <DialogDescription>
-                            {booking.code} · {booking.car.plate_number} ·{' '}
-                            {booking.employee.name}. {text.result}
-                        </DialogDescription>
-                    </DialogHeader>
+            <div className="grid gap-5">
+                <FormField
+                    id="handover-photo"
+                    label="Foto kondisi mobil"
+                    required
+                >
+                    <PhotoCapture
+                        value={photo}
+                        onChange={changePhoto}
+                        maxUploadKb={maxUploadKb}
+                        error={form.errors.photo ?? form.errors.source}
+                        disabled={form.processing}
+                    />
+                </FormField>
 
-                    <div className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label>Foto kondisi mobil</Label>
-                            <PhotoCapture
-                                value={photo}
-                                onChange={changePhoto}
-                                maxUploadKb={maxUploadKb}
-                                error={form.errors.photo ?? form.errors.source}
-                                disabled={form.processing}
-                            />
-                        </div>
-
-                        {stage === 'return' && (
-                            <div className="grid gap-2">
-                                <Label htmlFor="return-notes">
-                                    Catatan kondisi (opsional)
-                                </Label>
-                                <Textarea
-                                    id="return-notes"
-                                    value={form.data.return_notes}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'return_notes',
-                                            e.target.value,
-                                        )
-                                    }
-                                    maxLength={1000}
-                                    placeholder="Misalnya: baret baru di pintu kiri belakang"
-                                />
-                                <InputError
-                                    message={form.errors.return_notes}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            disabled={form.processing}
-                        >
-                            Batal
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={form.processing || photo === null}
-                            data-test="handover-submit"
-                        >
-                            {form.processing && <Spinner />}
-                            {text.submit}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                {stage === 'return' && (
+                    <FormField
+                        id="return-notes"
+                        label="Catatan kondisi (opsional)"
+                        error={form.errors.return_notes}
+                    >
+                        <Textarea
+                            id="return-notes"
+                            value={form.data.return_notes}
+                            onChange={(e) =>
+                                form.setData('return_notes', e.target.value)
+                            }
+                            maxLength={1000}
+                            placeholder="Misalnya: baret baru di pintu kiri belakang"
+                        />
+                    </FormField>
+                )}
+            </div>
+        </FormDialog>
     );
 }

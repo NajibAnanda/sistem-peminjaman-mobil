@@ -12,6 +12,7 @@ use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingExtension;
 use App\Models\Car;
+use App\Models\Employee;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -42,8 +43,11 @@ final class ExtendBooking
 
             $car = Car::query()->lockForUpdate()->findOrFail($booking->car_id);
 
+            $employee = Employee::query()->lockForUpdate()->findOrFail($booking->employee_id);
+
             try {
                 $this->ensureNoConflict($car, $booking->start_at, $newPlannedReturn, $booking);
+                $this->ensureEmployeeFree($employee, $booking->start_at, $newPlannedReturn, $booking);
             } catch (BookingException $exception) {
                 // Pada perpanjangan, yang perlu diubah adalah waktu kembali, bukan mobil.
                 throw $exception->forField('new_planned_return_at');

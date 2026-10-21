@@ -155,7 +155,7 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 
 ### 3.1 Penjadwalan Peminjaman
 
-Admin mencatat permintaan karyawan: memilih karyawan dan mobil (kotak pilihan yang dapat dicari), waktu mulai dan rencana kembali (input tanggal-waktu bawaan browser), serta tujuan. Waktu mulai tidak boleh di masa lalu, kecuali dalam toleransi 15 menit untuk karyawan yang datang langsung (diperiksa saat jadwal dibuat atau saat waktu mulainya diubah). Saat rentang waktu dipilih, daftar mobil menandai mobil yang tersedia pada rentang itu. Jika bentrok, sistem menolak dan menunjukkan peminjaman yang bertabrakan. Peminjaman berstatus **Dijadwalkan** masih bisa diedit (mobil, karyawan, waktu, tujuan) atau dibatalkan (dengan alasan).
+Admin mencatat permintaan karyawan: memilih karyawan dan mobil (kotak pilihan yang dapat dicari), waktu mulai dan rencana kembali (pemilih tanggal & jam), serta tujuan. Waktu mulai tidak boleh di masa lalu, kecuali dalam toleransi 15 menit untuk karyawan yang datang langsung (diperiksa saat jadwal dibuat atau saat waktu mulainya diubah). Saat rentang waktu dipilih, daftar mobil menandai mobil yang tersedia pada rentang itu. Jika bentrok, sistem menolak dan menunjukkan peminjaman yang bertabrakan. Peminjaman berstatus **Dijadwalkan** masih bisa diedit (mobil, karyawan, waktu, tujuan) atau dibatalkan (dengan alasan).
 
 ### 3.2 Serah Terima & Foto Bukti (Fitur Utama)
 
@@ -295,12 +295,15 @@ Status mobil yang tampil di aplikasi diturunkan dengan urutan prioritas berikut 
 
 ### 5.4 Aturan Lain
 
-- Waktu rencana kembali harus setelah waktu mulai.
+- Waktu rencana kembali harus setelah waktu mulai, dengan durasi minimal 30 menit. Tidak ada batas durasi maksimal; batas dapat ditetapkan kantor kemudian lewat `.env` (`FLEET_MAX_BOOKING_DAYS`) tanpa mengubah kode. Peminjaman lebih dari 7 hari (`FLEET_LONG_BOOKING_WARNING_DAYS`) hanya memunculkan konfirmasi "Pastikan tanggal sudah benar" di form, tanpa memblokir penyimpanan.
+- Satu karyawan tidak boleh memiliki dua peminjaman Dijadwalkan/Aktif yang waktunya tumpang tindih, meskipun mobilnya berbeda.
+- Tujuan minimal 5 karakter; alasan pembatalan dan perpanjangan minimal 10 karakter.
+- Ekspor Riwayat wajib memilih periode dengan rentang maksimal 366 hari (diatur di `config/fleet.php`). Halaman Riwayat dibuka dengan periode bulan berjalan, dengan pilihan cepat Hari ini, 7 hari terakhir, Bulan ini, Bulan lalu, 3 bulan terakhir, dan Tahun ini.
 - Waktu mulai tidak boleh lebih awal dari waktu sekarang dikurangi toleransi (default 15 menit, diatur di `config/fleet.php`). Berlaku untuk jadwal baru, dan untuk edit jadwal **hanya bila waktu mulai diubah**. Peminjaman yang sudah Belum Diambil tetap dapat diedit (tujuan, karyawan, mobil, rencana kembali) tanpa mengubah waktu mulai.
-- Mobil Nonaktif atau Maintenance tidak dapat dipilih untuk jadwal baru.
-- Karyawan Nonaktif tidak dapat dipilih untuk jadwal baru.
+- Mobil Nonaktif disembunyikan dari pilihan jadwal; mobil Maintenance tetap tampil tetapi tidak dapat dipilih, dengan keterangan "Maintenance".
+- Karyawan Nonaktif disembunyikan dari pilihan jadwal.
 - Edit jadwal (hanya saat `scheduled`) boleh mengganti mobil, karyawan, waktu mulai, rencana kembali, dan tujuan. Pengecekan bentrok dijalankan ulang setiap kali mobil, waktu mulai, atau rencana kembali berubah; nilai sebelum/sesudah dicatat di log aktivitas.
-- Serah terima ambil boleh sebelum `start_at` (`picked_up_at` = waktu aktual), tetapi ditolak jika mobil sedang Maintenance atau masih memiliki peminjaman `active` lain.
+- Serah terima ambil boleh sebelum `start_at` (`picked_up_at` = waktu aktual), tetapi ditolak jika mobil sedang Maintenance, mobil atau karyawan sudah nonaktif, atau mobil masih memiliki peminjaman `active` lain.
 - Perpanjangan: rencana kembali baru wajib lebih lambat dari `planned_return_at` saat ini.
 - Serah terima ambil dan kembali wajib menyertakan tepat 1 foto.
 - Mobil boleh dibuat tanpa foto referensi (0–2 foto); slot kosong menampilkan placeholder dan penanda **Foto belum lengkap**.
@@ -749,7 +752,7 @@ Badge status selalu menampilkan teks (dan ikon), tidak hanya warna.
 - Pesan sukses/gagal memakai toast (Sonner).
 - Tabel memakai pagination server, pencarian, dan filter.
 - Empty state yang jelas di setiap daftar.
-- Input waktu memakai `datetime-local` bawaan browser.
+- Input tanggal/waktu memakai pemilih tanggal berbasis shadcn (`calendar` + `popover`, react-day-picker + date-fns) dengan locale Indonesia, tampilan hari/bulan/tahun, dan pemilih jam-menit.
 - Pemilihan karyawan dan mobil memakai combobox yang dapat dicari (shadcn `command`).
 - Galeri foto referensi memakai dialog dengan tombol sebelumnya/selanjutnya, tanpa komponen carousel.
 
@@ -886,7 +889,8 @@ README project wajib berisi:
 | **Tanpa lupa password lewat email, verifikasi email, dan passkey** | Sistem tidak mengirim email; reset dilakukan Pengelola (perintah artisan untuk Pengelola yang terkunci). Passkey menambah permukaan serangan tanpa kebutuhan nyata. |
 | **2FA dan cek password bocor diatur lewat `.env`** | Default longgar untuk PC kantor yang offline; dapat diperketat tanpa ubah kode saat sistem bisa diakses dari internet. |
 | **Tooling Vite+ (oxlint + oxfmt) bawaan starter kit** | Menghindari dependensi tambahan ESLint/Prettier. |
-| **Font Inter lokal, input waktu `datetime-local`, galeri tanpa carousel** | Tetap berfungsi tanpa internet, CSP lebih ketat, dan tanpa dependensi tambahan. |
+| **Font Inter lokal, galeri tanpa carousel** | Tetap berfungsi tanpa internet, CSP lebih ketat, dan tanpa dependensi tambahan. |
+| **Pemilih tanggal shadcn (react-day-picker + date-fns)** | Menggantikan `datetime-local` bawaan browser yang tampilannya berbeda-beda antar-browser; dibundel lokal sehingga tetap berfungsi tanpa internet. |
 | **Tanpa microservices, repository pattern berlapis, atau Docker di awal** | Skala kecil; kompleksitas tambahan justru mempersulit perawatan. Struktur tetap siap dikembangkan. |
 
 ---

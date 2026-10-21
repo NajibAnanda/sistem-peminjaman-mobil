@@ -20,11 +20,11 @@ final class EmployeeException extends BusinessRuleException
 
     public static function alreadyInactive(): self
     {
-        return new self('Karyawan ini sudah nonaktif.');
+        return new self('Karyawan ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 
     public static function alreadyActive(): self
     {
-        return new self('Karyawan ini sudah aktif.');
+        return new self('Karyawan ini sudah aktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 }

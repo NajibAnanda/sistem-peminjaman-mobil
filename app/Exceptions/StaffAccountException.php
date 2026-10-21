@@ -28,11 +28,11 @@ final class StaffAccountException extends BusinessRuleException
 
     public static function alreadyInactive(): self
     {
-        return new self('Akun ini sudah nonaktif.');
+        return new self('Akun ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 
     public static function alreadyActive(): self
     {
-        return new self('Akun ini sudah aktif.');
+        return new self('Akun ini sudah aktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 }

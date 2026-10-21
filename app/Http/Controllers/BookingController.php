@@ -114,12 +114,12 @@ final class BookingController extends Controller
 
         return Inertia::render('bookings/form', [
             'booking' => $booking === null ? null : (new BookingResource($booking->load(['employee', 'car'])))->resolve(),
+            // Karyawan nonaktif disembunyikan sepenuhnya (prd.md 5.4).
             'employees' => Employee::query()
                 ->where('is_active', true)
-                ->when($booking, fn ($query, Booking $booking) => $query->orWhere('id', $booking->employee_id))
                 ->orderBy('name')
-                ->get(['id', 'name', 'employee_number', 'division', 'is_active'])
-                ->map(fn (Employee $employee): array => $employee->only(['id', 'name', 'employee_number', 'division', 'is_active']))
+                ->get(['id', 'name', 'employee_number', 'division'])
+                ->map(fn (Employee $employee): array => $employee->only(['id', 'name', 'employee_number', 'division']))
                 ->values()
                 ->all(),
             // Dimuat ulang (partial reload) setiap rentang waktu berubah.

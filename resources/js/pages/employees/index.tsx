@@ -71,7 +71,7 @@ export default function EmployeeIndex({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Data Karyawan"
-                    description="Karyawan yang dapat meminjam mobil dinas."
+                    description="Kelola data karyawan yang dapat dicatat sebagai peminjam mobil dinas beserta kontaknya."
                     actions={
                         <Button
                             onClick={() => openForm(null)}
@@ -85,7 +85,7 @@ export default function EmployeeIndex({
 
                 <DataTableCard
                     title="Daftar Karyawan"
-                    description="NIP, divisi, dan nomor yang dapat dihubungi."
+                    description="Identitas, divisi, dan nomor HP karyawan yang dapat dihubungi selama peminjaman berlangsung."
                     table={table}
                     data={employees}
                     columns={columns}

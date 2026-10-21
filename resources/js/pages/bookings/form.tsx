@@ -1,19 +1,24 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { CircleAlert } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import InputError from '@/components/input-error';
+import { DateTimePicker } from '@/components/date-picker/date-time-picker';
+import { addMinutes } from '@/components/date-picker/utils';
+import { FormCard } from '@/components/form/form-card';
+import { FormField } from '@/components/form/form-field';
+import { FormGrid } from '@/components/form/form-grid';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PageHeader } from '@/components/page-header';
 import type { ComboboxOption } from '@/components/searchable-combobox';
 import { SearchableCombobox } from '@/components/searchable-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LoadingButton } from '@/components/loading-button';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useDateFormat } from '@/hooks/use-date-format';
+import { useLongBookingConfirm } from '@/hooks/use-long-booking-confirm';
+import { toDateTimeLocal, toZonedIso } from '@/lib/datetime';
 import { create, edit, index, show, store, update } from '@/routes/bookings';
 import type { BookingFormProps, CarOption, EmployeeOption } from '@/types';
 
@@ -29,23 +34,17 @@ type ScheduleForm = {
 
 /** Kunci rentang yang valid (kembali setelah mulai), atau '' bila belum lengkap. */
 function rangeKey(start: string, end: string): string {
-    // Format datetime-local sama panjang, sehingga perbandingan string aman.
+    // Format "Y-m-dTH:i" sama panjang, sehingga perbandingan string aman.
     return start !== '' && end !== '' && end > start ? `${start}|${end}` : '';
 }
 
-function employeeOptions(
-    employees: EmployeeOption[],
-    selected: number | null,
-): ComboboxOption[] {
+/** Hanya karyawan aktif yang dikirim server; yang nonaktif disembunyikan. */
+function employeeOptions(employees: EmployeeOption[]): ComboboxOption[] {
     return employees.map((employee) => ({
         value: employee.id,
         label: employee.name,
         description: `${employee.employee_number} · ${employee.division}`,
         keywords: `${employee.employee_number} ${employee.division}`,
-        hint: employee.is_active ? undefined : (
-            <span className="text-muted-foreground">Nonaktif</span>
-        ),
-        disabled: !employee.is_active && employee.id !== selected,
     }));
 }
 
@@ -76,16 +75,21 @@ export default function BookingFormPage({
     cars,
     startToleranceMinutes,
 }: BookingFormProps) {
-    const { toDateTimeLocal } = useDateFormat();
+    const { timezone, bookingRules } = usePage().props;
+    const { toDateTimeLocal: toLocal } = useDateFormat();
     const form = useForm<ScheduleForm>({
         employee_id: booking?.employee.id ?? null,
         car_id: booking?.car.id ?? null,
-        start_at: booking ? toDateTimeLocal(booking.start_at) : '',
-        planned_return_at: booking
-            ? toDateTimeLocal(booking.planned_return_at)
-            : '',
+        start_at: booking ? toLocal(booking.start_at) : '',
+        planned_return_at: booking ? toLocal(booking.planned_return_at) : '',
         purpose: booking?.purpose ?? '',
     });
+    // Batas pilihan di kalender; aturan sebenarnya divalidasi server
+    // (AGENTS.md 5.11).
+    const earliestStart = addMinutes(
+        toDateTimeLocal(new Date(), timezone),
+        -startToleranceMinutes,
+    );
     const [checkingCars, setCheckingCars] = useState(false);
 
     const range = rangeKey(form.data.start_at, form.data.planned_return_at);
@@ -104,7 +108,10 @@ export default function BookingFormPage({
             requestedRange.current = range;
             router.get(
                 formUrl,
-                { start_at: start, planned_return_at: end },
+                {
+                    start_at: toZonedIso(start, timezone),
+                    planned_return_at: toZonedIso(end, timezone),
+                },
                 {
                     only: ['cars'],
                     preserveState: true,
@@ -117,16 +124,31 @@ export default function BookingFormPage({
         }, AVAILABILITY_DEBOUNCE_MS);
 
         return () => clearTimeout(timeout);
-    }, [range, formUrl]);
+    }, [range, formUrl, timezone]);
 
     const selectedCar = cars.find((car) => car.id === form.data.car_id);
 
-    const submit = (event: FormEvent) => {
-        event.preventDefault();
+    const longBooking = useLongBookingConfirm();
 
+    const save = () => {
+        // Server menerima ISO 8601 dengan offset zona waktu aplikasi.
+        form.transform((data) => ({
+            ...data,
+            start_at: toZonedIso(data.start_at, timezone),
+            planned_return_at: toZonedIso(data.planned_return_at, timezone),
+        }));
         form.submit(booking ? update(booking.id) : store(), {
             preserveScroll: true,
         });
+    };
+
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+        longBooking.confirmIfLong(
+            form.data.start_at,
+            form.data.planned_return_at,
+            save,
+        );
     };
 
     return (
@@ -142,24 +164,53 @@ export default function BookingFormPage({
                     }
                     description={
                         booking
-                            ? 'Jadwal masih dapat diubah selama mobil belum diserahterimakan.'
-                            : 'Catat permintaan karyawan. Pilih waktu terlebih dahulu agar ketersediaan mobil terlihat.'
+                            ? 'Ubah karyawan, mobil, waktu, atau tujuan selama mobil belum diserahterimakan kepada karyawan.'
+                            : 'Catat permintaan peminjaman karyawan; pilih waktu terlebih dahulu agar ketersediaan mobil terlihat.'
                     }
                 />
 
-                <Card className="max-w-3xl">
-                    <CardContent>
-                        <form onSubmit={submit} className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="booking-employee">
-                                    Karyawan
-                                </Label>
+                <form onSubmit={submit}>
+                    <FormCard
+                        title="Detail Peminjaman"
+                        description="Isi karyawan, waktu, mobil, dan tujuan peminjaman; kolom bertanda * wajib diisi."
+                        footer={
+                            <>
+                                <Button
+                                    variant="outline"
+                                    asChild
+                                    disabled={form.processing}
+                                >
+                                    <Link
+                                        href={
+                                            booking ? show(booking.id) : index()
+                                        }
+                                    >
+                                        Batal
+                                    </Link>
+                                </Button>
+                                <LoadingButton
+                                    type="submit"
+                                    loading={form.processing}
+                                    data-test="booking-form-submit"
+                                >
+                                    {booking
+                                        ? 'Simpan Perubahan'
+                                        : 'Jadwalkan Peminjaman'}
+                                </LoadingButton>
+                            </>
+                        }
+                    >
+                        <FormGrid>
+                            <FormField
+                                id="booking-employee"
+                                label="Karyawan"
+                                required
+                                error={form.errors.employee_id}
+                                span="full"
+                            >
                                 <SearchableCombobox
                                     id="booking-employee"
-                                    options={employeeOptions(
-                                        employees,
-                                        form.data.employee_id,
-                                    )}
+                                    options={employeeOptions(employees)}
                                     value={form.data.employee_id}
                                     onChange={(id) =>
                                         form.setData('employee_id', id)
@@ -169,76 +220,70 @@ export default function BookingFormPage({
                                     emptyText="Karyawan tidak ditemukan."
                                     invalid={!!form.errors.employee_id}
                                 />
-                                <InputError message={form.errors.employee_id} />
-                            </div>
+                            </FormField>
 
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="grid content-start gap-2">
-                                    <Label htmlFor="booking-start">
-                                        Waktu mulai
-                                    </Label>
-                                    <Input
-                                        id="booking-start"
-                                        type="datetime-local"
-                                        value={form.data.start_at}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'start_at',
-                                                e.target.value,
-                                            )
-                                        }
-                                        aria-invalid={
-                                            !!form.errors.start_at || undefined
-                                        }
-                                        required
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        Paling awal {startToleranceMinutes}{' '}
-                                        menit sebelum sekarang, untuk karyawan
-                                        yang datang langsung.
-                                    </p>
-                                    <InputError
-                                        message={form.errors.start_at}
-                                    />
-                                </div>
+                            <FormField
+                                id="booking-start"
+                                label="Waktu mulai"
+                                required
+                                error={form.errors.start_at}
+                                hint={`Paling awal ${startToleranceMinutes} menit sebelum sekarang, untuk karyawan yang datang langsung.`}
+                            >
+                                <DateTimePicker
+                                    id="booking-start"
+                                    value={form.data.start_at}
+                                    onChange={(value) =>
+                                        form.setData('start_at', value)
+                                    }
+                                    min={earliestStart}
+                                    placeholder="Pilih waktu mulai"
+                                    invalid={!!form.errors.start_at}
+                                    aria-describedby="booking-start-hint"
+                                />
+                            </FormField>
 
-                                <div className="grid content-start gap-2">
-                                    <Label htmlFor="booking-return">
-                                        Rencana kembali
-                                    </Label>
-                                    <Input
-                                        id="booking-return"
-                                        type="datetime-local"
-                                        value={form.data.planned_return_at}
-                                        min={form.data.start_at || undefined}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'planned_return_at',
-                                                e.target.value,
-                                            )
-                                        }
-                                        aria-invalid={
-                                            !!form.errors.planned_return_at ||
-                                            undefined
-                                        }
-                                        required
-                                    />
-                                    <InputError
-                                        message={form.errors.planned_return_at}
-                                    />
-                                </div>
-                            </div>
+                            <FormField
+                                id="booking-return"
+                                label="Rencana kembali"
+                                required
+                                error={form.errors.planned_return_at}
+                                hint={
+                                    bookingRules.maxDurationDays === null
+                                        ? `Durasi peminjaman minimal ${bookingRules.minDurationMinutes} menit.`
+                                        : `Durasi peminjaman ${bookingRules.minDurationMinutes} menit sampai ${bookingRules.maxDurationDays} hari.`
+                                }
+                            >
+                                <DateTimePicker
+                                    id="booking-return"
+                                    value={form.data.planned_return_at}
+                                    onChange={(value) =>
+                                        form.setData('planned_return_at', value)
+                                    }
+                                    min={form.data.start_at || undefined}
+                                    placeholder="Pilih rencana kembali"
+                                    invalid={!!form.errors.planned_return_at}
+                                    aria-describedby="booking-return-hint"
+                                />
+                            </FormField>
 
-                            <div className="grid gap-2">
-                                <div className="flex items-center justify-between gap-2">
-                                    <Label htmlFor="booking-car">Mobil</Label>
-                                    {checkingCars && (
+                            <FormField
+                                id="booking-car"
+                                label="Mobil"
+                                required
+                                error={form.errors.car_id}
+                                span="full"
+                                labelAside={
+                                    checkingCars && (
                                         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                            <Spinner className="size-3" />
+                                            <Spinner
+                                                className="size-3"
+                                                aria-hidden="true"
+                                            />
                                             Memeriksa ketersediaan...
                                         </span>
-                                    )}
-                                </div>
+                                    )
+                                }
+                            >
                                 <SearchableCombobox
                                     id="booking-car"
                                     options={carOptions(cars, form.data.car_id)}
@@ -255,6 +300,7 @@ export default function BookingFormPage({
                                     emptyText="Mobil tidak ditemukan."
                                     invalid={!!form.errors.car_id}
                                     disabled={range === ''}
+                                    loading={checkingCars}
                                 />
                                 {selectedCar?.available === false &&
                                     !form.errors.car_id && (
@@ -268,13 +314,16 @@ export default function BookingFormPage({
                                             </AlertDescription>
                                         </Alert>
                                     )}
-                                <InputError message={form.errors.car_id} />
-                            </div>
+                            </FormField>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="booking-purpose">
-                                    Tujuan / keperluan
-                                </Label>
+                            <FormField
+                                id="booking-purpose"
+                                label="Tujuan / keperluan"
+                                required
+                                error={form.errors.purpose}
+                                hint={`Minimal ${bookingRules.purposeMinLength} karakter.`}
+                                span="full"
+                            >
                                 <Textarea
                                     id="booking-purpose"
                                     value={form.data.purpose}
@@ -282,44 +331,21 @@ export default function BookingFormPage({
                                         form.setData('purpose', e.target.value)
                                     }
                                     required
+                                    minLength={bookingRules.purposeMinLength}
                                     maxLength={255}
                                     placeholder="Misalnya: kunjungan ke kantor cabang Bekasi"
                                     aria-invalid={
                                         !!form.errors.purpose || undefined
                                     }
+                                    aria-describedby="booking-purpose-hint"
                                 />
-                                <InputError message={form.errors.purpose} />
-                            </div>
-
-                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    disabled={form.processing}
-                                >
-                                    <Link
-                                        href={
-                                            booking ? show(booking.id) : index()
-                                        }
-                                    >
-                                        Batal
-                                    </Link>
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={form.processing}
-                                    data-test="booking-form-submit"
-                                >
-                                    {form.processing && <Spinner />}
-                                    {booking
-                                        ? 'Simpan Perubahan'
-                                        : 'Jadwalkan Peminjaman'}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                            </FormField>
+                        </FormGrid>
+                    </FormCard>
+                </form>
             </div>
+
+            <ConfirmDialog {...longBooking.dialog} />
         </>
     );
 }

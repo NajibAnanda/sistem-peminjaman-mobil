@@ -32,13 +32,17 @@ final readonly class TableQuery
         public ?CarbonImmutable $from = null,
         /** Akhir hari terakhir periode (inklusif). */
         public ?CarbonImmutable $to = null,
+        /** Periode bawaan bila URL tidak membawa periode (mis. bulan berjalan). */
+        public bool $defaultsToCurrentMonth = false,
     ) {}
 
     /**
      * @param  array<string, list<string>>  $allowedFilters  kunci filter => nilai yang diizinkan
      * @param  bool  $withPeriod  baca juga filter periode `from` & `to`
+     * @param  bool  $defaultToCurrentMonth  periode wajib: bila URL tidak membawa
+     *                                       `from`/`to`, pakai bulan berjalan
      */
-    public static function fromRequest(Request $request, array $allowedFilters, bool $withPeriod = false): self
+    public static function fromRequest(Request $request, array $allowedFilters, bool $withPeriod = false, bool $defaultToCurrentMonth = false): self
     {
         $search = $request->query('search');
         $search = is_string($search) ? mb_substr(trim($search), 0, self::MAX_SEARCH_LENGTH) : '';
@@ -58,6 +62,12 @@ final readonly class TableQuery
         $from = $withPeriod ? self::date($request->query('from')) : null;
         $to = $withPeriod ? self::date($request->query('to')) : null;
 
+        $defaultsToCurrentMonth = $withPeriod && $defaultToCurrentMonth;
+
+        if ($defaultsToCurrentMonth && ! $request->query->has('from') && ! $request->query->has('to')) {
+            [$from, $to] = self::currentMonth();
+        }
+
         // Rentang terbalik dianggap salah ketik, bukan hasil kosong.
         if ($from !== null && $to !== null && $from->greaterThan($to)) {
             [$from, $to] = [$to, $from];
@@ -69,6 +79,7 @@ final readonly class TableQuery
             $withPeriod,
             $from?->startOfDay(),
             $to?->endOfDay(),
+            $defaultsToCurrentMonth,
         );
     }
 
@@ -83,7 +94,7 @@ final readonly class TableQuery
     /**
      * Dikirim ke frontend agar input pencarian dan centang filter sesuai URL.
      *
-     * @return array{search: string|null, filters: array<string, list<string>>, period?: array{from: string|null, to: string|null}}
+     * @return array{search: string|null, filters: array<string, list<string>>, period?: array{from: string|null, to: string|null, default?: array{from: string, to: string}}}
      */
     public function toArray(): array
     {
@@ -97,9 +108,26 @@ final readonly class TableQuery
                 'from' => $this->from?->toDateString(),
                 'to' => $this->to?->toDateString(),
             ];
+
+            // Frontend memakai periode bawaan untuk tombol reset dan untuk
+            // menentukan apakah tabel sedang "difilter".
+            if ($this->defaultsToCurrentMonth) {
+                [$from, $to] = self::currentMonth();
+                $state['period']['default'] = ['from' => $from->toDateString(), 'to' => $to->toDateString()];
+            }
         }
 
         return $state;
+    }
+
+    /**
+     * @return array{0: CarbonImmutable, 1: CarbonImmutable}
+     */
+    private static function currentMonth(): array
+    {
+        $now = CarbonImmutable::now();
+
+        return [$now->startOfMonth(), $now->endOfMonth()];
     }
 
     /**

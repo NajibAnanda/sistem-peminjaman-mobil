@@ -45,12 +45,13 @@ test('ringkasan armada menghitung status tampilan mobil', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
             ->where('now', now()->toIso8601String())
-            ->where('fleet', [
+            ->missing('fleet')
+            ->loadDeferredProps(fn (Assert $reload) => $reload->where('fleet', [
                 ['status' => 'available', 'label' => 'Tersedia', 'count' => 2],
                 ['status' => 'borrowed', 'label' => 'Dipinjam', 'count' => 1],
                 ['status' => 'maintenance', 'label' => 'Maintenance', 'count' => 1],
                 ['status' => 'inactive', 'label' => 'Nonaktif', 'count' => 3],
-            ]),
+            ])),
         );
 });
 
@@ -70,13 +71,19 @@ test('jadwal ambil dan kembali hari ini, Terlambat, dan Belum Diambil berisi pem
         ->get(route('dashboard'))
         ->assertInertia(function (Assert $page) use ($pickupLater, $pickupMissed, $returnToday, $overdueToday, $overdueOld, $notPickedUpOld) {
             expect(dashboardCodes($page, 'pickupsToday'))->toBe([$pickupMissed->code, $pickupLater->code])
-                ->and(dashboardCodes($page, 'returnsToday'))->toBe([$overdueToday->code, $returnToday->code])
-                ->and(dashboardCodes($page, 'overdue'))->toBe([$overdueOld->code, $overdueToday->code])
-                ->and(dashboardCodes($page, 'notPickedUp'))->toBe([$notPickedUpOld->code, $pickupMissed->code]);
+                ->and(dashboardCodes($page, 'returnsToday'))->toBe([$overdueToday->code, $returnToday->code]);
 
-            $page->where('overdue.0.employee.phone', $overdueOld->employee->phone)
-                ->where('overdue.0.display_status', 'overdue')
-                ->where('alerts', ['overdue' => 2, 'not_picked_up' => 2]);
+            $page->where('alerts', ['overdue' => 2, 'not_picked_up' => 2])
+                ->where('alertListLimit', 10)
+                ->missing('overdue')
+                ->missing('notPickedUp')
+                ->loadDeferredProps(function (Assert $reload) use ($overdueToday, $overdueOld, $notPickedUpOld, $pickupMissed) {
+                    expect(dashboardCodes($reload, 'overdue'))->toBe([$overdueOld->code, $overdueToday->code])
+                        ->and(dashboardCodes($reload, 'notPickedUp'))->toBe([$notPickedUpOld->code, $pickupMissed->code]);
+
+                    $reload->where('overdue.0.employee.phone', $overdueOld->employee->phone)
+                        ->where('overdue.0.display_status', 'overdue');
+                });
         });
 });
 
@@ -88,8 +95,8 @@ test('daftar Terlambat dibatasi 10 tetapi jumlah di badge tetap lengkap', functi
     $this->actingAs($this->user)
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('overdue', 10)
-            ->where('alerts.overdue', 12));
+            ->where('alerts.overdue', 12)
+            ->loadDeferredProps(fn (Assert $reload) => $reload->has('overdue', 10)));
 });
 
 test('jadwal berikutnya untuk mobil yang belum kembali diberi peringatan (FR-23)', function () {
@@ -106,7 +113,7 @@ test('jadwal berikutnya untuk mobil yang belum kembali diberi peringatan (FR-23)
             $afterOnTime->code => null,
             $next->code => $overdue->code,
         ])
-        ->where('overdue.0.awaiting_return_code', null));
+        ->loadDeferredProps(fn (Assert $reload) => $reload->where('overdue.0.awaiting_return_code', null)));
 
     $this->get(route('bookings.index'))->assertInertia(fn (Assert $page) => $page
         ->where('bookings.data', fn ($rows) => collect($rows)->firstWhere('code', $next->code)['awaiting_return_code'] === $overdue->code));
@@ -146,6 +153,34 @@ test('jumlah query dashboard, peminjaman, dan jadwal armada tidak bertambah seir
 
     expect($countQueries())->toBe($few);
 })->with(['dashboard', 'bookings.index', 'schedule.index']);
+
+test('jumlah query data dashboard yang dimuat belakangan tidak bertambah seiring jumlah data', function () {
+    $this->actingAs($this->user);
+    // Halaman + request kedua untuk data yang dimuat belakangan.
+    $countQueries = function (): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+            ->loadDeferredProps(fn (Assert $reload) => $reload->has('fleet')->has('overdue')->has('notPickedUp')));
+        DB::disableQueryLog();
+
+        return count(DB::getQueryLog());
+    };
+
+    foreach (range(1, 2) as $i) {
+        bookingAt(BookingStatus::Active, '2026-10-19 06:00', '2026-10-20 10:00');
+        bookingAt(BookingStatus::Scheduled, '2026-10-20 08:00', '2026-10-20 18:00');
+    }
+
+    $few = $countQueries();
+
+    foreach (range(1, 8) as $i) {
+        bookingAt(BookingStatus::Active, '2026-10-19 06:00', '2026-10-20 10:00');
+        bookingAt(BookingStatus::Scheduled, '2026-10-20 08:00', '2026-10-20 18:00');
+    }
+
+    expect($countQueries())->toBe($few);
+});
 
 test('tamu dan akun nonaktif tidak dapat membuka dashboard', function () {
     $this->get(route('dashboard'))->assertRedirect(route('login'));

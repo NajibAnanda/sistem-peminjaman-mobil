@@ -6,7 +6,7 @@ namespace App\Http\Requests\Booking;
 
 use App\Http\Requests\Booking\Concerns\BookingScheduleAttributes;
 use App\Models\Booking;
-use Carbon\CarbonImmutable;
+use App\Support\DateInput;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Throwable;
@@ -40,7 +40,7 @@ final class UpdateBookingRequest extends FormRequest
     private function startChanged(): bool
     {
         try {
-            $submitted = CarbonImmutable::parse((string) $this->input('start_at'), (string) config('app.timezone'))->startOfMinute();
+            $submitted = DateInput::parse((string) $this->input('start_at'));
         } catch (Throwable) {
             // Bukan tanggal: biarkan aturan 'date' yang menolak.
             return true;

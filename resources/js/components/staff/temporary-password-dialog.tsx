@@ -1,15 +1,8 @@
-import { Check, Copy, KeyRound } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/form-dialog';
 import { useClipboard } from '@/hooks/use-clipboard';
 import type { TemporaryPasswordFlash } from '@/types';
 
@@ -39,23 +32,14 @@ export function TemporaryPasswordDialog({ credentials, onClose }: Props) {
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
-            <DialogContent
-                className="sm:max-w-md"
-                onInteractOutside={(event) => event.preventDefault()}
-            >
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <KeyRound className="size-5" aria-hidden="true" />
-                        Password Sementara
-                    </DialogTitle>
-                    <DialogDescription>
-                        Berikan password ini kepada {credentials.name} (
-                        {credentials.email}). Password wajib diganti saat login
-                        pertama.
-                    </DialogDescription>
-                </DialogHeader>
-
+        <FormDialog
+            open
+            onOpenChange={(open) => !open && onClose()}
+            title="Password Sementara"
+            description={`Berikan password ini kepada ${credentials.name} (${credentials.email}); password wajib diganti saat login pertama.`}
+            footer={<Button onClick={onClose}>Saya sudah mencatatnya</Button>}
+        >
+            <div className="grid gap-4">
                 <div className="flex items-stretch overflow-hidden rounded-lg border border-border">
                     <code
                         className="flex-1 bg-muted px-3 py-2 font-mono text-lg tracking-wider select-all"
@@ -79,11 +63,7 @@ export function TemporaryPasswordDialog({ credentials, onClose }: Props) {
                         ditutup, password tidak dapat dilihat lagi.
                     </AlertDescription>
                 </Alert>
-
-                <DialogFooter>
-                    <Button onClick={onClose}>Saya sudah mencatatnya</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </FormDialog>
     );
 }

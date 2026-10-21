@@ -111,8 +111,8 @@ export default function CarShow({
                                 )}
                             </CardTitle>
                             <CardDescription>
-                                Klik foto untuk memperbesar. Foto otomatis
-                                diperkecil sebelum diunggah.
+                                Foto tampak depan dan belakang mobil sebagai
+                                acuan kondisi; klik foto untuk memperbesarnya.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -164,8 +164,8 @@ export default function CarShow({
                             <CardHeader>
                                 <CardTitle>Jadwal Mendatang</CardTitle>
                                 <CardDescription>
-                                    Peminjaman yang sudah dijadwalkan untuk
-                                    mobil ini.
+                                    Daftar peminjaman terjadwal yang akan
+                                    memakai mobil ini dalam waktu dekat.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -196,7 +196,7 @@ export default function CarShow({
                                     <EmptyState
                                         icon={CalendarClock}
                                         title="Tidak ada jadwal"
-                                        description="Belum ada peminjaman yang dijadwalkan."
+                                        description="Belum ada peminjaman yang dijadwalkan untuk mobil ini."
                                     />
                                 )}
                             </CardContent>

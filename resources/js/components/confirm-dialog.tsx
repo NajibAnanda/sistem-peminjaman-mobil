@@ -8,8 +8,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingButton } from '@/components/loading-button';
 
 type Props = {
     open: boolean;
@@ -17,6 +16,8 @@ type Props = {
     title: string;
     description: ReactNode;
     confirmLabel: string;
+    /** Label tombol batal; bawaan "Batal". */
+    cancelLabel?: string;
     onConfirm: () => void;
     processing?: boolean;
     destructive?: boolean;
@@ -32,6 +33,7 @@ export function ConfirmDialog({
     title,
     description,
     confirmLabel,
+    cancelLabel = 'Batal',
     onConfirm,
     processing = false,
     destructive = false,
@@ -50,17 +52,16 @@ export function ConfirmDialog({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={processing}>
-                        Batal
+                        {cancelLabel}
                     </AlertDialogCancel>
-                    <Button
+                    <LoadingButton
                         variant={destructive ? 'destructive' : 'default'}
                         onClick={onConfirm}
-                        disabled={processing}
+                        loading={processing}
                         data-test="confirm-dialog-button"
                     >
-                        {processing && <Spinner />}
                         {confirmLabel}
-                    </Button>
+                    </LoadingButton>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

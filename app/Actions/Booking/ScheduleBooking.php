@@ -38,6 +38,7 @@ final class ScheduleBooking
             $this->ensureCarSchedulable($car);
             $this->ensureEmployeeActive($employee);
             $this->ensureNoConflict($car, $data['start_at'], $data['planned_return_at']);
+            $this->ensureEmployeeFree($employee, $data['start_at'], $data['planned_return_at']);
 
             $booking = Booking::query()->create([
                 'code' => $this->codes->next(),

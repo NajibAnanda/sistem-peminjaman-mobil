@@ -87,5 +87,5 @@ test('form edit booking yang bukan Dijadwalkan diarahkan ke detail', function ()
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('bookings.edit', $this->booking))
         ->assertRedirect(route('bookings.show', $this->booking))
-        ->assertSessionHas('error', 'Jadwal hanya dapat diedit selama peminjaman berstatus Dijadwalkan (status saat ini: Aktif).');
+        ->assertSessionHas('error', 'Jadwal hanya dapat diedit selama peminjaman berstatus Dijadwalkan (status saat ini: Aktif). Data kemungkinan baru saja diubah petugas lain; muat ulang halaman untuk melihat data terbaru.');
 });

@@ -62,13 +62,39 @@ return [
     | Peminjaman
     |--------------------------------------------------------------------------
     |
-    | Toleransi waktu mulai di masa lalu, untuk karyawan yang datang langsung
-    | saat jadwal dicatat.
+    | Toleransi waktu mulai di masa lalu (untuk karyawan yang datang langsung
+    | saat jadwal dicatat), durasi minimal satu peminjaman, serta panjang
+    | minimal tujuan dan alasan pembatalan/perpanjangan.
+    |
+    | Durasi dihitung dari waktu mulai sampai rencana kembali (termasuk
+    | setelah perpanjangan). Tidak ada batas maksimal kecuali
+    | FLEET_MAX_BOOKING_DAYS diisi. Durasi di atas
+    | FLEET_LONG_BOOKING_WARNING_DAYS hanya memunculkan peringatan konfirmasi
+    | di form (tidak memblokir penyimpanan).
     |
     */
 
     'booking' => [
         'start_tolerance_minutes' => 15,
+        'min_duration_minutes' => 30,
+        'max_duration_days' => is_numeric(env('FLEET_MAX_BOOKING_DAYS')) ? (int) env('FLEET_MAX_BOOKING_DAYS') : null,
+        'long_booking_warning_days' => (int) env('FLEET_LONG_BOOKING_WARNING_DAYS', 7),
+        'purpose_min_length' => 5,
+        'reason_min_length' => 10,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pemilih Tanggal & Waktu
+    |--------------------------------------------------------------------------
+    |
+    | Kelipatan menit pada pilihan jam di form (mis. 5 = 00, 05, 10, ... 55).
+    | Hanya membatasi pilihan di antarmuka; validasi waktu tetap di server.
+    |
+    */
+
+    'date_picker' => [
+        'minute_step' => 5,
     ],
 
     /*
@@ -80,11 +106,15 @@ return [
     | komputer yang membuka file ("," English, ";" Indonesia). File CSV diberi
     | BOM UTF-8 agar huruf non-ASCII terbaca benar di Excel.
     |
+    | Ekspor wajib memilih periode dengan rentang paling panjang
+    | `max_range_days` hari, agar file tetap ringan dibuka.
+    |
     */
 
     'export' => [
         'csv_delimiter' => env('FLEET_CSV_DELIMITER', ','),
         'chunk_size' => 500,
+        'max_range_days' => 366,
     ],
 
     /*

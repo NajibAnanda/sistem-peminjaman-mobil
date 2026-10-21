@@ -1,18 +1,44 @@
 import { Link } from '@inertiajs/react';
+import { CardStatSkeleton } from '@/components/skeletons/card-stat-skeleton';
 import { StatusBadge } from '@/components/status-badge';
 import { Card } from '@/components/ui/card';
+import { useDelayedFlag } from '@/hooks/use-delayed-flag';
+import { cn } from '@/lib/utils';
 import { index } from '@/routes/cars';
 import type { FleetSummaryItem } from '@/types';
 
 type Props = {
-    items: FleetSummaryItem[];
+    /** undefined = masih dimuat (deferred prop). */
+    items: FleetSummaryItem[] | undefined;
 };
+
+// Sama dengan jumlah App\Enums\CarDisplayStatus (Tersedia, Dipinjam,
+// Maintenance, Nonaktif), agar skeleton menempati ruang yang sama.
+const STATUS_COUNT = 4;
 
 /**
  * Ringkasan armada per status tampilan (FR-20). Setiap kartu membuka Data
  * Mobil dengan filter status yang sama.
  */
 export function FleetSummary({ items }: Props) {
+    const showSkeleton = useDelayedFlag(items === undefined);
+
+    if (items === undefined) {
+        return (
+            <div
+                className={cn(
+                    'grid gap-4 sm:grid-cols-2 xl:grid-cols-4',
+                    !showSkeleton && 'invisible',
+                )}
+                aria-busy="true"
+            >
+                {Array.from({ length: STATUS_COUNT }, (_, index) => (
+                    <CardStatSkeleton key={index} />
+                ))}
+            </div>
+        );
+    }
+
     return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {items.map((item) => (

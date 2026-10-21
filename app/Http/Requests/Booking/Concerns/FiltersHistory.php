@@ -31,7 +31,17 @@ trait FiltersHistory
             'employee' => array_column($this->employeeOptions(), 'value'),
             'division' => $this->divisions(),
             'lateness' => LatenessFilter::values(),
-        ], withPeriod: true);
+        ], withPeriod: true, defaultToCurrentMonth: $this->periodDefaultsToCurrentMonth());
+    }
+
+    /**
+     * Halaman Riwayat mengisi bulan berjalan bila periode belum dipilih.
+     * Ekspor tidak: permintaan ekspor tanpa periode ditolak (lihat
+     * ExportHistoryRequest), dan antarmuka selalu mengirim periode yang tampil.
+     */
+    protected function periodDefaultsToCurrentMonth(): bool
+    {
+        return false;
     }
 
     /**

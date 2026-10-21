@@ -35,9 +35,13 @@ final class DashboardController extends Controller
         $now = CarbonImmutable::now();
         $today = [$now->startOfDay(), $now->endOfDay()];
 
+        // Ringkasan armada, Terlambat, dan Belum Diambil dimuat setelah halaman
+        // tampil (deferred) agar dashboard langsung terbuka; sementara itu
+        // frontend menampilkan skeleton. Jadwal hari ini tetap dimuat langsung.
         return Inertia::render('dashboard', [
             'now' => $now->toIso8601String(),
-            'fleet' => $this->fleetSummary(),
+            'alertListLimit' => self::ALERT_LIST_LIMIT,
+            'fleet' => Inertia::defer(fn (): array => $this->fleetSummary()),
             'pickupsToday' => $this->list(fn (Builder $query) => $query
                 ->where('status', BookingStatus::Scheduled)
                 ->whereBetween('start_at', $today)
@@ -46,12 +50,12 @@ final class DashboardController extends Controller
                 ->where('status', BookingStatus::Active)
                 ->whereBetween('planned_return_at', $today)
                 ->orderBy('planned_return_at'), $now),
-            'overdue' => $this->list(fn (Builder $query) => $query
+            'overdue' => Inertia::defer(fn (): array => $this->list(fn (Builder $query) => $query
                 ->overdue($now)
-                ->orderBy('planned_return_at'), $now, self::ALERT_LIST_LIMIT),
-            'notPickedUp' => $this->list(fn (Builder $query) => $query
+                ->orderBy('planned_return_at'), $now, self::ALERT_LIST_LIMIT)),
+            'notPickedUp' => Inertia::defer(fn (): array => $this->list(fn (Builder $query) => $query
                 ->notPickedUp($now)
-                ->orderBy('start_at'), $now, self::ALERT_LIST_LIMIT),
+                ->orderBy('start_at'), $now, self::ALERT_LIST_LIMIT)),
         ]);
     }
 

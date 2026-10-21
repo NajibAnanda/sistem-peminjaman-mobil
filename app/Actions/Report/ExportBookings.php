@@ -48,12 +48,8 @@ final class ExportBookings
      */
     private function fileName(TableQuery $table, ExportFormat $format, CarbonImmutable $now): string
     {
-        $period = match (true) {
-            $table->from !== null && $table->to !== null => "{$table->from->toDateString()}_sd_{$table->to->toDateString()}",
-            $table->from !== null => "sejak_{$table->from->toDateString()}",
-            $table->to !== null => "sampai_{$table->to->toDateString()}",
-            default => 'semua-periode',
-        };
+        // Periode selalu lengkap: diwajibkan ExportHistoryRequest.
+        $period = "{$table->from?->toDateString()}_sd_{$table->to?->toDateString()}";
 
         return sprintf('%s_%s_diekspor-%s.%s', self::FILE_PREFIX, $period, $now->format('Y-m-d-Hi'), $format->value);
     }

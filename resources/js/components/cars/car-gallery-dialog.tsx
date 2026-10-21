@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CarPhotoPlaceholder } from '@/components/cars/car-photo-placeholder';
+import { LoadingImage } from '@/components/loading-image';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -63,12 +64,12 @@ export function CarGalleryDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="overflow-hidden rounded-lg">
+                <div className="relative aspect-video max-h-[70vh] w-full overflow-hidden rounded-lg">
                     {photo.url ? (
-                        <img
+                        <LoadingImage
                             src={photo.url}
                             alt={`${title}, ${PHOTO_SLOT_LABELS[photo.position]}`}
-                            className="max-h-[70vh] w-full bg-muted object-contain"
+                            className="size-full object-contain"
                         />
                     ) : (
                         <CarPhotoPlaceholder

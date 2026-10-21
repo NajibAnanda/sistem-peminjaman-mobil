@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Support\BookingAlerts;
+use App\Support\BookingDuration;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,6 +59,15 @@ final class HandleInertiaRequests extends Middleware
             // sendirian lewat polling (only: ['alerts']).
             'alerts' => fn (): ?array => $user instanceof User ? BookingAlerts::counts() : null,
             'pollingIntervalSeconds' => (int) config('fleet.polling_interval_seconds'),
+            'minuteStep' => (int) config('fleet.date_picker.minute_step'),
+            // Hanya untuk petunjuk di form; validasi tetap di server.
+            'bookingRules' => [
+                'purposeMinLength' => (int) config('fleet.booking.purpose_min_length'),
+                'reasonMinLength' => (int) config('fleet.booking.reason_min_length'),
+                'minDurationMinutes' => (int) config('fleet.booking.min_duration_minutes'),
+                'maxDurationDays' => BookingDuration::maxDays(),
+                'longBookingWarningDays' => (int) config('fleet.booking.long_booking_warning_days'),
+            ],
         ];
     }
 

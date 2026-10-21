@@ -2,7 +2,7 @@ import { Form } from '@inertiajs/react';
 import { Eye, EyeOff, LockKeyhole, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import AlertError from '@/components/alert-error';
-import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/loading-button';
 import {
     Card,
     CardContent,
@@ -24,12 +24,19 @@ export default function TwoFactorRecoveryCodes({
     errors,
 }: Props) {
     const [codesAreVisible, setCodesAreVisible] = useState<boolean>(false);
+    const [fetchingCodes, setFetchingCodes] = useState(false);
     const codesSectionRef = useRef<HTMLDivElement | null>(null);
     const canRegenerateCodes = recoveryCodesList.length > 0 && codesAreVisible;
 
     const toggleCodesVisibility = useCallback(async () => {
         if (!codesAreVisible && !recoveryCodesList.length) {
-            await fetchRecoveryCodes();
+            setFetchingCodes(true);
+
+            try {
+                await fetchRecoveryCodes();
+            } finally {
+                setFetchingCodes(false);
+            }
         }
 
         setCodesAreVisible(!codesAreVisible);
@@ -66,9 +73,10 @@ export default function TwoFactorRecoveryCodes({
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col gap-3 select-none sm:flex-row sm:items-center sm:justify-between">
-                    <Button
+                    <LoadingButton
                         onClick={toggleCodesVisibility}
                         className="w-fit"
+                        loading={fetchingCodes}
                         aria-expanded={codesAreVisible}
                         aria-controls="recovery-codes-section"
                     >
@@ -78,7 +86,7 @@ export default function TwoFactorRecoveryCodes({
                         />
                         {codesAreVisible ? 'Sembunyikan' : 'Lihat'} kode
                         pemulihan
-                    </Button>
+                    </LoadingButton>
 
                     {canRegenerateCodes && (
                         <Form
@@ -87,14 +95,14 @@ export default function TwoFactorRecoveryCodes({
                             onSuccess={fetchRecoveryCodes}
                         >
                             {({ processing }) => (
-                                <Button
+                                <LoadingButton
                                     variant="secondary"
                                     type="submit"
-                                    disabled={processing}
+                                    loading={processing}
                                     aria-describedby="regenerate-warning"
                                 >
                                     <RefreshCw /> Buat ulang kode
-                                </Button>
+                                </LoadingButton>
                             )}
                         </Form>
                     )}

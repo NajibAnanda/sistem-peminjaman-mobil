@@ -1,11 +1,13 @@
+import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { Badge } from '@/components/ui/badge';
 import { useDateFormat } from '@/hooks/use-date-format';
 import type { ActivityEntry } from '@/types';
 
-/** Jumlah perubahan yang diringkas di tabel; selebihnya di dialog rincian. */
-const PREVIEW_CHANGES = 2;
-
+/**
+ * Rincian perubahan (nilai sebelum/sesudah) dibuka lewat aksi "Lihat
+ * rincian"; tabel hanya menampilkan jumlahnya agar satu kolom = satu data.
+ */
 export function useActivityColumns(): DataTableColumn<ActivityEntry>[] {
     const { formatDateTime } = useDateFormat();
 
@@ -13,8 +15,9 @@ export function useActivityColumns(): DataTableColumn<ActivityEntry>[] {
         {
             id: 'time',
             header: 'Waktu',
+            skeleton: 'date',
             cell: (activity) => (
-                <span className="whitespace-nowrap tabular-nums">
+                <span className="tabular-nums">
                     {formatDateTime(activity.created_at)}
                 </span>
             ),
@@ -23,52 +26,53 @@ export function useActivityColumns(): DataTableColumn<ActivityEntry>[] {
             id: 'causer',
             header: 'Petugas',
             cell: (activity) => (
-                <span className="font-medium">{activity.causer_name}</span>
+                <TruncatedText
+                    text={activity.causer_name}
+                    className="max-w-44 font-medium"
+                />
             ),
         },
         {
             id: 'type',
             header: 'Jenis data',
+            skeleton: 'badge',
             cell: (activity) => (
-                <div className="flex flex-col items-start gap-1">
-                    <Badge variant="secondary">{activity.type_label}</Badge>
-                    {activity.subject_label && (
-                        <span className="text-xs text-muted-foreground">
-                            {activity.subject_label}
-                        </span>
-                    )}
-                </div>
+                <Badge variant="secondary">{activity.type_label}</Badge>
             ),
+        },
+        {
+            id: 'subject',
+            header: 'Data',
+            cell: (activity) =>
+                activity.subject_label ? (
+                    <TruncatedText
+                        text={activity.subject_label}
+                        className="max-w-48"
+                    />
+                ) : (
+                    <span className="text-muted-foreground">—</span>
+                ),
         },
         {
             id: 'description',
             header: 'Aktivitas',
-            cell: (activity) => {
-                const preview = activity.changes.slice(0, PREVIEW_CHANGES);
-                const rest = activity.changes.length - preview.length;
-
-                return (
-                    <div className="grid max-w-md gap-1 whitespace-normal">
-                        <span>{activity.description}</span>
-                        {preview.map((change) => (
-                            <span
-                                key={change.field}
-                                className="truncate text-xs text-muted-foreground"
-                            >
-                                {change.label}:{' '}
-                                {change.old !== null
-                                    ? `${change.old} → ${change.new ?? '—'}`
-                                    : (change.new ?? '—')}
-                            </span>
-                        ))}
-                        {rest > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                                dan {rest} perubahan lain
-                            </span>
-                        )}
-                    </div>
-                );
-            },
+            cell: (activity) => (
+                <TruncatedText
+                    text={activity.description}
+                    className="max-w-80"
+                />
+            ),
+        },
+        {
+            id: 'changes',
+            header: 'Perubahan',
+            align: 'right',
+            cell: (activity) =>
+                activity.changes.length > 0 ? (
+                    activity.changes.length
+                ) : (
+                    <span className="text-muted-foreground">—</span>
+                ),
         },
     ];
 }

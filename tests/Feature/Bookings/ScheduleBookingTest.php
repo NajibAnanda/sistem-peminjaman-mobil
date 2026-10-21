@@ -60,6 +60,23 @@ test('admin dapat menjadwalkan peminjaman', function () {
         ->and(lastActivity()->subject_id)->toBe($booking->id);
 });
 
+test('waktu ISO dengan offset zona waktu disimpan dalam jam WIB', function (string $start, string $end) {
+    $this->actingAs($this->user)
+        ->post(route('bookings.store'), schedulePayload($this->car, $this->employee, [
+            'start_at' => $start,
+            'planned_return_at' => $end,
+        ]))
+        ->assertSessionHasNoErrors();
+
+    $booking = Booking::query()->sole();
+
+    expect($booking->start_at->format('Y-m-d H:i'))->toBe('2026-10-20 09:00')
+        ->and($booking->planned_return_at->format('Y-m-d H:i'))->toBe('2026-10-20 15:00');
+})->with([
+    'offset WIB (dari pemilih tanggal)' => ['2026-10-20T09:00:00+07:00', '2026-10-20T15:00:00+07:00'],
+    'UTC' => ['2026-10-20T02:00:00Z', '2026-10-20T08:00:00Z'],
+]);
+
 test('field wajib dan rencana kembali setelah waktu mulai divalidasi', function () {
     $this->actingAs($this->user)
         ->post(route('bookings.store'), [])
@@ -194,9 +211,11 @@ test('karyawan nonaktif tidak dapat dijadwalkan', function () {
 test('kode booking unik dan berurutan per bulan', function () {
     $this->actingAs($this->user);
     $otherCar = Car::factory()->create();
+    // Karyawan lain: satu karyawan tidak boleh punya dua peminjaman bersamaan.
+    $otherEmployee = Employee::factory()->create();
 
     $this->post(route('bookings.store'), schedulePayload($this->car, $this->employee));
-    $this->post(route('bookings.store'), schedulePayload($otherCar, $this->employee));
+    $this->post(route('bookings.store'), schedulePayload($otherCar, $otherEmployee));
     $this->post(route('bookings.store'), schedulePayload($this->car, $this->employee, [
         'start_at' => '2026-11-02T09:00',
         'planned_return_at' => '2026-11-02T12:00',

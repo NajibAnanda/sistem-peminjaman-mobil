@@ -84,7 +84,7 @@ test('mobil dengan peminjaman berjalan tidak dapat dinonaktifkan (FR-10)', funct
 test('menonaktifkan mobil yang sudah nonaktif ditolak', function () {
     $this->actingAs($this->user)
         ->post(route('cars.deactivate', Car::factory()->inactive()->create()))
-        ->assertInertiaFlash('toast.message', 'Mobil ini sudah nonaktif.');
+        ->assertInertiaFlash('toast.message', 'Mobil ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
 });
 
 test('tamu tidak dapat mengubah status mobil', function () {

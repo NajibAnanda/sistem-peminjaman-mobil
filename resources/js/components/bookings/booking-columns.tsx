@@ -1,4 +1,6 @@
-import { AwaitingReturnHint } from '@/components/bookings/awaiting-return-notice';
+import { TriangleAlert } from 'lucide-react';
+import { CellNote } from '@/components/data-table/cell-note';
+import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { StatusBadge } from '@/components/status-badge';
 import { useDateFormat } from '@/hooks/use-date-format';
@@ -12,66 +14,72 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
             id: 'code',
             header: 'Kode',
             cell: (booking) => (
-                <div className="max-w-56">
-                    <div className="font-medium tabular-nums">
-                        {booking.code}
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">
-                        {booking.purpose}
-                    </div>
-                </div>
+                <span className="font-medium tabular-nums">{booking.code}</span>
+            ),
+        },
+        {
+            id: 'purpose',
+            header: 'Tujuan',
+            cell: (booking) => (
+                <TruncatedText text={booking.purpose} className="max-w-56" />
             ),
         },
         {
             id: 'employee',
             header: 'Karyawan',
             cell: (booking) => (
-                <div>
-                    <div className="font-medium">{booking.employee.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                        {booking.employee.division}
-                    </div>
-                </div>
+                <TruncatedText
+                    text={booking.employee.name}
+                    className="max-w-48 font-medium"
+                />
             ),
+        },
+        {
+            id: 'division',
+            header: 'Divisi',
+            cell: (booking) => booking.employee.division,
+        },
+        {
+            id: 'plate',
+            header: 'Plat',
+            cell: (booking) => booking.car.plate_number,
         },
         {
             id: 'car',
             header: 'Mobil',
             cell: (booking) => (
-                <div>
-                    <div className="font-medium">
-                        {booking.car.plate_number}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                        {booking.car.brand} {booking.car.model}
-                    </div>
-                </div>
+                <TruncatedText
+                    text={`${booking.car.brand} ${booking.car.model}`}
+                    className="max-w-44"
+                />
             ),
         },
         {
-            id: 'schedule',
-            header: 'Jadwal',
-            cell: (booking) => (
-                <div className="text-sm whitespace-nowrap tabular-nums">
-                    <div>{formatDateTime(booking.start_at)}</div>
-                    <div className="text-muted-foreground">
-                        s.d. {formatDateTime(booking.planned_return_at)}
-                    </div>
-                </div>
-            ),
+            id: 'start_at',
+            header: 'Mulai',
+            skeleton: 'date',
+            cell: (booking) => formatDateTime(booking.start_at),
+        },
+        {
+            id: 'planned_return_at',
+            header: 'Rencana kembali',
+            skeleton: 'date',
+            cell: (booking) => formatDateTime(booking.planned_return_at),
         },
         {
             id: 'status',
             header: 'Status',
+            skeleton: 'badge',
             cell: (booking) => (
-                <div className="flex flex-col items-start gap-1">
+                <span className="inline-flex items-center gap-1.5">
                     <StatusBadge status={booking.display_status} />
                     {booking.awaiting_return_code && (
-                        <AwaitingReturnHint
-                            code={booking.awaiting_return_code}
+                        <CellNote
+                            icon={TriangleAlert}
+                            text={`Mobil belum kembali dari ${booking.awaiting_return_code}`}
                         />
                     )}
-                </div>
+                </span>
             ),
         },
     ];

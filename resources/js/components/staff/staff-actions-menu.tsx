@@ -1,18 +1,5 @@
-import {
-    KeyRound,
-    MoreHorizontal,
-    Pencil,
-    UserCheck,
-    UserX,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { KeyRound, Pencil, UserCheck, UserX } from 'lucide-react';
+import { RowActions } from '@/components/data-table/row-actions';
 import type { StaffMember } from '@/types';
 
 export type StaffAction = 'edit' | 'reset' | 'deactivate' | 'activate';
@@ -28,51 +15,35 @@ type Props = {
  */
 export function StaffActionsMenu({ staff, onAction }: Props) {
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Aksi untuk ${staff.name}`}
-                >
-                    <MoreHorizontal aria-hidden="true" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => onAction('edit', staff)}>
-                    <Pencil aria-hidden="true" />
-                    Edit
-                </DropdownMenuItem>
-
-                {!staff.is_self && (
-                    <DropdownMenuItem onSelect={() => onAction('reset', staff)}>
-                        <KeyRound aria-hidden="true" />
-                        Reset password
-                    </DropdownMenuItem>
-                )}
-
-                {!staff.is_self && (
-                    <>
-                        <DropdownMenuSeparator />
-                        {staff.is_active ? (
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onSelect={() => onAction('deactivate', staff)}
-                            >
-                                <UserX aria-hidden="true" />
-                                Nonaktifkan
-                            </DropdownMenuItem>
-                        ) : (
-                            <DropdownMenuItem
-                                onSelect={() => onAction('activate', staff)}
-                            >
-                                <UserCheck aria-hidden="true" />
-                                Aktifkan
-                            </DropdownMenuItem>
-                        )}
-                    </>
-                )}
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions
+            label={`Aksi untuk ${staff.name}`}
+            actions={[
+                {
+                    label: 'Edit',
+                    icon: Pencil,
+                    onSelect: () => onAction('edit', staff),
+                },
+                {
+                    label: 'Aktifkan',
+                    icon: UserCheck,
+                    onSelect: () => onAction('activate', staff),
+                    hidden: staff.is_self || staff.is_active,
+                },
+                {
+                    label: 'Reset password',
+                    icon: KeyRound,
+                    onSelect: () => onAction('reset', staff),
+                    destructive: true,
+                    hidden: staff.is_self,
+                },
+                {
+                    label: 'Nonaktifkan',
+                    icon: UserX,
+                    onSelect: () => onAction('deactivate', staff),
+                    destructive: true,
+                    hidden: staff.is_self || !staff.is_active,
+                },
+            ]}
+        />
     );
 }

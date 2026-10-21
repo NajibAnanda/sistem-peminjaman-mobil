@@ -31,6 +31,8 @@ export type UseTableQueryReturn = {
     activeFilterCount: number;
     /** Tabel ini memakai filter periode (server mengirim `query.period`). */
     hasPeriod: boolean;
+    /** Periode wajib: tidak bisa dikosongkan, reset kembali ke periode bawaan. */
+    periodRequired: boolean;
     period: TablePeriod;
     setPeriod: (period: TablePeriod) => void;
     /** Hasil saat ini dibatasi pencarian/filter/periode (menurut server). */
@@ -43,6 +45,14 @@ function serverPeriod(query: TableQueryState): TablePeriod {
         from: query.period?.from ?? '',
         to: query.period?.to ?? '',
     };
+}
+
+function defaultPeriod(query: TableQueryState): TablePeriod {
+    return query.period?.default ?? EMPTY_PERIOD;
+}
+
+function samePeriod(a: TablePeriod, b: TablePeriod): boolean {
+    return a.from === b.from && a.to === b.to;
 }
 
 function buildParams(
@@ -183,11 +193,12 @@ export function useTableQuery({
 
     const resetAll = () => {
         const next = emptyFilters();
+        const initialPeriod = defaultPeriod(query);
 
         setSearch('');
         setFilters(next);
-        setPeriodState(EMPTY_PERIOD);
-        visit('', next, EMPTY_PERIOD);
+        setPeriodState(initialPeriod);
+        visit('', next, initialPeriod);
     };
 
     const goToPage = (page: number) =>
@@ -205,13 +216,14 @@ export function useTableQuery({
         goToPage,
         activeFilterCount: countFilters(filters),
         hasPeriod: query.period !== undefined,
+        periodRequired: query.period?.default !== undefined,
         period,
         setPeriod,
         isFiltered:
             serverSearch !== '' ||
             countFilters(query.filters) > 0 ||
-            activePeriod.from !== '' ||
-            activePeriod.to !== '',
+            // Periode bawaan (bulan berjalan) tidak dihitung sebagai filter.
+            !samePeriod(activePeriod, defaultPeriod(query)),
         loading,
     };
 }

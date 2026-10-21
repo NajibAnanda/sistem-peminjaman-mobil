@@ -1,17 +1,9 @@
 import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/form-dialog';
+import { FormField } from '@/components/form/form-field';
+import { FormGrid } from '@/components/form/form-grid';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -19,7 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Spinner } from '@/components/ui/spinner';
 import { store, update } from '@/routes/employees';
 import type { Employee, Option } from '@/types';
 
@@ -62,138 +53,119 @@ export function EmployeeFormDialog({
     };
 
     return (
-        <Dialog
+        <FormDialog
             open={open}
-            onOpenChange={(next) => !form.processing && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            title={isEdit ? 'Edit Data Karyawan' : 'Tambah Karyawan'}
+            description={
+                isEdit
+                    ? 'Perbarui identitas, divisi, atau nomor HP karyawan sesuai data terbaru.'
+                    : 'Tambahkan karyawan yang dapat meminjam mobil dinas; karyawan tidak memiliki akun di sistem.'
+            }
+            onSubmit={submit}
+            submitLabel={isEdit ? 'Simpan Perubahan' : 'Tambah Karyawan'}
+            processing={form.processing}
+            submitTestId="employee-form-submit"
         >
-            <DialogContent
-                className="sm:max-w-md"
-                onInteractOutside={(event) => event.preventDefault()}
-            >
-                <form onSubmit={submit} className="grid gap-6">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isEdit ? 'Edit Data Karyawan' : 'Tambah Karyawan'}
-                        </DialogTitle>
-                        <DialogDescription>
-                            Karyawan peminjam tidak memiliki akun dan tidak
-                            login ke aplikasi.
-                        </DialogDescription>
-                    </DialogHeader>
+            <FormGrid>
+                <FormField
+                    id="employee-number"
+                    label="NIP"
+                    required
+                    error={form.errors.employee_number}
+                    hint="Huruf dan angka saja, tanpa spasi atau simbol."
+                >
+                    <Input
+                        id="employee-number"
+                        value={form.data.employee_number}
+                        onChange={(e) =>
+                            form.setData('employee_number', e.target.value)
+                        }
+                        autoFocus
+                        required
+                        maxLength={30}
+                        autoComplete="off"
+                        className="uppercase"
+                        placeholder="K2024001"
+                        aria-invalid={
+                            !!form.errors.employee_number || undefined
+                        }
+                        aria-describedby="employee-number-hint"
+                    />
+                </FormField>
 
-                    <div className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="employee-number">NIP</Label>
-                            <Input
-                                id="employee-number"
-                                value={form.data.employee_number}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'employee_number',
-                                        e.target.value,
-                                    )
-                                }
-                                autoFocus
-                                required
-                                autoComplete="off"
-                                className="uppercase"
-                                placeholder="K2024001"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Huruf dan angka saja, tanpa spasi atau simbol.
-                            </p>
-                            <InputError message={form.errors.employee_number} />
-                        </div>
+                <FormField
+                    id="employee-name"
+                    label="Nama"
+                    required
+                    error={form.errors.name}
+                >
+                    <Input
+                        id="employee-name"
+                        value={form.data.name}
+                        onChange={(e) => form.setData('name', e.target.value)}
+                        required
+                        maxLength={255}
+                        autoComplete="off"
+                        placeholder="Nama lengkap"
+                        aria-invalid={!!form.errors.name || undefined}
+                    />
+                </FormField>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="employee-name">Nama</Label>
-                            <Input
-                                id="employee-name"
-                                value={form.data.name}
-                                onChange={(e) =>
-                                    form.setData('name', e.target.value)
-                                }
-                                required
-                                autoComplete="off"
-                                placeholder="Nama lengkap"
-                            />
-                            <InputError message={form.errors.name} />
-                        </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="grid gap-2">
-                                <Label htmlFor="employee-division">
-                                    Divisi
-                                </Label>
-                                <Select
-                                    value={form.data.division}
-                                    onValueChange={(value) =>
-                                        form.setData('division', value)
-                                    }
+                <FormField
+                    id="employee-division"
+                    label="Divisi"
+                    required
+                    error={form.errors.division}
+                >
+                    <Select
+                        value={form.data.division}
+                        onValueChange={(value) =>
+                            form.setData('division', value)
+                        }
+                    >
+                        <SelectTrigger
+                            id="employee-division"
+                            className="w-full"
+                            aria-invalid={!!form.errors.division || undefined}
+                        >
+                            <SelectValue placeholder="Pilih divisi" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {divisions.map((division) => (
+                                <SelectItem
+                                    key={division.value}
+                                    value={division.value}
                                 >
-                                    <SelectTrigger
-                                        id="employee-division"
-                                        className="w-full"
-                                    >
-                                        <SelectValue placeholder="Pilih divisi" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {divisions.map((division) => (
-                                            <SelectItem
-                                                key={division.value}
-                                                value={division.value}
-                                            >
-                                                {division.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={form.errors.division} />
-                            </div>
+                                    {division.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </FormField>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="employee-phone">No HP</Label>
-                                <Input
-                                    id="employee-phone"
-                                    type="tel"
-                                    inputMode="tel"
-                                    value={form.data.phone}
-                                    onChange={(e) =>
-                                        form.setData('phone', e.target.value)
-                                    }
-                                    required
-                                    autoComplete="off"
-                                    placeholder="0812xxxxxxxx"
-                                />
-                                <InputError message={form.errors.phone} />
-                            </div>
-                        </div>
-                        <p className="-mt-2 text-xs text-muted-foreground">
-                            No HP boleh ditulis 08xx atau +62xx; disimpan dalam
-                            format 08xx.
-                        </p>
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            disabled={form.processing}
-                        >
-                            Batal
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={form.processing}
-                            data-test="employee-form-submit"
-                        >
-                            {form.processing && <Spinner />}
-                            {isEdit ? 'Simpan Perubahan' : 'Tambah Karyawan'}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                <FormField
+                    id="employee-phone"
+                    label="No HP"
+                    required
+                    error={form.errors.phone}
+                    hint="Boleh ditulis 08xx atau +62xx; disimpan dalam format 08xx."
+                >
+                    <Input
+                        id="employee-phone"
+                        type="tel"
+                        inputMode="tel"
+                        value={form.data.phone}
+                        onChange={(e) => form.setData('phone', e.target.value)}
+                        required
+                        maxLength={20}
+                        autoComplete="off"
+                        placeholder="0812xxxxxxxx"
+                        aria-invalid={!!form.errors.phone || undefined}
+                        aria-describedby="employee-phone-hint"
+                    />
+                </FormField>
+            </FormGrid>
+        </FormDialog>
     );
 }

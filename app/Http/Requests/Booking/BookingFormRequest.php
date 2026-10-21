@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Booking;
 
 use App\Models\Booking;
+use App\Support\DateInput;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -53,7 +54,7 @@ final class BookingFormRequest extends FormRequest
         }
 
         try {
-            return CarbonImmutable::parse($value, (string) config('app.timezone'))->startOfMinute();
+            return DateInput::parse($value);
         } catch (Throwable) {
             return null;
         }

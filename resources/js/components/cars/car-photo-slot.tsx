@@ -5,7 +5,8 @@ import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { PHOTO_SLOT_LABELS } from '@/components/cars/car-gallery-dialog';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/loading-button';
+import { LoadingImage } from '@/components/loading-image';
 import { Spinner } from '@/components/ui/spinner';
 import { compressImage } from '@/lib/compress-image';
 import { store } from '@/routes/cars/photos';
@@ -84,13 +85,13 @@ export function CarPhotoSlot({
                 <button
                     type="button"
                     onClick={onOpen}
-                    className="overflow-hidden rounded-lg border border-border focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                    className="relative block aspect-video w-full overflow-hidden rounded-lg border border-border focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                     aria-label={`Lihat foto ${label}`}
                 >
-                    <img
+                    <LoadingImage
                         src={slot.url}
                         alt={`${plateNumber}, ${label}`}
-                        className="aspect-video w-full bg-muted object-cover"
+                        className="size-full object-cover"
                     />
                 </button>
             ) : (
@@ -104,7 +105,7 @@ export function CarPhotoSlot({
                     aria-label={`Unggah foto ${label}`}
                 >
                     {uploading ? (
-                        <Spinner />
+                        <Spinner aria-label="Mengunggah foto" />
                     ) : (
                         <Upload className="size-6" aria-hidden="true" />
                     )}
@@ -123,25 +124,19 @@ export function CarPhotoSlot({
                 onChange={upload}
                 data-test={`car-photo-input-${slot.position}`}
             />
-            <Button
+            <LoadingButton
                 variant={slot.url ? 'outline' : 'default'}
                 size="sm"
                 onClick={() => input.current?.click()}
-                disabled={uploading}
+                loading={uploading}
             >
-                {uploading ? (
-                    <Spinner />
-                ) : slot.url ? (
+                {slot.url ? (
                     <Camera aria-hidden="true" />
                 ) : (
                     <Upload aria-hidden="true" />
                 )}
-                {uploading
-                    ? 'Mengunggah...'
-                    : slot.url
-                      ? 'Ganti foto'
-                      : 'Unggah foto'}
-            </Button>
+                {slot.url ? 'Ganti foto' : 'Unggah foto'}
+            </LoadingButton>
             <InputError message={error} />
         </div>
     );

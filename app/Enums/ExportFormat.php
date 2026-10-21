@@ -20,8 +20,8 @@ enum ExportFormat: string
     public function label(): string
     {
         return match ($this) {
-            self::Xlsx => 'Excel (.xlsx)',
-            self::Csv => 'CSV',
+            self::Xlsx => 'Microsoft Excel (.xlsx)',
+            self::Csv => 'CSV (.csv)',
         };
     }
 

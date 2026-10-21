@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react';
 import { useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LoadingButton } from '@/components/loading-button';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useCamera } from '@/hooks/use-camera';
@@ -138,21 +139,18 @@ export function PhotoCapture({
                         <Camera className="size-6" aria-hidden="true" />
                         Ambil dengan Kamera
                     </Button>
-                    <Button
+                    <LoadingButton
                         type="button"
                         variant="outline"
                         className="h-24 flex-col gap-2"
                         onClick={() => input.current?.click()}
-                        disabled={busy}
+                        loading={processing}
+                        disabled={disabled}
                         data-test="photo-capture-upload"
                     >
-                        {processing ? (
-                            <Spinner className="size-6" />
-                        ) : (
-                            <Upload className="size-6" aria-hidden="true" />
-                        )}
-                        {processing ? 'Memproses foto...' : 'Unggah File'}
-                    </Button>
+                        <Upload className="size-6" aria-hidden="true" />
+                        Unggah File
+                    </LoadingButton>
                 </div>
             ) : (
                 <div className="grid gap-2">
@@ -168,7 +166,7 @@ export function PhotoCapture({
                             />
                         ) : (
                             <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Spinner />
+                                <Spinner aria-hidden="true" />
                                 Membuka kamera...
                             </span>
                         )}
@@ -184,19 +182,16 @@ export function PhotoCapture({
                             <X aria-hidden="true" />
                             Batal
                         </Button>
-                        <Button
+                        <LoadingButton
                             type="button"
                             size="sm"
                             onClick={() => void takePhoto()}
-                            disabled={camera.status !== 'ready' || processing}
+                            loading={processing}
+                            disabled={camera.status !== 'ready'}
                         >
-                            {processing ? (
-                                <Spinner />
-                            ) : (
-                                <Camera aria-hidden="true" />
-                            )}
+                            <Camera aria-hidden="true" />
                             Ambil Foto
-                        </Button>
+                        </LoadingButton>
                     </div>
                 </div>
             )}

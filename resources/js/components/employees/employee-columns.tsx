@@ -1,3 +1,4 @@
+import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { StatusBadge } from '@/components/status-badge';
 import type { Employee } from '@/types';
@@ -15,7 +16,10 @@ export function useEmployeeColumns(): DataTableColumn<Employee>[] {
             id: 'name',
             header: 'Nama',
             cell: (employee) => (
-                <span className="font-medium">{employee.name}</span>
+                <TruncatedText
+                    text={employee.name}
+                    className="max-w-64 font-medium"
+                />
             ),
         },
         {
@@ -33,6 +37,7 @@ export function useEmployeeColumns(): DataTableColumn<Employee>[] {
         {
             id: 'status',
             header: 'Status',
+            skeleton: 'badge',
             cell: (employee) => (
                 <StatusBadge
                     status={employee.is_active ? 'enabled' : 'inactive'}

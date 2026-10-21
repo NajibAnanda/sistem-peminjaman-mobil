@@ -2,14 +2,14 @@ import { Form, Head } from '@inertiajs/react';
 import { ShieldAlert } from 'lucide-react';
 import { useRef } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
+import { FormCard } from '@/components/form/form-card';
+import { FormField } from '@/components/form/form-field';
+import { FormGrid } from '@/components/form/form-grid';
 import type { Props as ManageTwoFactorProps } from '@/components/manage-two-factor';
 import ManageTwoFactor from '@/components/manage-two-factor';
 import PasswordInput from '@/components/password-input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { LoadingButton } from '@/components/loading-button';
 import { edit } from '@/routes/security';
 
 type Props = {
@@ -25,8 +25,6 @@ export default function Security(props: Props) {
         <>
             <Head title="Pengaturan keamanan" />
 
-            <h1 className="sr-only">Pengaturan keamanan</h1>
-
             {props.twoFactorRequired && !props.twoFactorEnabled && (
                 <Alert>
                     <ShieldAlert />
@@ -38,101 +36,94 @@ export default function Security(props: Props) {
                 </Alert>
             )}
 
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Ganti password"
-                    description="Gunakan minimal 10 karakter yang berisi huruf dan angka"
-                />
+            <Form
+                {...SecurityController.update.form()}
+                options={{
+                    preserveScroll: true,
+                }}
+                resetOnError={[
+                    'password',
+                    'password_confirmation',
+                    'current_password',
+                ]}
+                resetOnSuccess
+                onError={(errors) => {
+                    if (errors.password) {
+                        passwordInput.current?.focus();
+                    }
 
-                <Form
-                    {...SecurityController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    resetOnError={[
-                        'password',
-                        'password_confirmation',
-                        'current_password',
-                    ]}
-                    resetOnSuccess
-                    onError={(errors) => {
-                        if (errors.password) {
-                            passwordInput.current?.focus();
+                    if (errors.current_password) {
+                        currentPasswordInput.current?.focus();
+                    }
+                }}
+            >
+                {({ errors, processing }) => (
+                    <FormCard
+                        title="Ganti password"
+                        description="Gunakan minimal 10 karakter yang berisi huruf dan angka, dan jangan dipakai di aplikasi lain."
+                        footer={
+                            <LoadingButton
+                                loading={processing}
+                                data-test="update-password-button"
+                            >
+                                Simpan
+                            </LoadingButton>
                         }
-
-                        if (errors.current_password) {
-                            currentPasswordInput.current?.focus();
-                        }
-                    }}
-                    className="space-y-6"
-                >
-                    {({ errors, processing }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="current_password">
-                                    Password saat ini
-                                </Label>
-
+                    >
+                        <FormGrid>
+                            <FormField
+                                id="current_password"
+                                label="Password saat ini"
+                                required
+                                error={errors.current_password}
+                                span="full"
+                            >
                                 <PasswordInput
                                     id="current_password"
                                     ref={currentPasswordInput}
                                     name="current_password"
-                                    className="mt-1 block w-full"
+                                    required
                                     autoComplete="current-password"
                                     placeholder="Password saat ini"
                                 />
+                            </FormField>
 
-                                <InputError message={errors.current_password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">Password baru</Label>
-
+                            <FormField
+                                id="password"
+                                label="Password baru"
+                                required
+                                error={errors.password}
+                            >
                                 <PasswordInput
                                     id="password"
                                     ref={passwordInput}
                                     name="password"
-                                    className="mt-1 block w-full"
+                                    required
                                     autoComplete="new-password"
                                     placeholder="Password baru"
                                     passwordrules={props.passwordRules}
                                 />
+                            </FormField>
 
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Ulangi password baru
-                                </Label>
-
+                            <FormField
+                                id="password_confirmation"
+                                label="Ulangi password baru"
+                                required
+                                error={errors.password_confirmation}
+                            >
                                 <PasswordInput
                                     id="password_confirmation"
                                     name="password_confirmation"
-                                    className="mt-1 block w-full"
+                                    required
                                     autoComplete="new-password"
                                     placeholder="Ulangi password baru"
                                     passwordrules={props.passwordRules}
                                 />
-
-                                <InputError
-                                    message={errors.password_confirmation}
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    disabled={processing}
-                                    data-test="update-password-button"
-                                >
-                                    Simpan
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
+                            </FormField>
+                        </FormGrid>
+                    </FormCard>
+                )}
+            </Form>
 
             <ManageTwoFactor
                 canManageTwoFactor={props.canManageTwoFactor}
