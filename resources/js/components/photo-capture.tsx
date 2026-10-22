@@ -1,6 +1,6 @@
 import { Camera, CircleAlert, RotateCcw, Upload, X } from 'lucide-react';
 import type { ChangeEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingButton } from '@/components/loading-button';
@@ -44,6 +44,14 @@ export function PhotoCapture({
     const [processing, setProcessing] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
+    useEffect(() => {
+        return () => {
+            if (value?.previewUrl && value.previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(value.previewUrl);
+            }
+        };
+    }, [value?.previewUrl]);
+
     const accept = async (file: File, source: PhotoSource) => {
         setProcessing(true);
         setLocalError(null);
@@ -55,6 +63,10 @@ export function PhotoCapture({
                 setLocalError(`Ukuran foto maksimal ${maxUploadKb / 1024} MB.`);
 
                 return;
+            }
+
+            if (value?.previewUrl && value.previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(value.previewUrl);
             }
 
             onChange({
@@ -89,7 +101,7 @@ export function PhotoCapture({
     };
 
     const retake = () => {
-        if (value) {
+        if (value?.previewUrl && value.previewUrl.startsWith('blob:')) {
             URL.revokeObjectURL(value.previewUrl);
         }
 
@@ -210,6 +222,7 @@ export function PhotoCapture({
                 className="hidden"
                 onChange={upload}
                 data-test="photo-capture-input"
+                aria-label="Unggah foto bukti"
             />
             <InputError message={localError ?? error} />
         </div>

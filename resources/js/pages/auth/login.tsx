@@ -40,6 +40,8 @@ export default function Login({ status }: Props) {
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
+                                    autoCapitalize="none"
+                                    spellCheck={false}
                                     placeholder="nama@perusahaan.co.id"
                                 />
                                 <InputError message={errors.email} />

@@ -85,6 +85,7 @@ export function EmployeeFormDialog({
                         required
                         maxLength={30}
                         autoComplete="off"
+                        spellCheck={false}
                         className="uppercase"
                         placeholder="K2024001"
                         aria-invalid={

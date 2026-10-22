@@ -1,4 +1,5 @@
 import { Link, usePage, usePoll } from '@inertiajs/react';
+import { useEffect } from 'react';
 import {
     CalendarRange,
     CarFront,
@@ -38,11 +39,27 @@ import type { NavItem } from '@/types';
 const SECOND_MS = 1000;
 
 export function AppSidebar() {
-    const { auth, alerts, pollingIntervalSeconds } = usePage().props;
+    const page = usePage();
+    const { auth, alerts, pollingIntervalSeconds } = page.props;
 
     // Badge Terlambat/Belum Diambil diperbarui tanpa memuat ulang halaman;
     // hanya prop `alerts` yang diminta ke server (prd.md 7.3).
-    usePoll(pollingIntervalSeconds * SECOND_MS, { only: ['alerts'] });
+    // Halaman Dashboard sudah memuat `alerts` bersama data widget, sehingga
+    // polling sidebar dinonaktifkan di Dashboard untuk mencegah request duplikat.
+    const isDashboard = page.component === 'dashboard';
+    const { start, stop } = usePoll(
+        pollingIntervalSeconds * SECOND_MS,
+        { only: ['alerts'] },
+        { autoStart: !isDashboard },
+    );
+
+    useEffect(() => {
+        if (isDashboard) {
+            stop();
+        } else {
+            start();
+        }
+    }, [isDashboard, start, stop]);
 
     const mainNavItems: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },

@@ -71,6 +71,7 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
                         required
                         maxLength={15}
                         autoComplete="off"
+                        spellCheck={false}
                         placeholder="B 1234 ABC"
                         className="uppercase"
                         aria-invalid={!!form.errors.plate_number || undefined}

@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { CarFront, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -42,8 +42,14 @@ export default function ScheduleIndex({
     bookings,
 }: ScheduleProps) {
     const { formatDate, formatWeekday, toDateTimeLocal } = useDateFormat();
-    const rows = layoutTimeline(bookings, week.start, week.end);
-    const nowLeft = nowPosition(now, week.start, week.end);
+    const rows = useMemo(
+        () => layoutTimeline(bookings, week.start, week.end),
+        [bookings, week.start, week.end],
+    );
+    const nowLeft = useMemo(
+        () => nowPosition(now, week.start, week.end),
+        [now, week.start, week.end],
+    );
     const today = toDateTimeLocal(now).slice(0, 10);
     const lastDay = week.days[week.days.length - 1];
     const weekLabel = `${formatDate(week.start)} – ${formatDate(`${lastDay}T12:00:00Z`)}`;

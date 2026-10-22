@@ -28,21 +28,20 @@ export function layoutTimeline(
     weekStart: string,
     weekEnd: string,
 ): Map<number, TimelineRow> {
-    const startMs = new Date(weekStart).getTime();
-    const endMs = new Date(weekEnd).getTime();
+    const startMs = Date.parse(weekStart);
+    const endMs = Date.parse(weekEnd);
     const span = endMs - startMs;
     const rows = new Map<number, TimelineRow>();
     // Akhir blok terakhir di setiap lajur, per mobil.
     const laneEnds = new Map<number, number[]>();
 
     const sorted = [...bookings].sort(
-        (a, b) =>
-            new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+        (a, b) => Date.parse(a.start_at) - Date.parse(b.start_at),
     );
 
     for (const booking of sorted) {
-        const bookingStart = new Date(booking.start_at).getTime();
-        const bookingEnd = new Date(booking.end_at).getTime();
+        const bookingStart = Date.parse(booking.start_at);
+        const bookingEnd = Date.parse(booking.end_at);
         const from = Math.max(bookingStart, startMs);
         const to = Math.min(bookingEnd, endMs);
 
@@ -78,9 +77,9 @@ export function nowPosition(
     weekStart: string,
     weekEnd: string,
 ): number | null {
-    const startMs = new Date(weekStart).getTime();
-    const endMs = new Date(weekEnd).getTime();
-    const nowMs = new Date(now).getTime();
+    const startMs = Date.parse(weekStart);
+    const endMs = Date.parse(weekEnd);
+    const nowMs = Date.parse(now);
 
     if (nowMs < startMs || nowMs >= endMs) {
         return null;

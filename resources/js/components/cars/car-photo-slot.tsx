@@ -123,6 +123,7 @@ export function CarPhotoSlot({
                 className="hidden"
                 onChange={upload}
                 data-test={`car-photo-input-${slot.position}`}
+                aria-label={`Unggah berkas foto ${label}`}
             />
             <LoadingButton
                 variant={slot.url ? 'outline' : 'default'}

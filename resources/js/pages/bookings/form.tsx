@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { CircleAlert } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DateTimePicker } from '@/components/date-picker/date-time-picker';
 import { addMinutes } from '@/components/date-picker/utils';
 import { FormCard } from '@/components/form/form-card';
@@ -128,6 +128,15 @@ export default function BookingFormPage({
 
     const selectedCar = cars.find((car) => car.id === form.data.car_id);
 
+    const employeeListOptions = useMemo(
+        () => employeeOptions(employees),
+        [employees],
+    );
+    const carListOptions = useMemo(
+        () => carOptions(cars, form.data.car_id),
+        [cars, form.data.car_id],
+    );
+
     const longBooking = useLongBookingConfirm();
 
     const save = () => {
@@ -210,7 +219,7 @@ export default function BookingFormPage({
                             >
                                 <SearchableCombobox
                                     id="booking-employee"
-                                    options={employeeOptions(employees)}
+                                    options={employeeListOptions}
                                     value={form.data.employee_id}
                                     onChange={(id) =>
                                         form.setData('employee_id', id)
@@ -286,7 +295,7 @@ export default function BookingFormPage({
                             >
                                 <SearchableCombobox
                                     id="booking-car"
-                                    options={carOptions(cars, form.data.car_id)}
+                                    options={carListOptions}
                                     value={form.data.car_id}
                                     onChange={(id) =>
                                         form.setData('car_id', id)
