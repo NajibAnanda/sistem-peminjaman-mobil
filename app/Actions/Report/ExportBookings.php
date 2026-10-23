@@ -11,22 +11,22 @@ use App\Exports\BookingsExport;
 use App\Models\Booking;
 use App\Models\User;
 use App\Support\TableQuery;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Ekspor Riwayat ke Excel/CSV mengikuti filter yang aktif (FR-26), lalu
+ * Ekspor Riwayat ke Excel/CSV/PDF mengikuti filter yang aktif (FR-26), lalu
  * mencatatnya di log aktivitas.
  */
 final class ExportBookings
 {
     private const FILE_PREFIX = 'riwayat-peminjaman';
 
-    public function handle(TableQuery $table, ExportFormat $format, User $actor): BinaryFileResponse
+    public function handle(TableQuery $table, ExportFormat $format, User $actor): Response
     {
         $now = CarbonImmutable::now();
-        $export = new BookingsExport($table, $now);
         $fileName = $this->fileName($table, $format, $now);
 
         activity(ActivityLogName::Report)
@@ -39,6 +39,27 @@ final class ExportBookings
                 'query' => $table->toArray(),
             ])
             ->log("Mengekspor riwayat peminjaman ({$format->label()})");
+
+        if ($format === ExportFormat::Pdf) {
+            $bookings = Booking::query()
+                ->with(['employee', 'car', 'creator'])
+                ->withCount('extensions')
+                ->forHistory($table, $now)
+                ->orderByDesc('start_at')
+                ->orderByDesc('id')
+                ->get();
+
+            $pdf = Pdf::loadView('exports.bookings-pdf', [
+                'bookings' => $bookings,
+                'table' => $table,
+                'now' => $now,
+                'actor' => $actor,
+            ])->setPaper('a4', 'landscape');
+
+            return $pdf->download($fileName);
+        }
+
+        $export = new BookingsExport($table, $now);
 
         return Excel::download($export, $fileName, $format->writerType());
     }

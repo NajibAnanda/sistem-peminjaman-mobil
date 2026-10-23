@@ -6,16 +6,19 @@ import type { TableQueryState } from '@/types/table';
  */
 export type Employee = {
     id: number;
-    employee_number: string;
     name: string;
     division: string;
     phone: string;
     is_active: boolean;
 };
 
+export type DivisionOption = Option & {
+    can_delete?: boolean;
+};
+
 export type EmployeeIndexProps = {
     employees: Paginated<Employee>;
     query: TableQueryState;
-    divisions: Option[];
+    divisions: DivisionOption[];
     statuses: Option[];
 };

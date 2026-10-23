@@ -7,6 +7,7 @@ namespace App\Http\Requests\Booking\Concerns;
 use App\Enums\BookingDisplayStatus;
 use App\Enums\LatenessFilter;
 use App\Models\Car;
+use App\Models\Division;
 use App\Models\Employee;
 use App\Support\TableQuery;
 
@@ -67,10 +68,10 @@ trait FiltersHistory
     {
         return $this->employeeOptions ??= array_values(Employee::query()
             ->orderBy('name')
-            ->get(['id', 'name', 'employee_number'])
+            ->get(['id', 'name', 'division'])
             ->map(fn (Employee $employee): array => [
                 'value' => (string) $employee->id,
-                'label' => "{$employee->name} ({$employee->employee_number})",
+                'label' => "{$employee->name} ({$employee->division})",
             ])
             ->all());
     }
@@ -80,6 +81,9 @@ trait FiltersHistory
      */
     public function divisions(): array
     {
-        return array_values(array_map('strval', (array) config('fleet.divisions')));
+        return array_values(array_unique(array_filter(array_merge(
+            Division::query()->pluck('name')->all(),
+            Employee::query()->distinct()->whereNotNull('division')->pluck('division')->all()
+        ))));
     }
 }

@@ -21,7 +21,7 @@ export type HistoryIndexProps = {
         car: Option[];
         employee: Option[];
     };
-    exportFormats: Option<'xlsx' | 'csv'>[];
+    exportFormats: Option<'xlsx' | 'csv' | 'pdf'>[];
 };
 
 export type ActivityChange = {

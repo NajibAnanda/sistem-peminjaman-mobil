@@ -18,10 +18,9 @@ final class EmployeeFactory extends Factory
     public function definition(): array
     {
         return [
-            'employee_number' => fake()->unique()->numerify('K20######'),
             'name' => fake()->name(),
             'division' => fake()->randomElement(config('fleet.divisions')),
-            'phone' => fake()->numerify('08##########'),
+            'phone' => fake()->unique()->numerify('08##########'),
             'is_active' => true,
         ];
     }

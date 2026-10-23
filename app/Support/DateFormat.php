@@ -31,6 +31,13 @@ final class DateFormat
         return $local->format('j').' '.self::MONTHS[(int) $local->format('n')].' '.$local->format('Y, H.i');
     }
 
+    public static function date(CarbonInterface $value): string
+    {
+        $local = $value->copy()->setTimezone((string) config('app.timezone'));
+
+        return $local->format('j').' '.self::MONTHS[(int) $local->format('n')].' '.$local->format('Y');
+    }
+
     public static function range(CarbonInterface $start, CarbonInterface $end): string
     {
         return self::dateTime($start).' – '.self::dateTime($end);

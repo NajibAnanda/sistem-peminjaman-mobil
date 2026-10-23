@@ -2,9 +2,9 @@
 
 # Sistem Peminjaman Mobil Dinas Internal
 
-**Versi Dokumen:** 2.1
-**Tanggal:** 16 Oktober 2026
-**Status:** Draft — siap dikembangkan
+**Versi Dokumen:** 2.2
+**Tanggal:** 22 Oktober 2026
+**Status:** Siap dikembangkan
 
 ---
 
@@ -15,6 +15,7 @@
 | 1.0 – 1.5 | Agustus – Oktober 2026 | Versi berbasis Next.js + Supabase + Vercel dengan karyawan sebagai pengguna aplikasi (self-service). Lihat dokumen PRD v1.5. |
 | 2.0   | 16 Oktober 2026 | **Perombakan total.** (1) Sistem berjalan **lokal di PC kantor** (Laragon) dengan rancangan siap deploy, menggantikan Supabase + Vercel. (2) Stack berganti ke **Laravel 13 + Inertia + React + TypeScript + shadcn/ui + MySQL**. (3) Sistem **hanya dioperasikan petugas GA**; karyawan tidak login dan hanya menjadi data. (4) Role menjadi **Pengelola** dan **Admin**. (5) Alur approve/tolak dihapus, diganti penjadwalan langsung oleh Admin + pembatalan. (6) **Odometer dihapus seluruhnya** (foto maupun angka); foto bukti menjadi **1 foto kondisi** per serah terima. (7) Ditambahkan: perpanjangan peminjaman, indikator Belum Diambil, log aktivitas, ekspor **Excel & CSV**, **light/dark mode**, backup otomatis. |
 | 2.1   | 16 Oktober 2026 | Keputusan setelah analisis starter kit. (1) Lupa password lewat email, verifikasi email, dan passkey dinonaktifkan; reset password hanya oleh Pengelola, ditambah perintah artisan untuk Pengelola yang terkunci. (2) 2FA opsional, dapat diwajibkan untuk Pengelola lewat `.env`. (3) Kebijakan password minimal 10 karakter huruf + angka di semua environment; cek password bocor opsional lewat `.env`. (4) Aturan baru: toleransi waktu mulai 15 menit, serah terima ambil boleh lebih awal, edit jadwal boleh mengganti mobil/karyawan, perpanjangan tidak boleh memperpendek, serah terima ambil ditolak selama mobil belum kembali dari peminjaman sebelumnya. (5) Foto referensi mobil boleh menyusul. (6) Aturan format NIP dan no HP. (7) Tooling Vite+ (oxlint + oxfmt), font Inter lokal, bahasa `lang/id`. (8) Rencana pengerjaan menjadi 8 fase. |
+| 2.2   | 22 Oktober 2026 | Penyelarasan sistem: (1) NIP (`employee_number`) dihilangkan dari data karyawan; identitas unik karyawan kini menggunakan No HP (`08xx`, unik). (2) Kolom NIP pada laporan ekspor riwayat digantikan No HP. (3) Master divisi dikelola secara dinamis via tabel database `divisions` dengan kemampuan tambah dan hapus langsung dari UI form karyawan. (4) Format ekspor riwayat peminjaman mendukung PDF selain Excel dan CSV. |
 
 ---
 
@@ -58,7 +59,6 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 - Pencatatan odometer dan perhitungan jarak tempuh.
 - Notifikasi di luar aplikasi (WhatsApp, email, push notification).
 - Tanda tangan digital peminjam.
-- Ekspor PDF.
 
 ### 1.4 Pengguna Sistem
 
@@ -92,7 +92,7 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 | FR-06 | Admin dapat menambah, mengedit, dan menonaktifkan/mengaktifkan data mobil (plat nomor unik, merk, tipe). Mobil tidak dapat dihapus permanen dari aplikasi. | Must Have |
 | FR-07 | Admin dapat mengubah status operasional mobil menjadi **Operasional** atau **Maintenance**. Mobil yang sedang dipinjam tidak dapat diubah ke Maintenance. Jika mobil punya jadwal mendatang, sistem menampilkan daftar jadwal tersebut sebagai peringatan. | Must Have |
 | FR-08 | Setiap mobil memiliki slot 2 foto referensi (tampak depan/samping dan tampak belakang/interior) yang dapat dilihat lewat galeri popup (dialog) dengan navigasi sebelumnya/selanjutnya. Foto boleh menyusul: mobil dapat dibuat tanpa foto; slot kosong menampilkan placeholder, dan mobil diberi penanda **Foto belum lengkap** di daftar dan detail. | Must Have |
-| FR-09 | Admin dapat menambah, mengedit, dan menonaktifkan/mengaktifkan data karyawan (NIP unik, nama, divisi, no HP). Aturan format NIP dan no HP ada di section 5.4. | Must Have |
+| FR-09 | Admin dapat menambah, mengedit, dan menonaktifkan/mengaktifkan data karyawan (nama, divisi, no HP unik). Pilihan divisi dikelola secara dinamis melalui master divisi (tambah dan hapus). Aturan data karyawan ada di section 5.4. | Must Have |
 | FR-10 | Karyawan atau mobil yang masih memiliki peminjaman berjalan (status Dijadwalkan atau Aktif) tidak dapat dinonaktifkan. Sistem menampilkan peminjaman yang menghalangi. | Must Have |
 
 #### Peminjaman
@@ -124,7 +124,7 @@ Membangun sistem pencatatan peminjaman mobil dinas yang:
 | Kode  | Requirement | Prioritas |
 | ----- | ----------- | --------- |
 | FR-25 | Riwayat peminjaman dapat dicari dan difilter berdasarkan periode, mobil, karyawan, divisi, status, dan keterlambatan. | Must Have |
-| FR-26 | Laporan dapat diekspor ke **Excel (.xlsx)** dan **CSV**, mengikuti filter yang sedang aktif. | Must Have |
+| FR-26 | Laporan dapat diekspor ke **Excel (.xlsx)**, **CSV**, dan **PDF**, mengikuti filter yang sedang aktif. | Must Have |
 | FR-27 | Sistem mencatat log aktivitas (siapa membuat/mengubah apa dan kapan). Log dapat dilihat oleh Pengelola. | Should Have |
 
 #### Tampilan
@@ -189,11 +189,11 @@ Plat nomor, merk, tipe, status operasional (Operasional/Maintenance), status akt
 
 ### 3.7 Data Karyawan
 
-NIP (huruf/angka tanpa spasi, maks. 30 karakter, disimpan dalam huruf besar), nama, divisi, dan no HP (disimpan dalam format `08xx`). Daftar divisi (awal: Keuangan, SDM, Teknik) disimpan di file konfigurasi aplikasi. Karyawan dinonaktifkan, bukan dihapus.
+Nama, divisi, dan no HP (unik, disimpan dalam format `08xx`). Pilihan divisi dikelola secara dinamis melalui tabel `divisions` (dapat ditambah dan dihapus langsung oleh petugas dari form karyawan selama belum terpakai). Karyawan dinonaktifkan, bukan dihapus.
 
 ### 3.8 Riwayat & Laporan
 
-Riwayat dengan pencarian dan filter, serta ekspor Excel dan CSV sesuai filter. Kolom laporan: kode peminjaman, nama karyawan, NIP, divisi, mobil, plat nomor, tujuan, waktu mulai, rencana kembali, waktu ambil, waktu kembali, status, jumlah perpanjangan, durasi keterlambatan, petugas pencatat.
+Riwayat dengan pencarian dan filter, serta ekspor Excel, CSV, dan PDF sesuai filter. Kolom laporan: kode peminjaman, nama karyawan, divisi, no HP, mobil, plat nomor, tujuan, waktu mulai, rencana kembali, waktu ambil, waktu kembali, status, jumlah perpanjangan, durasi keterlambatan, petugas pencatat.
 
 ### 3.9 Kelola Petugas & Log Aktivitas (Pengelola)
 
@@ -307,8 +307,9 @@ Status mobil yang tampil di aplikasi diturunkan dengan urutan prioritas berikut 
 - Perpanjangan: rencana kembali baru wajib lebih lambat dari `planned_return_at` saat ini.
 - Serah terima ambil dan kembali wajib menyertakan tepat 1 foto.
 - Mobil boleh dibuat tanpa foto referensi (0–2 foto); slot kosong menampilkan placeholder dan penanda **Foto belum lengkap**.
-- NIP: wajib, unik, hanya huruf A–Z/a–z dan angka 0–9 tanpa spasi, maksimal 30 karakter, tanpa pola khusus. Disimpan dalam **huruf besar**, sehingga keunikan tidak terpengaruh perbedaan huruf besar/kecil. (Aturan ini akan direvisi bila format NIP kantor ternyata memakai titik atau tanda hubung.)
-- No HP: wajib, diterima dalam format `08xx` atau `+62xx`, lalu dinormalisasi dan disimpan dalam format `08xx`. Panjang 10–15 digit dihitung **setelah** dinormalisasi ke `08xx`.
+- Data Karyawan: NIP dihilangkan. Identitas karyawan mencakup nama, divisi, dan no HP.
+- No HP: wajib, unik sebagai identitas unik karyawan, diterima dalam format `08xx` atau `+62xx`, lalu dinormalisasi dan disimpan dalam format `08xx`. Panjang 10–15 digit dihitung **setelah** dinormalisasi ke `08xx`.
+- Master Divisi: disimpan dalam tabel `divisions`. Petugas dapat menambah divisi baru atau menghapus divisi yang belum dipakai langsung dari dropdown form karyawan; penghapusan ditolak bila divisi masih terkait dengan data karyawan atau peminjaman.
 - Penonaktifan karyawan/mobil ditolak jika masih ada peminjaman `scheduled` atau `active` (FR-10).
 - Tidak ada penghapusan permanen untuk peminjaman, foto bukti, karyawan, mobil, atau akun petugas.
 - Setiap peminjaman memiliki kode unik yang mudah dibaca, format `PMJ-YYYYMM-NNNN` (contoh: `PMJ-202610-0007`).
@@ -404,7 +405,7 @@ app/
 ├── Policies/
 └── Support/             # ImageProcessor, BookingCodeGenerator
 config/
-└── fleet.php            # daftar divisi, batas ukuran foto, interval polling, toleransi waktu mulai, opsi keamanan (2FA Pengelola, cek password bocor)
+└── fleet.php            # batas ukuran foto, interval polling, toleransi waktu mulai, opsi keamanan (2FA Pengelola, cek password bocor)
 lang/
 └── id/                  # validation, auth, passwords, pagination + nama atribut (ditulis manual)
 resources/
@@ -533,11 +534,16 @@ erDiagram
 
     EMPLOYEES {
         bigint id PK
-        string employee_number UK "NIP"
         string name
         string division
-        string phone
+        string phone UK
         boolean is_active
+        timestamps created_updated
+    }
+
+    DIVISIONS {
+        bigint id PK
+        string name UK
         timestamps created_updated
     }
 
@@ -618,7 +624,8 @@ erDiagram
 | Tabel | Catatan |
 | ----- | ------- |
 | `users` | Akun petugas (Pengelola & Admin). Memakai tabel bawaan Laravel agar kompatibel dengan Fortify. Nilai `role`: `manager` (label: Pengelola), `admin` (label: Admin). Tabel `passkeys` bawaan starter kit dihapus lewat migration baru karena passkey tidak dipakai. |
-| `employees` | Data master karyawan peminjam, tanpa kredensial login. `division` disimpan sebagai teks; pilihan valid diatur di `config/fleet.php`. `employee_number` disimpan dalam huruf besar; `phone` disimpan ternormalisasi dalam format `08xx`. |
+| `employees` | Data master karyawan peminjam, tanpa kredensial login. NIP dihilangkan; `phone` unik dan disimpan ternormalisasi dalam format `08xx`. `division` disimpan sebagai teks sesuai master divisi. |
+| `divisions` | Master pilihan divisi dinamis. `name` unik (maks. 50 karakter). Petugas dapat menambah atau menghapus divisi langsung dari UI dropdown form selama tidak digunakan karyawan. |
 | `cars` | `operational_status` hanya menyimpan kondisi operasional. Status "Dipinjam" diturunkan dari peminjaman aktif (section 5.3). |
 | `car_photos` | 0–2 baris per mobil (foto boleh menyusul), unik pada (`car_id`, `position`). Disimpan di disk publik. |
 | `bookings` | `code` unik format `PMJ-YYYYMM-NNNN`. `planned_return_at` selalu berisi nilai terbaru setelah perpanjangan. |
@@ -632,6 +639,8 @@ erDiagram
 - `bookings (status, planned_return_at)` untuk daftar Terlambat.
 - `bookings (status, start_at)` untuk daftar Belum Diambil.
 - `bookings (employee_id)` dan `bookings (start_at)` untuk filter riwayat.
+- `employees (phone)` unik sebagai pengenal unik karyawan.
+- `divisions (name)` unik.
 - Semua foreign key memakai `restrictOnDelete`, sehingga data yang memiliki riwayat tidak dapat terhapus.
 
 ---
@@ -832,7 +841,7 @@ README project wajib berisi:
 - Bagian **Pindah ke server**, termasuk anjuran `FLEET_REQUIRE_2FA_FOR_MANAGER=true` dan `FLEET_PASSWORD_CHECK_UNCOMPROMISED=true` bila sistem dapat diakses dari internet.
 - Lokasi folder foto dan cara backup serta restore.
 - Daftar perintah perawatan rutin.
-- Cara menambah pilihan divisi di `config/fleet.php`.
+- Cara mengelola (tambah dan hapus) pilihan divisi langsung dari aplikasi.
 
 ---
 
@@ -856,7 +865,7 @@ README project wajib berisi:
 - Edit jadwal mencatat nilai sebelum/sesudah di log aktivitas.
 - Route registrasi, lupa password, verifikasi email, dan passkey tidak tersedia.
 - Pengelola tanpa 2FA diarahkan ke halaman keamanan saat `FLEET_REQUIRE_2FA_FOR_MANAGER=true`.
-- No HP dinormalisasi ke format `08xx` dan panjangnya dihitung setelah normalisasi; NIP berisi spasi atau simbol ditolak; NIP disimpan huruf besar dan NIP yang hanya berbeda huruf besar/kecil ditolak sebagai duplikat.
+- No HP dinormalisasi ke format `08xx`, wajib unik, dan panjangnya dihitung setelah normalisasi; No HP duplikat ditolak.
 
 ### 14.2 Standar
 
@@ -879,11 +888,11 @@ README project wajib berisi:
 | **Odometer dihapus** | Menyederhanakan serah terima. Konsekuensi: tidak ada laporan jarak tempuh. Dapat ditambahkan kembali sebagai isian opsional tanpa mengubah alur. |
 | **1 foto kondisi per serah terima** | Cukup sebagai bukti dan mempercepat proses. |
 | **Tanpa tanda tangan digital** | Menjaga serah terima tetap singkat; foto bertanda waktu dan petugas pencatat menjadi bukti. |
-| **Ekspor Excel & CSV, tanpa PDF** | Sesuai kebutuhan pengolahan data GA. |
+| **Ekspor Excel, CSV & PDF** | Sesuai kebutuhan pengolahan data GA (analisis via spreadsheet dan cetak laporan/arsip via PDF). |
 | **Status Terlambat & Belum Diambil dihitung, bukan disimpan** | Tidak bergantung pada job terjadwal dan tidak pernah tidak sinkron. |
 | **Status Dipinjam pada mobil diturunkan dari peminjaman** | Satu sumber kebenaran; mencegah data ganda yang bisa berbeda. |
 | **Soft deactivation, tanpa hapus permanen** | Menjaga integritas riwayat dan bukti audit. |
-| **Divisi di file konfigurasi, bukan tabel** | Daftar jarang berubah; menghindari halaman kelola tambahan. Perubahan cukup di satu file. |
+| **Divisi di tabel dinamis, bukan file konfigurasi** | Memudahkan petugas menambah/menghapus divisi langsung dari form input tanpa perlu mengubah file konfigurasi di server. |
 | **Polling untuk badge, bukan realtime/websocket** | Cukup untuk beberapa petugas; tanpa server tambahan. |
 | **Tidak ada notifikasi WhatsApp/email** | Sistem lokal; pemberitahuan cukup di dalam aplikasi. |
 | **Tanpa lupa password lewat email, verifikasi email, dan passkey** | Sistem tidak mengirim email; reset dilakukan Pengelola (perintah artisan untuk Pengelola yang terkunci). Passkey menambah permukaan serangan tanpa kebutuhan nyata. |
@@ -901,10 +910,10 @@ README project wajib berisi:
 | ---- | ------- |
 | 1. Fondasi | Penyesuaian starter kit: nonaktifkan registrasi, lupa password, verifikasi email, dan passkey (+ hapus `@laravel/passkeys`, migration drop `passkeys`); role & kolom akun; middleware akun aktif, ganti password, 2FA Pengelola, security headers; kebijakan password & opsi `FLEET_*`; zona waktu & `lang/id`; token status + `StatusBadge`; font Inter lokal; layout & menu Indonesia; `config/fleet.php`; seeder Pengelola; workflow CI |
 | 2. Akun Petugas | Kelola Petugas (termasuk status 2FA), password sementara, nonaktif + akhiri sesi, minimal 1 Pengelola aktif, profil, perintah artisan reset password Pengelola, mulai pencatatan log aktivitas |
-| 3. Data Master | Data Mobil (+ status operasional, foto referensi yang boleh menyusul, galeri), Data Karyawan (validasi NIP & no HP) |
+| 3. Data Master | Data Mobil (+ status operasional, foto referensi yang boleh menyusul, galeri), Data Karyawan (nama, divisi, no HP unik), Master Divisi dinamis |
 | 4. Inti Peminjaman | Penjadwalan + cek bentrok, edit, batal, serah terima ambil/kembali + foto, perpanjangan, detail + perbandingan foto |
 | 5. Monitoring | Dashboard, badge Terlambat/Belum Diambil, peringatan jadwal berikutnya, Jadwal Armada |
-| 6. Riwayat & Laporan | Riwayat + filter, ekspor Excel/CSV, halaman Log Aktivitas |
+| 6. Riwayat & Laporan | Riwayat + filter, ekspor Excel/CSV/PDF, halaman Log Aktivitas |
 | 7. Audit Kualitas & Keamanan | Kepatuhan PRD/AGENTS, matriks test hak akses, review keamanan, performa, `composer audit`/`npm audit` |
 | 8. Operasional & Serah Terima | Backup otomatis, scheduler, autostart, SSL Laragon + rename folder, user MySQL khusus, README & panduan pengguna, uji restore |
 
@@ -916,10 +925,10 @@ Prompt rinci tiap fase ada di `PROMPTS.md`.
 
 | Prioritas | Fitur |
 | --------- | ----- |
-| Must Have | Login petugas, kelola petugas + proteksi, data mobil (+ status operasional, foto referensi & galeri), data karyawan, proteksi nonaktif, penjadwalan + cek bentrok, pembatalan, serah terima ambil & kembali (1 foto), timestamp foto, dashboard, indikator Terlambat, riwayat + filter, ekspor Excel & CSV |
+| Must Have | Login petugas, kelola petugas + proteksi, data mobil (+ status operasional, foto referensi & galeri), data karyawan, master divisi, proteksi nonaktif, penjadwalan + cek bentrok, pembatalan, serah terima ambil & kembali (1 foto), timestamp foto, dashboard, indikator Terlambat, riwayat + filter, ekspor Excel, CSV & PDF |
 | Should Have | 2FA, profil & ganti password, edit jadwal, perpanjangan, perbandingan foto, Belum Diambil, peringatan konflik jadwal berikutnya, Jadwal Armada, log aktivitas, light/dark mode |
 | Could Have | — |
-| Won't Have (versi ini) | Login karyawan, approval, odometer & jarak tempuh, tanda tangan digital, notifikasi WhatsApp/email, ekspor PDF, registrasi, lupa password lewat email, verifikasi email, passkey |
+| Won't Have (versi ini) | Login karyawan, approval, odometer & jarak tempuh, tanda tangan digital, notifikasi WhatsApp/email, registrasi, lupa password lewat email, verifikasi email, passkey |
 
 ## Lampiran B: Pemetaan dari PRD v1.5
 
@@ -937,7 +946,7 @@ Prompt rinci tiap fase ada di `PROMPTS.md`.
 | FR-13 Kelola mobil | FR-06, FR-07 (hapus → nonaktif) |
 | FR-14 Riwayat | FR-25 |
 | FR-15 Jarak tempuh | Dihapus |
-| FR-17 Ekspor CSV/PDF | FR-26 (Excel & CSV) |
+| FR-17 Ekspor CSV/PDF | FR-26 (Excel, CSV & PDF) |
 | FR-18 Foto referensi + galeri | FR-08 |
 | FR-19 Divisi user | FR-09 (pada data karyawan) |
 | FR-20/21 Profil & password user | FR-03 (hanya petugas) |

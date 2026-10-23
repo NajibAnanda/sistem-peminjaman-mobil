@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Employee;
 
 use App\Enums\ActiveStatus;
+use App\Models\Division;
 use App\Models\Employee;
 use App\Support\TableQuery;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -31,7 +32,10 @@ final class EmployeeIndexRequest extends FormRequest
     public function tableQuery(): TableQuery
     {
         /** @var list<string> $divisions */
-        $divisions = config('fleet.divisions');
+        $divisions = array_values(array_unique(array_filter(array_merge(
+            Division::query()->pluck('name')->all(),
+            Employee::query()->distinct()->whereNotNull('division')->pluck('division')->all()
+        ))));
 
         return TableQuery::fromRequest($this, [
             'division' => $divisions,

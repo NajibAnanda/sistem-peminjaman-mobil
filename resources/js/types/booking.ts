@@ -35,7 +35,6 @@ export type Booking = {
     employee: {
         id: number;
         name: string;
-        employee_number: string;
         division: string;
         phone: string;
     };
@@ -87,8 +86,8 @@ export type BookingDetail = Booking & {
 export type EmployeeOption = {
     id: number;
     name: string;
-    employee_number: string;
     division: string;
+    phone: string;
 };
 
 /**

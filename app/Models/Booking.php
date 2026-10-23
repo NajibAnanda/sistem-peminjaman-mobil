@@ -302,7 +302,7 @@ final class Booking extends Model
     }
 
     /**
-     * Pencarian kode, nama/NIP karyawan, atau plat nomor.
+     * Pencarian kode, nama/no HP karyawan, atau plat nomor.
      *
      * @param  Builder<self>  $query
      */
@@ -314,7 +314,7 @@ final class Booking extends Model
             ->where('code', 'like', "%{$term}%")
             ->orWhereIn('employee_id', Employee::query()->select('id')->where(fn (Builder $query) => $query
                 ->where('name', 'like', "%{$term}%")
-                ->orWhere('employee_number', 'like', "%{$term}%")))
+                ->orWhere('phone', 'like', "%{$term}%")))
             ->orWhereIn('car_id', Car::query()->select('id')->where('plate_number', 'like', "%{$term}%")));
     }
 

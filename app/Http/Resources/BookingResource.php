@@ -39,7 +39,6 @@ class BookingResource extends JsonResource
             'employee' => [
                 'id' => $this->employee->id,
                 'name' => $this->employee->name,
-                'employee_number' => $this->employee->employee_number,
                 'division' => $this->employee->division,
                 'phone' => $this->employee->phone,
             ],

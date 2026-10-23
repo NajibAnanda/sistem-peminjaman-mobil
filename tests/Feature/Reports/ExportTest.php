@@ -12,9 +12,11 @@ use Carbon\CarbonImmutable;
 use Illuminate\Testing\TestResponse;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Tests\TestCase;
 
 const EXPORT_HEADINGS = [
-    'Kode Peminjaman', 'Nama Karyawan', 'NIP', 'Divisi', 'Mobil', 'Plat Nomor', 'Tujuan',
+    'Kode Peminjaman', 'Nama Karyawan', 'Divisi', 'No HP', 'Mobil', 'Plat Nomor', 'Tujuan',
     'Waktu Mulai', 'Rencana Kembali', 'Waktu Ambil', 'Waktu Kembali', 'Status',
     'Jumlah Perpanjangan', 'Durasi Keterlambatan', 'Petugas Pencatat',
 ];
@@ -23,13 +25,14 @@ const EXPORT_HEADINGS = [
 const EXPORT_PERIOD = ['from' => '2026-09-01', 'to' => '2026-10-31'];
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->travelTo(CarbonImmutable::parse('2026-10-20 12:00:00'));
     $this->user = User::factory()->admin()->create(['name' => 'Sari Petugas']);
     $creator = User::factory()->admin()->create(['name' => 'Dewi Pencatat']);
 
     $car = Car::factory()->create(['plate_number' => 'B 1234 ABC', 'brand' => 'Toyota', 'model' => 'Avanza']);
-    // NIP berupa angka dengan nol di depan harus tetap utuh di file.
-    $employee = Employee::factory()->create(['name' => 'Ayu Ningsih Pratiwi', 'employee_number' => '00123', 'division' => 'Keuangan']);
+    // No HP berupa angka dengan nol di depan harus tetap utuh sebagai teks di file.
+    $employee = Employee::factory()->create(['name' => 'Ayu Ningsih Pratiwi', 'division' => 'Keuangan', 'phone' => '081234567890']);
 
     $this->late = Booking::factory()->create([
         'code' => 'PMJ-202609-9001',
@@ -58,7 +61,10 @@ beforeEach(function () {
 
 function exportedFile(TestResponse $response): string
 {
-    return $response->baseResponse->getFile()->getPathname();
+    /** @var BinaryFileResponse $fileResponse */
+    $fileResponse = $response->baseResponse;
+
+    return $fileResponse->getFile()->getPathname();
 }
 
 /**
@@ -90,7 +96,7 @@ test('CSV berisi kolom laporan lengkap dengan tanggal dan teks Indonesia', funct
     expect(csvRows($response))->toBe([
         EXPORT_HEADINGS,
         [
-            'PMJ-202609-9001', 'Ayu Ningsih Pratiwi', '00123', 'Keuangan', 'Toyota Avanza', 'B 1234 ABC',
+            'PMJ-202609-9001', 'Ayu Ningsih Pratiwi', 'Keuangan', '081234567890', 'Toyota Avanza', 'B 1234 ABC',
             'Kunjungan ke Kantor Cabang Bekasi — “urgent”',
             '10 Sep 2026, 08.00', '10 Sep 2026, 12.00', '10 Sep 2026, 07.45', '11 Sep 2026, 15.30',
             'Selesai', '2', '1 hari 3 jam', 'Dewi Pencatat',
@@ -128,7 +134,7 @@ test('pemisah CSV mengikuti config', function () {
         ->and($rows[1][0])->toBe('PMJ-202610-9001');
 });
 
-test('file Excel berisi judul tebal dan NIP tersimpan sebagai teks', function () {
+test('file Excel berisi judul tebal dan no HP tersimpan sebagai teks', function () {
     $response = $this->actingAs($this->user)
         ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'xlsx', 'status' => ['completed']]))
         ->assertOk()
@@ -139,8 +145,8 @@ test('file Excel berisi judul tebal dan NIP tersimpan sebagai teks', function ()
     expect($sheet->rangeToArray('A1:O1')[0])->toBe(EXPORT_HEADINGS)
         ->and($sheet->getStyle('A1')->getFont()->getBold())->toBeTrue()
         ->and($sheet->getHighestRow())->toBe(2)
-        ->and($sheet->getCell('C2')->getValue())->toBe('00123')
-        ->and($sheet->getCell('C2')->getDataType())->toBe(DataType::TYPE_STRING)
+        ->and($sheet->getCell('D2')->getValue())->toBe('081234567890')
+        ->and($sheet->getCell('D2')->getDataType())->toBe(DataType::TYPE_STRING)
         ->and($sheet->getCell('H2')->getValue())->toBe('10 Sep 2026, 08.00')
         ->and($sheet->getCell('M2')->getValue())->toBe(2)
         ->and(IOFactory::load(exportedFile($this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'xlsx', 'status' => ['scheduled']]))))
@@ -172,11 +178,20 @@ test('ekspor tercatat di log aktivitas', function () {
         ->and($activity->properties['query']['filters']['status'])->toBe(['completed']);
 });
 
+test('ekspor PDF menghasilkan file download dengan nama dan header yang tepat', function () {
+    $response = $this->actingAs($this->user)
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'pdf', 'status' => ['completed']]))
+        ->assertOk()
+        ->assertDownload('riwayat-peminjaman_2026-09-01_sd_2026-10-31_diekspor-2026-10-20-1200.pdf');
+
+    expect($response->headers->get('content-type'))->toBe('application/pdf');
+});
+
 test('format tidak dikenal ditolak', function (?string $format) {
     $this->actingAs($this->user)
         ->get(route('history.export', [...EXPORT_PERIOD, ...array_filter(['format' => $format])]))
         ->assertSessionHasErrors('format');
-})->with(['pdf', null]);
+})->with(['docx', null]);
 
 test('tamu dan akun nonaktif tidak dapat mengekspor', function () {
     $this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv']))->assertRedirect(route('login'));

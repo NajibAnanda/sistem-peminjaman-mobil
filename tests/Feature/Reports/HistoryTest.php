@@ -7,7 +7,9 @@ use App\Models\Car;
 use App\Models\Employee;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 /**
  * @return list<string>
@@ -21,13 +23,14 @@ function historyCodes(Assert $page): array
 }
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->travelTo(CarbonImmutable::parse('2026-10-20 12:00:00'));
     $this->user = User::factory()->admin()->create();
 
     $this->carA = Car::factory()->create(['plate_number' => 'B 1111 AAA']);
     $this->carB = Car::factory()->create(['plate_number' => 'D 2222 BBB']);
-    $this->rina = Employee::factory()->create(['name' => 'Rina Kartika', 'employee_number' => 'KRY001', 'division' => 'Keuangan']);
-    $this->budi = Employee::factory()->create(['name' => 'Budi Santoso', 'employee_number' => 'KRY002', 'division' => 'Teknik']);
+    $this->rina = Employee::factory()->create(['name' => 'Rina Kartika', 'division' => 'Keuangan']);
+    $this->budi = Employee::factory()->create(['name' => 'Budi Santoso', 'division' => 'Teknik']);
 
     $make = fn (string $code, BookingStatus $status, Car $car, Employee $employee, string $start, string $end, array $extra = []) => Booking::factory()->create([
         'code' => $code,
@@ -82,10 +85,11 @@ test('riwayat berisi semua peminjaman, terbaru di atas, dengan keterlambatan dan
                 ['value' => (string) $this->carA->id, 'label' => 'B 1111 AAA'],
                 ['value' => (string) $this->carB->id, 'label' => 'D 2222 BBB'],
             ])
-            ->where('filterOptions.employee.0', ['value' => (string) $this->budi->id, 'label' => 'Budi Santoso (KRY002)'])
+            ->where('filterOptions.employee.0', ['value' => (string) $this->budi->id, 'label' => 'Budi Santoso (Teknik)'])
             ->where('exportFormats', [
                 ['value' => 'xlsx', 'label' => 'Microsoft Excel (.xlsx)'],
                 ['value' => 'csv', 'label' => 'CSV (.csv)'],
+                ['value' => 'pdf', 'label' => 'Dokumen PDF (.pdf)'],
             ]),
         );
 });
@@ -173,7 +177,7 @@ test('Admin dan Pengelola dapat membuka riwayat; tamu dan akun nonaktif tidak', 
     $this->actingAs(User::factory()->manager()->create())->get(route('history.index'))->assertOk();
     $this->actingAs($this->user)->get(route('history.index'))->assertOk();
 
-    auth()->logout();
+    Auth::logout();
     $this->get(route('history.index'))->assertRedirect(route('login'));
 
     $this->actingAs(User::factory()->inactive()->create())

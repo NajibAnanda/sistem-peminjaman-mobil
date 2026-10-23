@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 /**
  * @return list<string>
@@ -17,6 +18,7 @@ function bookingCodes(Assert $page): array
 }
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->travelTo(CarbonImmutable::parse('2026-10-20 12:00:00'));
     $this->user = User::factory()->admin()->create();
 
@@ -30,7 +32,7 @@ beforeEach(function () {
     ]);
 
     $make('PMJ-202609-0001', BookingStatus::Scheduled, '2026-10-21 08:00', '2026-10-21 12:00', [
-        'employee_id' => Employee::factory()->create(['name' => 'Rina Kartika', 'employee_number' => 'KRY777'])->id,
+        'employee_id' => Employee::factory()->create(['name' => 'Rina Kartika', 'phone' => '087777777777'])->id,
     ]);
     $make('PMJ-202609-0002', BookingStatus::Scheduled, '2026-10-20 09:00', '2026-10-20 15:00');
     $make('PMJ-202609-0003', BookingStatus::Active, '2026-10-20 08:00', '2026-10-20 18:00', [
@@ -74,7 +76,7 @@ test('pencarian dan filter status mengembalikan data yang benar', function (arra
 })->with([
     'cari kode' => [['search' => '0002'], ['PMJ-202609-0002']],
     'cari nama karyawan' => [['search' => 'rina'], ['PMJ-202609-0001']],
-    'cari NIP' => [['search' => 'KRY777'], ['PMJ-202609-0001']],
+    'cari no HP peminjam' => [['search' => '087777'], ['PMJ-202609-0001']],
     'cari plat' => [['search' => '4321'], ['PMJ-202609-0003']],
     'kode selesai tidak muncul' => [['search' => '0005'], []],
     'dijadwalkan' => [['status' => ['scheduled']], ['PMJ-202609-0001']],

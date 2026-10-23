@@ -13,7 +13,7 @@ import type { Option, TableQueryState } from '@/types';
 type Props = {
     /** Pencarian & filter yang berlaku menurut server (= data yang tampil). */
     query: TableQueryState;
-    formats: Option<'xlsx' | 'csv'>[];
+    formats: Option<'xlsx' | 'csv' | 'pdf'>[];
 };
 
 /**

@@ -3,6 +3,7 @@
 use App\Models\Employee;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 /**
  * @return list<string>
@@ -13,11 +14,12 @@ function employeeNames(Assert $page): array
 }
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->user = User::factory()->admin()->create();
 
-    Employee::factory()->create(['employee_number' => 'K001', 'name' => 'Ani Lestari', 'division' => 'Keuangan', 'phone' => '081111111111']);
-    Employee::factory()->create(['employee_number' => 'K002', 'name' => 'Budi Santoso', 'division' => 'Teknik', 'phone' => '082222222222']);
-    Employee::factory()->inactive()->create(['employee_number' => 'K003', 'name' => 'Citra Dewi', 'division' => 'SDM', 'phone' => '083333333333']);
+    Employee::factory()->create(['name' => 'Ani Lestari', 'division' => 'Keuangan', 'phone' => '081111111111']);
+    Employee::factory()->create(['name' => 'Budi Santoso', 'division' => 'Teknik', 'phone' => '082222222222']);
+    Employee::factory()->inactive()->create(['name' => 'Citra Dewi', 'division' => 'SDM', 'phone' => '083333333333']);
 });
 
 test('daftar karyawan dikirim dengan opsi divisi dari config', function () {
@@ -27,11 +29,11 @@ test('daftar karyawan dikirim dengan opsi divisi dari config', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('employees/index')
             ->has('employees.data', 3)
-            ->has('employees.data.0', fn (Assert $row) => $row->hasAll(['id', 'employee_number', 'name', 'division', 'phone', 'is_active']))
+            ->has('employees.data.0', fn (Assert $row) => $row->hasAll(['id', 'name', 'division', 'phone', 'is_active']))
             ->where('divisions', [
-                ['value' => 'Keuangan', 'label' => 'Keuangan'],
-                ['value' => 'SDM', 'label' => 'SDM'],
-                ['value' => 'Teknik', 'label' => 'Teknik'],
+                ['value' => 'Keuangan', 'label' => 'Keuangan', 'can_delete' => false],
+                ['value' => 'SDM', 'label' => 'SDM', 'can_delete' => false],
+                ['value' => 'Teknik', 'label' => 'Teknik', 'can_delete' => false],
             ]),
         );
 });
@@ -41,7 +43,6 @@ test('pencarian dan filter mengembalikan data yang benar', function (array $quer
         ->get(route('employees.index', $query))
         ->assertInertia(fn (Assert $page) => expect(employeeNames($page))->toBe($expected));
 })->with([
-    'cari NIP' => [['search' => 'k002'], ['Budi Santoso']],
     'cari nama' => [['search' => 'lestari'], ['Ani Lestari']],
     'cari no HP' => [['search' => '0833'], ['Citra Dewi']],
     'divisi' => [['division' => ['Teknik', 'SDM']], ['Budi Santoso', 'Citra Dewi']],

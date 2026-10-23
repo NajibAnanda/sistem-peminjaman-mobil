@@ -12,6 +12,7 @@ use App\Http\Requests\Employee\EmployeeIndexRequest;
 use App\Http\Requests\Employee\StoreEmployeeRequest;
 use App\Http\Requests\Employee\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
+use App\Models\Division;
 use App\Models\Employee;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -29,13 +30,35 @@ final class EmployeeController extends Controller
             Employee::query()->forTable($table)->orderByDesc('is_active')->orderBy('name'),
         );
 
+        /** @var array<string, int> $employeeCounts */
+        $employeeCounts = Employee::query()
+            ->selectRaw('division, count(*) as count')
+            ->groupBy('division')
+            ->pluck('count', 'division')
+            ->map(fn ($c): int => (int) $c)
+            ->all();
+
         /** @var list<string> $divisions */
-        $divisions = config('fleet.divisions');
+        $divisions = array_values(array_unique(array_filter(array_merge(
+            Division::query()->pluck('name')->all(),
+            array_keys($employeeCounts),
+        ))));
+        sort($divisions);
+
+        $divisionOptions = array_map(function (string $division) use ($employeeCounts): array {
+            $count = $employeeCounts[$division] ?? 0;
+
+            return [
+                'value' => $division,
+                'label' => $division,
+                'can_delete' => $count === 0,
+            ];
+        }, $divisions);
 
         return Inertia::render('employees/index', [
             'employees' => EmployeeResource::collection($employees),
             'query' => $table->toArray(),
-            'divisions' => array_map(fn (string $division): array => ['value' => $division, 'label' => $division], $divisions),
+            'divisions' => $divisionOptions,
             'statuses' => ActiveStatus::options(),
         ]);
     }

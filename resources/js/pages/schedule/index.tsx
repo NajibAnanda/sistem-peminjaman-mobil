@@ -242,7 +242,7 @@ export default function ScheduleIndex({
                                                     <>
                                                         {nowLeft !== null && (
                                                             <div
-                                                                className="pointer-events-none absolute inset-y-0 z-[1] w-px bg-destructive/70"
+                                                                className="pointer-events-none absolute inset-y-0 z-1 w-px bg-destructive/70"
                                                                 style={{
                                                                     left: `${nowLeft}%`,
                                                                 }}

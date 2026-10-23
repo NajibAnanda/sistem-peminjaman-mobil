@@ -118,8 +118,8 @@ final class BookingController extends Controller
             'employees' => Employee::query()
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'employee_number', 'division'])
-                ->map(fn (Employee $employee): array => $employee->only(['id', 'name', 'employee_number', 'division']))
+                ->get(['id', 'name', 'division', 'phone'])
+                ->map(fn (Employee $employee): array => $employee->only(['id', 'name', 'division', 'phone']))
                 ->values()
                 ->all(),
             // Dimuat ulang (partial reload) setiap rentang waktu berubah.

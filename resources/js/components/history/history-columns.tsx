@@ -38,11 +38,6 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
             ),
         },
         {
-            id: 'employee_number',
-            header: 'NIP',
-            cell: (booking) => booking.employee.employee_number,
-        },
-        {
             id: 'division',
             header: 'Divisi',
             cell: (booking) => booking.employee.division,

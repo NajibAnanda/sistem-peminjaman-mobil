@@ -15,13 +15,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
- * @property string $employee_number
  * @property string $name
  * @property string $division
  * @property string $phone
  * @property bool $is_active
  */
-#[Fillable(['employee_number', 'name', 'division', 'phone', 'is_active'])]
+#[Fillable(['name', 'division', 'phone', 'is_active'])]
 final class Employee extends Model
 {
     /** @use HasFactory<EmployeeFactory> */
@@ -55,8 +54,7 @@ final class Employee extends Model
         $query
             ->when($table->search, fn (Builder $query, string $term) => $query->where(
                 fn (Builder $query) => $query
-                    ->where('employee_number', 'like', "%{$term}%")
-                    ->orWhere('name', 'like', "%{$term}%")
+                    ->where('name', 'like', "%{$term}%")
                     ->orWhere('phone', 'like', "%{$term}%"),
             ))
             ->when($table->filter('division'), fn (Builder $query, array $divisions) => $query->whereIn('division', $divisions))

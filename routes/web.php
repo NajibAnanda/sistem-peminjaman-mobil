@@ -13,6 +13,7 @@ use App\Http\Controllers\CarDeactivationController;
 use App\Http\Controllers\CarOperationalStatusController;
 use App\Http\Controllers\CarPhotoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\EmployeeActivationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDeactivationController;
@@ -89,6 +90,8 @@ Route::middleware('auth')->group(function () {
     Route::post('employees/{employee}/activate', EmployeeActivationController::class)
         ->can('activate', 'employee')
         ->name('employees.activate');
+    Route::post('divisions', [DivisionController::class, 'store'])->name('divisions.store');
+    Route::delete('divisions/{division}', [DivisionController::class, 'destroy'])->name('divisions.destroy');
 
     // Kelola Petugas (khusus Pengelola; otorisasi per aksi lewat UserPolicy).
     Route::get('staff', [StaffController::class, 'index'])->name('staff.index');

@@ -6,10 +6,12 @@ use App\Models\Employee;
 use App\Models\User;
 use App\Support\Search\GlobalSearch;
 use Illuminate\Testing\TestResponse;
+use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->car = Car::factory()->create(['plate_number' => 'B 1234 SRI', 'brand' => 'Toyota', 'model' => 'Avanza']);
-    $this->employee = Employee::factory()->create(['name' => 'Sri Wahyuni', 'employee_number' => 'KRY900', 'division' => 'Keuangan']);
+    $this->employee = Employee::factory()->create(['name' => 'Sri Wahyuni', 'division' => 'Keuangan']);
     $this->booking = Booking::factory()->scheduled()->for($this->car)->for($this->employee)->create();
     $this->staff = User::factory()->admin()->create(['name' => 'Sri Petugas', 'email' => 'sri@kantor.test']);
 });
@@ -49,7 +51,7 @@ test('hasil hanya berisi field untuk tampilan dan tertaut ke halaman terkait', f
         'subtitle' => 'Toyota Avanza',
         'url' => route('cars.show', $this->car),
     ])
-        ->and($groups['employees'][0]['url'])->toBe(route('employees.index', ['search' => 'KRY900']))
+        ->and($groups['employees'][0]['url'])->toBe(route('employees.index', ['search' => 'Sri Wahyuni']))
         ->and($groups['bookings'][0]['title'])->toBe($this->booking->code)
         ->and($groups['bookings'][0]['url'])->toBe(route('bookings.show', $this->booking))
         ->and($groups['staff'][0])->toBe([

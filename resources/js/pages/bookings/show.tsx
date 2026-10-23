@@ -108,8 +108,7 @@ export default function BookingShow({
                                         <span className="font-medium">
                                             {booking.employee.name}
                                         </span>
-                                        <span className="text-muted-foreground tabular-nums">
-                                            {booking.employee.employee_number} ·{' '}
+                                        <span className="text-muted-foreground">
                                             {booking.employee.division}
                                         </span>
                                         <span className="text-muted-foreground tabular-nums">

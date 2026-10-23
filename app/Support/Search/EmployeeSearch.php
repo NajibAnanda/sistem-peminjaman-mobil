@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Data karyawan tidak punya halaman detail, jadi hasil membuka daftar
- * karyawan dengan pencarian NIP itu.
+ * karyawan dengan pencarian nama itu.
  */
 final class EmployeeSearch implements SearchCategory
 {
@@ -33,16 +33,16 @@ final class EmployeeSearch implements SearchCategory
     {
         return array_values(Employee::query()
             ->where(fn (Builder $query) => $query
-                ->where('employee_number', 'like', "%{$term}%")
-                ->orWhere('name', 'like', "%{$term}%"))
+                ->where('name', 'like', "%{$term}%")
+                ->orWhere('phone', 'like', "%{$term}%"))
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'employee_number', 'name', 'division', 'is_active'])
+            ->get(['id', 'name', 'division', 'phone', 'is_active'])
             ->map(fn (Employee $employee): array => [
                 'id' => $employee->id,
                 'title' => $employee->name,
-                'subtitle' => "{$employee->employee_number} · {$employee->division}".($employee->is_active ? '' : ' · Nonaktif'),
-                'url' => route('employees.index', ['search' => $employee->employee_number]),
+                'subtitle' => "{$employee->division} · {$employee->phone}".($employee->is_active ? '' : ' · Nonaktif'),
+                'url' => route('employees.index', ['search' => $employee->name]),
             ])
             ->all());
     }

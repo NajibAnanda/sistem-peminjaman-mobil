@@ -6,13 +6,6 @@ import type { Employee } from '@/types';
 export function useEmployeeColumns(): DataTableColumn<Employee>[] {
     return [
         {
-            id: 'employee_number',
-            header: 'NIP',
-            cell: (employee) => (
-                <span className="tabular-nums">{employee.employee_number}</span>
-            ),
-        },
-        {
             id: 'name',
             header: 'Nama',
             cell: (employee) => (

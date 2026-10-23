@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 final class UpdateEmployee
 {
     /**
-     * @param  array{employee_number: string, name: string, division: string, phone: string}  $data
+     * @param  array{name: string, division: string, phone: string}  $data
      */
     public function handle(Employee $employee, array $data, User $actor): Employee
     {

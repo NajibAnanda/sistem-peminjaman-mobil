@@ -20,6 +20,9 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -60,8 +63,8 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
         return [
             'Kode Peminjaman',
             'Nama Karyawan',
-            'NIP',
             'Divisi',
+            'No HP',
             'Mobil',
             'Plat Nomor',
             'Tujuan',
@@ -87,8 +90,8 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
         return [
             $row->code,
             $row->employee->name,
-            $row->employee->employee_number,
             $row->employee->division,
+            $row->employee->phone,
             "{$row->car->brand} {$row->car->model}",
             $row->car->plate_number,
             $row->purpose,
@@ -112,7 +115,7 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     public function columnWidths(): array
     {
         return [
-            'A' => 18, 'B' => 28, 'C' => 14, 'D' => 14, 'E' => 22, 'F' => 13, 'G' => 40, 'H' => 19,
+            'A' => 18, 'B' => 28, 'C' => 16, 'D' => 16, 'E' => 22, 'F' => 13, 'G' => 40, 'H' => 19,
             'I' => 19, 'J' => 19, 'K' => 19, 'L' => 14, 'M' => 12, 'N' => 18, 'O' => 22,
         ];
     }
@@ -136,8 +139,8 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     }
 
     /**
-     * Teks disimpan sebagai teks apa adanya: NIP atau no HP yang hanya berisi
-     * angka tidak boleh diubah Excel menjadi angka (nol di depan hilang).
+     * Teks disimpan sebagai teks apa adanya: no HP yang diawali 08 tidak boleh
+     * diubah Excel menjadi angka (nol di depan hilang).
      * Hanya kolom jumlah yang disimpan sebagai angka.
      */
     public function bindValue(Cell $cell, mixed $value): bool
@@ -156,6 +159,54 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
      */
     public function styles(Worksheet $sheet): array
     {
-        return [1 => ['font' => ['bold' => true]]];
+        $highestRow = $sheet->getHighestRow();
+        $highestColumn = 'O';
+
+        // Header baris 1: navy gelap kontras, teks putih tebal, tinggi 28pt
+        $sheet->getStyle("A1:{$highestColumn}1")->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF1E293B'],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+        $sheet->setAutoFilter("A1:{$highestColumn}1");
+
+        if ($highestRow >= 2) {
+            // Garis kisi tipis untuk seluruh tabel
+            $sheet->getStyle("A1:{$highestColumn}{$highestRow}")->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FFE2E8F0'],
+                    ],
+                ],
+                'alignment' => [
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+
+            // Zebra striping khusus baris isi tabel: baris ganjil data (row 3, 5, ...) diberi aksen abu-abu sangat lembut
+            for ($row = 2; $row <= $highestRow; $row++) {
+                $sheet->getRowDimension($row)->setRowHeight(20);
+                if ($row % 2 === 1) {
+                    $sheet->getStyle("A{$row}:{$highestColumn}{$row}")->applyFromArray([
+                        'fill' => [
+                            'fillType' => Fill::FILL_SOLID,
+                            'startColor' => ['argb' => 'FFF8FAFC'],
+                        ],
+                    ]);
+                }
+            }
+        }
+
+        return [];
     }
 }

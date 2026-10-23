@@ -5,8 +5,10 @@ use App\Models\Booking;
 use App\Models\Employee;
 use App\Models\User;
 use Inertia\Support\SessionKey;
+use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->user = User::factory()->admin()->create();
 });
 
@@ -17,14 +19,13 @@ beforeEach(function () {
 function employeePayload(array $overrides = []): array
 {
     return [...[
-        'employee_number' => 'k2024001',
         'name' => ' Dewi Lestari ',
         'division' => 'Keuangan',
         'phone' => '+62 812-3456-7890',
     ], ...$overrides];
 }
 
-test('karyawan baru disimpan dengan NIP huruf besar dan no HP 08xx', function () {
+test('karyawan baru disimpan dengan no HP 08xx', function () {
     $this->actingAs($this->user)
         ->post(route('employees.store'), employeePayload())
         ->assertSessionHasNoErrors()
@@ -32,30 +33,34 @@ test('karyawan baru disimpan dengan NIP huruf besar dan no HP 08xx', function ()
 
     $employee = Employee::query()->sole();
 
-    expect($employee->employee_number)->toBe('K2024001')
-        ->and($employee->name)->toBe('Dewi Lestari')
+    expect($employee->name)->toBe('Dewi Lestari')
         ->and($employee->phone)->toBe('081234567890')
         ->and($employee->is_active)->toBeTrue()
         ->and(lastActivity()->event)->toBe(ActivityEvent::Created->value);
 });
 
-test('validasi NIP, no HP, dan divisi', function (array $overrides, string $field, string $message) {
-    Employee::factory()->create(['employee_number' => 'K2024001']);
+test('validasi no HP dan divisi', function (array $overrides, string $field, string $message) {
+    Employee::factory()->create(['phone' => '081234567890']);
 
     $this->actingAs($this->user)
-        ->post(route('employees.store'), employeePayload(['employee_number' => 'K9', ...$overrides]))
+        ->post(route('employees.store'), employeePayload($overrides))
         ->assertSessionHasErrors([$field => $message]);
 })->with([
-    'NIP duplikat beda huruf' => [['employee_number' => 'k2024001'], 'employee_number', 'NIP sudah dipakai.'],
-    'NIP berspasi' => [['employee_number' => 'K 2024'], 'employee_number', 'NIP hanya boleh berisi huruf dan angka, tanpa spasi atau simbol.'],
-    'NIP bersimbol' => [['employee_number' => 'K-2024'], 'employee_number', 'NIP hanya boleh berisi huruf dan angka, tanpa spasi atau simbol.'],
-    'NIP terlalu panjang' => [['employee_number' => str_repeat('A', 31)], 'employee_number', 'NIP tidak boleh lebih dari 30 karakter.'],
+    'no HP duplikat' => [['phone' => '081234567890'], 'phone', 'No HP sudah dipakai karyawan lain.'],
     'no HP 62 tanpa plus' => [['phone' => '6281234567890'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
     'no HP telepon rumah' => [['phone' => '0215551234'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
     'no HP terlalu pendek' => [['phone' => '081234567'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
     'no HP terlalu panjang' => [['phone' => '0812345678901234'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
-    'divisi tidak dikenal' => [['division' => 'Pemasaran'], 'division', 'Divisi yang dipilih tidak valid.'],
+    'divisi terlalu panjang' => [['division' => str_repeat('A', 51)], 'division', 'Divisi tidak boleh lebih dari 50 karakter.'],
 ]);
+
+test('karyawan dengan divisi baru kustom berhasil disimpan', function () {
+    $this->actingAs($this->user)
+        ->post(route('employees.store'), employeePayload(['division' => 'Operasional Pelabuhan']))
+        ->assertSessionHasNoErrors();
+
+    expect(Employee::query()->where('division', 'Operasional Pelabuhan')->exists())->toBeTrue();
+});
 
 test('panjang no HP dihitung setelah normalisasi', function (string $phone) {
     $this->actingAs($this->user)
@@ -72,7 +77,6 @@ test('data karyawan dapat diubah dan perubahan tercatat', function () {
 
     $this->actingAs($this->user)
         ->put(route('employees.update', $employee), [
-            'employee_number' => $employee->employee_number,
             'name' => $employee->name,
             'division' => 'Teknik',
             'phone' => $employee->phone,

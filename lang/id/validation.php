@@ -182,9 +182,6 @@ return [
         'plate_number' => [
             'regex' => 'Format plat nomor tidak valid. Tulis kode wilayah, angka, lalu huruf akhiran. Contoh: B 1234 ABC atau AB 12 CD.',
         ],
-        'employee_number' => [
-            'alpha_num' => 'NIP hanya boleh berisi huruf dan angka, tanpa spasi atau simbol.',
-        ],
     ],
 
     /*
@@ -206,7 +203,6 @@ return [
         'recovery_code' => 'kode pemulihan',
         'role' => 'peran',
         'is_active' => 'status aktif',
-        'employee_number' => 'NIP',
         'phone' => 'no HP',
         'division' => 'divisi',
         'plate_number' => 'plat nomor',

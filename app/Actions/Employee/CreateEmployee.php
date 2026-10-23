@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 final class CreateEmployee
 {
     /**
-     * @param  array{employee_number: string, name: string, division: string, phone: string}  $data
+     * @param  array{name: string, division: string, phone: string}  $data
      */
     public function handle(array $data, User $actor): Employee
     {
@@ -24,7 +24,7 @@ final class CreateEmployee
                 ->performedOn($employee)
                 ->causedBy($actor)
                 ->event(ActivityEvent::Created->value)
-                ->withChanges(['attributes' => $employee->only(['employee_number', 'name', 'division', 'phone'])])
+                ->withChanges(['attributes' => $employee->only(['name', 'division', 'phone'])])
                 ->log("Menambah karyawan {$employee->name}");
 
             return $employee;

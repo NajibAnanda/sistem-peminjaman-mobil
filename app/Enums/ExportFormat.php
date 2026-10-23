@@ -16,12 +16,14 @@ enum ExportFormat: string
 
     case Xlsx = 'xlsx';
     case Csv = 'csv';
+    case Pdf = 'pdf';
 
     public function label(): string
     {
         return match ($this) {
             self::Xlsx => 'Microsoft Excel (.xlsx)',
             self::Csv => 'CSV (.csv)',
+            self::Pdf => 'Dokumen PDF (.pdf)',
         };
     }
 
@@ -30,6 +32,7 @@ enum ExportFormat: string
         return match ($this) {
             self::Xlsx => Excel::XLSX,
             self::Csv => Excel::CSV,
+            self::Pdf => Excel::DOMPDF,
         };
     }
 }

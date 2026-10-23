@@ -43,8 +43,8 @@ function employeeOptions(employees: EmployeeOption[]): ComboboxOption[] {
     return employees.map((employee) => ({
         value: employee.id,
         label: employee.name,
-        description: `${employee.employee_number} · ${employee.division}`,
-        keywords: `${employee.employee_number} ${employee.division}`,
+        description: `${employee.division} · ${employee.phone}`,
+        keywords: `${employee.division} ${employee.phone}`,
     }));
 }
 
@@ -225,7 +225,7 @@ export default function BookingFormPage({
                                         form.setData('employee_id', id)
                                     }
                                     placeholder="Pilih karyawan"
-                                    searchPlaceholder="Cari nama, NIP, atau divisi..."
+                                    searchPlaceholder="Cari nama, no HP, atau divisi..."
                                     emptyText="Karyawan tidak ditemukan."
                                     invalid={!!form.errors.employee_id}
                                 />
