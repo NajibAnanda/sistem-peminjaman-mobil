@@ -14,7 +14,7 @@ final class BookingException extends BusinessRuleException
 {
     private const MAX_LISTED_CONFLICTS = 3;
 
-    private const RELOAD_HINT = 'Data kemungkinan baru saja diubah petugas lain; muat ulang halaman untuk melihat data terbaru.';
+    private const RELOAD_HINT = 'Data kemungkinan baru saja diubah petugas lain. Muat ulang halaman untuk melihat data terbaru.';
 
     /**
      * Antarmuka hanya menawarkan transisi yang sah, jadi transisi yang ditolak
@@ -42,7 +42,7 @@ final class BookingException extends BusinessRuleException
     {
         $listed = $conflicts->take(self::MAX_LISTED_CONFLICTS)
             ->map(fn (Booking $booking): string => "{$booking->code} ({$booking->car->plate_number}, ".DateFormat::range($booking->start_at, $booking->planned_return_at).')')
-            ->implode('; ');
+            ->implode(', ');
         $remaining = $conflicts->count() - self::MAX_LISTED_CONFLICTS;
         $suffix = $remaining > 0 ? " dan {$remaining} lainnya" : '';
 
@@ -69,7 +69,7 @@ final class BookingException extends BusinessRuleException
     {
         $listed = $conflicts->take(self::MAX_LISTED_CONFLICTS)
             ->map(fn (Booking $booking): string => "{$booking->code} ({$booking->employee->name}, ".DateFormat::range($booking->start_at, $booking->planned_return_at).')')
-            ->implode('; ');
+            ->implode(', ');
 
         $remaining = $conflicts->count() - self::MAX_LISTED_CONFLICTS;
         $suffix = $remaining > 0 ? " dan {$remaining} lainnya" : '';

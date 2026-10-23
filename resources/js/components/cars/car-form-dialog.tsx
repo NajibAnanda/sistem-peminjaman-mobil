@@ -45,7 +45,7 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
             description={
                 isEdit
                     ? 'Perbarui plat nomor, merk, atau tipe mobil sesuai data kendaraan terbaru.'
-                    : 'Daftarkan mobil dinas baru; foto referensi dapat ditambahkan setelah data disimpan.'
+                    : 'Daftarkan mobil dinas baru. Foto referensi dapat ditambahkan setelah data disimpan.'
             }
             onSubmit={submit}
             submitLabel={isEdit ? 'Simpan Perubahan' : 'Tambah Mobil'}
@@ -53,32 +53,6 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
             submitTestId="car-form-submit"
         >
             <FormGrid>
-                <FormField
-                    id="car-plate"
-                    label="Plat nomor"
-                    required
-                    error={form.errors.plate_number}
-                    hint="Contoh: B 1234 ABC. Disimpan dalam huruf besar."
-                    span="full"
-                >
-                    <Input
-                        id="car-plate"
-                        value={form.data.plate_number}
-                        onChange={(e) =>
-                            form.setData('plate_number', e.target.value)
-                        }
-                        autoFocus
-                        required
-                        maxLength={15}
-                        autoComplete="off"
-                        spellCheck={false}
-                        placeholder="B 1234 ABC"
-                        className="uppercase"
-                        aria-invalid={!!form.errors.plate_number || undefined}
-                        aria-describedby="car-plate-hint"
-                    />
-                </FormField>
-
                 <FormField
                     id="car-brand"
                     label="Merk"
@@ -89,6 +63,7 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
                         id="car-brand"
                         value={form.data.brand}
                         onChange={(e) => form.setData('brand', e.target.value)}
+                        autoFocus
                         required
                         maxLength={50}
                         autoComplete="off"
@@ -112,6 +87,29 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
                         autoComplete="off"
                         placeholder="Avanza"
                         aria-invalid={!!form.errors.model || undefined}
+                    />
+                </FormField>
+
+                <FormField
+                    id="car-plate"
+                    label="Plat nomor"
+                    required
+                    error={form.errors.plate_number}
+                    span="full"
+                >
+                    <Input
+                        id="car-plate"
+                        value={form.data.plate_number}
+                        onChange={(e) =>
+                            form.setData('plate_number', e.target.value)
+                        }
+                        required
+                        maxLength={15}
+                        autoComplete="off"
+                        spellCheck={false}
+                        placeholder="B 1234 ABC"
+                        className="uppercase"
+                        aria-invalid={!!form.errors.plate_number || undefined}
                     />
                 </FormField>
             </FormGrid>

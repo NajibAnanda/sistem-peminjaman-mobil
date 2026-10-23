@@ -41,7 +41,7 @@ enum ErrorPageStatus: int
             self::Forbidden => 'Anda tidak memiliki izin untuk membuka halaman ini.',
             self::NotFound => 'Halaman atau data yang Anda cari tidak ada atau sudah dipindahkan.',
             self::TooManyRequests => 'Tunggu sebentar, lalu coba lagi.',
-            self::ServerError => 'Terjadi kesalahan pada sistem. Coba lagi beberapa saat lagi; bila terus terjadi, hubungi Pengelola.',
+            self::ServerError => 'Terjadi kesalahan pada sistem. Coba beberapa saat lagi, atau hubungi Pengelola bila kendala berlanjut.',
             self::Unavailable => 'Aplikasi sedang diperbarui. Coba lagi beberapa menit lagi.',
         };
     }

@@ -62,7 +62,7 @@ final class BookingDetailResource extends BookingResource
         }
 
         return [
-            'url' => route('bookings.photos.show', ['booking' => $this->id, 'stage' => $photo->stage->value]),
+            'url' => route('bookings.photos.show', ['booking' => $this->id, 'stage' => $photo->stage->value], absolute: false),
             'taken_at' => $photo->taken_at->toIso8601String(),
             'source_label' => $photo->source->label(),
             'uploaded_by_name' => $photo->uploader->name,

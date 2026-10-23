@@ -43,12 +43,12 @@ export default function CarShow({
 
     return (
         <>
-            <Head title={car.plate_number} />
+            <Head title={`${car.brand} ${car.model} (${car.plate_number})`} />
 
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
-                    title={car.plate_number}
-                    description={`${car.brand} ${car.model}`}
+                    title={`${car.brand} ${car.model}`}
+                    description={car.plate_number}
                     actions={
                         <>
                             <Button variant="outline" onClick={openForm}>
@@ -112,7 +112,7 @@ export default function CarShow({
                             </CardTitle>
                             <CardDescription>
                                 Foto tampak depan dan belakang mobil sebagai
-                                acuan kondisi; klik foto untuk memperbesarnya.
+                                acuan kondisi. Klik foto untuk memperbesar.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -253,7 +253,7 @@ function statusConfirmation(
                                 (booking) =>
                                     `${booking.code} (${booking.employee_name}, ${formatDateTime(booking.start_at)})`,
                             )
-                            .join('; ')}
+                            .join(', ')}
                         .
                     </span>
                 )}
@@ -271,6 +271,9 @@ function statusConfirmation(
 CarShow.layout = ({ car }: CarShowProps) => ({
     breadcrumbs: [
         { title: 'Data Mobil', href: index() },
-        { title: car.plate_number, href: show(car.id) },
+        {
+            title: `${car.brand} ${car.model} (${car.plate_number})`,
+            href: show(car.id),
+        },
     ],
 });

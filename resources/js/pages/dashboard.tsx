@@ -60,7 +60,7 @@ export default function Dashboard({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Dashboard"
-                    description={`Selamat datang, ${auth.user.name}; berikut ringkasan armada dan jadwal peminjaman per ${formatDate(now)}.`}
+                    description={`Selamat datang, ${auth.user.name}. Berikut ringkasan armada dan jadwal peminjaman per ${formatDate(now)}.`}
                     actions={
                         <Button asChild>
                             <Link href={create()}>

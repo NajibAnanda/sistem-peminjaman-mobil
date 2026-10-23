@@ -225,7 +225,7 @@ export function EmployeeFormDialog({
                 description={
                     isEdit
                         ? 'Perbarui identitas, divisi, atau nomor HP karyawan sesuai data terbaru.'
-                        : 'Tambahkan karyawan yang dapat meminjam mobil dinas; karyawan tidak memiliki akun di sistem.'
+                        : 'Tambahkan karyawan yang dapat meminjam mobil dinas. Karyawan tidak memiliki akun login.'
                 }
                 onSubmit={submit}
                 submitLabel={isEdit ? 'Simpan Perubahan' : 'Tambah Karyawan'}

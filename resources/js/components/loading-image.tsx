@@ -37,10 +37,10 @@ export function LoadingImage({ src, alt, className, compact = false }: Props) {
     useEffect(() => {
         const node = image.current;
 
-        if (node?.complete) {
+        if (node?.complete && node.naturalWidth > 0) {
             setState({
                 src,
-                status: node.naturalWidth > 0 ? 'loaded' : 'failed',
+                status: 'loaded',
             });
         }
     }, [src]);

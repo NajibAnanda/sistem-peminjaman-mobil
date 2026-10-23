@@ -36,7 +36,7 @@ export function TemporaryPasswordDialog({ credentials, onClose }: Props) {
             open
             onOpenChange={(open) => !open && onClose()}
             title="Password Sementara"
-            description={`Berikan password ini kepada ${credentials.name} (${credentials.email}); password wajib diganti saat login pertama.`}
+            description={`Berikan password ini kepada ${credentials.name} (${credentials.email}). Password wajib diganti saat login pertama.`}
             footer={<Button onClick={onClose}>Saya sudah mencatatnya</Button>}
         >
             <div className="grid gap-4">

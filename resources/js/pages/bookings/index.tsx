@@ -45,7 +45,6 @@ export default function BookingIndex({
 
                 <DataTableCard
                     title="Daftar Peminjaman"
-                    description="Peminjaman berstatus Dijadwalkan dan Aktif; yang sudah selesai atau dibatalkan tersedia di Riwayat."
                     table={table}
                     data={bookings}
                     columns={columns}

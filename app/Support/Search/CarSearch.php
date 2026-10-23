@@ -37,9 +37,9 @@ final class CarSearch implements SearchCategory
             ->get(['id', 'plate_number', 'brand', 'model', 'is_active'])
             ->map(fn (Car $car): array => [
                 'id' => $car->id,
-                'title' => $car->plate_number,
-                'subtitle' => "{$car->brand} {$car->model}".($car->is_active ? '' : ' · Nonaktif'),
-                'url' => route('cars.show', $car),
+                'title' => "{$car->brand} {$car->model}",
+                'subtitle' => $car->plate_number.($car->is_active ? '' : ' · Nonaktif'),
+                'url' => route('cars.show', $car, absolute: false),
             ])
             ->all());
     }

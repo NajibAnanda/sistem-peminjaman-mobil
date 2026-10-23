@@ -47,18 +47,18 @@ test('hasil hanya berisi field untuk tampilan dan tertaut ke halaman terkait', f
 
     expect($groups['cars'][0])->toBe([
         'id' => $this->car->id,
-        'title' => 'B 1234 SRI',
-        'subtitle' => 'Toyota Avanza',
-        'url' => route('cars.show', $this->car),
+        'title' => 'Toyota Avanza',
+        'subtitle' => 'B 1234 SRI',
+        'url' => route('cars.show', $this->car, absolute: false),
     ])
-        ->and($groups['employees'][0]['url'])->toBe(route('employees.index', ['search' => 'Sri Wahyuni']))
+        ->and($groups['employees'][0]['url'])->toBe(route('employees.index', ['search' => 'Sri Wahyuni'], absolute: false))
         ->and($groups['bookings'][0]['title'])->toBe($this->booking->code)
-        ->and($groups['bookings'][0]['url'])->toBe(route('bookings.show', $this->booking))
+        ->and($groups['bookings'][0]['url'])->toBe(route('bookings.show', $this->booking, absolute: false))
         ->and($groups['staff'][0])->toBe([
             'id' => $this->staff->id,
             'title' => 'Sri Petugas',
             'subtitle' => 'sri@kantor.test · Admin',
-            'url' => route('staff.index', ['search' => 'sri@kantor.test']),
+            'url' => route('staff.index', ['search' => 'sri@kantor.test'], absolute: false),
         ])
         ->and(json_encode($groups))->not->toContain('password')
         ->not->toContain('two_factor');

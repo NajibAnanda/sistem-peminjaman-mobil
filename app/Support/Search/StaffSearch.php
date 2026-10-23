@@ -41,7 +41,7 @@ final class StaffSearch implements SearchCategory
                 'id' => $user->id,
                 'title' => $user->name,
                 'subtitle' => $user->email.' · '.$user->role->label().($user->is_active ? '' : ' · Nonaktif'),
-                'url' => route('staff.index', ['search' => $user->email]),
+                'url' => route('staff.index', ['search' => $user->email], absolute: false),
             ])
             ->all());
     }

@@ -268,7 +268,7 @@ test('serah terima ganda memberi pesan bahwa data sudah diubah', function () {
     // Petugas lain (atau klik kedua) dengan halaman lama.
     $this->actingAs(User::factory()->admin()->create())
         ->post(route('bookings.pickup', $booking), $payload())
-        ->assertInertiaFlash('toast.message', 'Peminjaman ini sudah berstatus Aktif sehingga tidak dapat diubah menjadi Aktif. Data kemungkinan baru saja diubah petugas lain; muat ulang halaman untuk melihat data terbaru.');
+        ->assertInertiaFlash('toast.message', 'Peminjaman ini sudah berstatus Aktif sehingga tidak dapat diubah menjadi Aktif. Data kemungkinan baru saja diubah petugas lain. Muat ulang halaman untuk melihat data terbaru.');
 
     expect($booking->photos()->count())->toBe(1);
 });

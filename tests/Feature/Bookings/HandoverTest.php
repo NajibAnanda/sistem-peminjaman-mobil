@@ -98,9 +98,9 @@ test('detail menampilkan kedua foto berdampingan tanpa path penyimpanan', functi
         ->assertInertia(fn (Assert $page) => $page
             ->component('bookings/show')
             ->where('booking.status', 'completed')
-            ->where('booking.photos.pickup.url', route('bookings.photos.show', ['booking' => $this->booking->id, 'stage' => 'pickup']))
+            ->where('booking.photos.pickup.url', route('bookings.photos.show', ['booking' => $this->booking->id, 'stage' => 'pickup'], absolute: false))
             ->where('booking.photos.pickup.source_label', 'Kamera')
-            ->where('booking.photos.return.url', route('bookings.photos.show', ['booking' => $this->booking->id, 'stage' => 'return']))
+            ->where('booking.photos.return.url', route('bookings.photos.show', ['booking' => $this->booking->id, 'stage' => 'return'], absolute: false))
             ->missing('booking.photos.pickup.path')
             ->where('booking.actions', ['edit' => false, 'cancel' => false, 'pickup' => false, 'extend' => false, 'return' => false]),
         );

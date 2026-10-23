@@ -213,10 +213,10 @@ export default function ScheduleIndex({
                                                 role="rowheader"
                                             >
                                                 <span className="truncate text-sm font-medium">
-                                                    {car.plate_number}
-                                                </span>
-                                                <span className="truncate text-xs text-muted-foreground">
                                                     {car.brand} {car.model}
+                                                </span>
+                                                <span className="truncate text-xs text-muted-foreground tabular-nums">
+                                                    {car.plate_number}
                                                 </span>
                                             </div>
                                             <div

@@ -120,11 +120,11 @@ export default function BookingShow({
                                             href={showCar(booking.car.id)}
                                             className="font-medium underline-offset-4 hover:underline"
                                         >
-                                            {booking.car.plate_number}
-                                        </Link>
-                                        <span className="text-muted-foreground">
                                             {booking.car.brand}{' '}
                                             {booking.car.model}
+                                        </Link>
+                                        <span className="text-muted-foreground tabular-nums">
+                                            {booking.car.plate_number}
                                         </span>
                                     </Field>
                                     <Field label="Waktu mulai (rencana)">

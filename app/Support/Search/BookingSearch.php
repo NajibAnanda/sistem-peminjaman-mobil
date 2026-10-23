@@ -41,7 +41,7 @@ final class BookingSearch implements SearchCategory
                 'id' => $booking->id,
                 'title' => $booking->code,
                 'subtitle' => "{$booking->employee->name} · {$booking->car->plate_number} · {$booking->displayStatus()->label()}",
-                'url' => route('bookings.show', $booking),
+                'url' => route('bookings.show', $booking, absolute: false),
             ])
             ->all());
     }

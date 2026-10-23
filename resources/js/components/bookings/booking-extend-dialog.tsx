@@ -71,7 +71,7 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                     <>
                         Rencana kembali {booking.code} (
                         {booking.car.plate_number}) saat ini{' '}
-                        {formatDateTime(booking.planned_return_at)}; pilih waktu
+                        {formatDateTime(booking.planned_return_at)}. Pilih waktu
                         baru beserta alasannya.
                     </>
                 }
@@ -86,11 +86,6 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                         label="Rencana kembali baru"
                         required
                         error={form.errors.new_planned_return_at}
-                        hint={
-                            bookingRules.maxDurationDays === null
-                                ? 'Harus lebih lambat dari rencana kembali saat ini.'
-                                : `Harus lebih lambat dari rencana saat ini; durasi total maksimal ${bookingRules.maxDurationDays} hari.`
-                        }
                     >
                         <DateTimePicker
                             id="extend-return-at"
@@ -100,7 +95,6 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                                 form.setData('new_planned_return_at', value)
                             }
                             invalid={!!form.errors.new_planned_return_at}
-                            aria-describedby="extend-return-at-hint"
                         />
                     </FormField>
 
@@ -109,7 +103,6 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                         label="Alasan"
                         required
                         error={form.errors.reason}
-                        hint={`Minimal ${bookingRules.reasonMinLength} karakter.`}
                     >
                         <Textarea
                             id="extend-reason"
@@ -122,7 +115,6 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                             maxLength={500}
                             placeholder="Misalnya: rapat dengan klien diperpanjang"
                             aria-invalid={!!form.errors.reason || undefined}
-                            aria-describedby="extend-reason-hint"
                         />
                     </FormField>
                 </div>

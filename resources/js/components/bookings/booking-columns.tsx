@@ -40,11 +40,6 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
             cell: (booking) => booking.employee.division,
         },
         {
-            id: 'plate',
-            header: 'Plat',
-            cell: (booking) => booking.car.plate_number,
-        },
-        {
             id: 'car',
             header: 'Mobil',
             cell: (booking) => (
@@ -52,6 +47,13 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
                     text={`${booking.car.brand} ${booking.car.model}`}
                     className="max-w-44"
                 />
+            ),
+        },
+        {
+            id: 'plate',
+            header: 'Plat',
+            cell: (booking) => (
+                <span className="tabular-nums">{booking.car.plate_number}</span>
             ),
         },
         {

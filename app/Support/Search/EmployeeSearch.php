@@ -42,7 +42,7 @@ final class EmployeeSearch implements SearchCategory
                 'id' => $employee->id,
                 'title' => $employee->name,
                 'subtitle' => "{$employee->division} · {$employee->phone}".($employee->is_active ? '' : ' · Nonaktif'),
-                'url' => route('employees.index', ['search' => $employee->name]),
+                'url' => route('employees.index', ['search' => $employee->name], absolute: false),
             ])
             ->all());
     }

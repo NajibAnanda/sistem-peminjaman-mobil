@@ -30,12 +30,11 @@ export default function ActivityLogIndex({
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
                     title="Log Aktivitas"
-                    description="Pantau siapa mengubah data apa dan kapan; catatan log tidak dapat diubah atau dihapus."
+                    description="Pantau siapa mengubah data apa dan kapan. Catatan log tidak dapat diubah atau dihapus."
                 />
 
                 <DataTableCard
                     title="Daftar Aktivitas"
-                    description="Rekam jejak seluruh perubahan data oleh petugas, diurutkan dari aktivitas terbaru."
                     table={table}
                     data={activities}
                     columns={columns}

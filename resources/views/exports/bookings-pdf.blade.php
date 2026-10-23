@@ -142,8 +142,8 @@
                         <div class="text-muted">{{ $booking->employee->division }} &bull; {{ $booking->employee->phone }}</div>
                     </td>
                     <td>
-                        <div class="font-bold">{{ $booking->car->plate_number }}</div>
-                        <div class="text-muted">{{ $booking->car->brand }} {{ $booking->car->model }}</div>
+                        <div class="font-bold">{{ $booking->car->brand }} {{ $booking->car->model }}</div>
+                        <div class="text-muted">{{ $booking->car->plate_number }}</div>
                     </td>
                     <td>
                         <div><span class="text-muted">Mulai:</span> {{ \App\Support\DateFormat::dateTime($booking->start_at) }}</div>

@@ -35,7 +35,6 @@ export default function HistoryIndex({
 
                 <DataTableCard
                     title="Riwayat Peminjaman"
-                    description="Seluruh peminjaman dari semua status, dengan filter periode berdasarkan waktu mulai peminjaman."
                     table={table}
                     data={bookings}
                     columns={columns}

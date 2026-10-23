@@ -54,9 +54,9 @@ function carOptions(
 ): ComboboxOption[] {
     return cars.map((car) => ({
         value: car.id,
-        label: car.plate_number,
-        description: `${car.brand} ${car.model}`,
-        keywords: `${car.brand} ${car.model}`,
+        label: `${car.brand} ${car.model}`,
+        description: car.plate_number,
+        keywords: `${car.plate_number} ${car.brand} ${car.model}`,
         hint:
             car.available === false ? (
                 <span className="text-destructive">{car.reason}</span>
@@ -174,14 +174,14 @@ export default function BookingFormPage({
                     description={
                         booking
                             ? 'Ubah karyawan, mobil, waktu, atau tujuan selama mobil belum diserahterimakan kepada karyawan.'
-                            : 'Catat permintaan peminjaman karyawan; pilih waktu terlebih dahulu agar ketersediaan mobil terlihat.'
+                            : 'Catat permintaan peminjaman karyawan. Pilih waktu terlebih dahulu untuk melihat ketersediaan mobil.'
                     }
                 />
 
                 <form onSubmit={submit}>
                     <FormCard
                         title="Detail Peminjaman"
-                        description="Isi karyawan, waktu, mobil, dan tujuan peminjaman; kolom bertanda * wajib diisi."
+                        description="Isi data peminjaman mobil dinas. Kolom bertanda * wajib diisi."
                         footer={
                             <>
                                 <Button
@@ -256,11 +256,6 @@ export default function BookingFormPage({
                                 label="Rencana kembali"
                                 required
                                 error={form.errors.planned_return_at}
-                                hint={
-                                    bookingRules.maxDurationDays === null
-                                        ? `Durasi peminjaman minimal ${bookingRules.minDurationMinutes} menit.`
-                                        : `Durasi peminjaman ${bookingRules.minDurationMinutes} menit sampai ${bookingRules.maxDurationDays} hari.`
-                                }
                             >
                                 <DateTimePicker
                                     id="booking-return"
@@ -271,7 +266,6 @@ export default function BookingFormPage({
                                     min={form.data.start_at || undefined}
                                     placeholder="Pilih rencana kembali"
                                     invalid={!!form.errors.planned_return_at}
-                                    aria-describedby="booking-return-hint"
                                 />
                             </FormField>
 
@@ -305,7 +299,7 @@ export default function BookingFormPage({
                                             ? 'Isi waktu mulai dan rencana kembali terlebih dahulu'
                                             : 'Pilih mobil'
                                     }
-                                    searchPlaceholder="Cari plat, merk, atau tipe..."
+                                    searchPlaceholder="Cari merk, tipe, atau plat..."
                                     emptyText="Mobil tidak ditemukan."
                                     invalid={!!form.errors.car_id}
                                     disabled={range === ''}
@@ -316,8 +310,10 @@ export default function BookingFormPage({
                                         <Alert>
                                             <CircleAlert aria-hidden="true" />
                                             <AlertDescription>
-                                                {selectedCar.plate_number} tidak
-                                                tersedia pada waktu ini (
+                                                {selectedCar.brand}{' '}
+                                                {selectedCar.model} (
+                                                {selectedCar.plate_number})
+                                                tidak tersedia pada waktu ini (
                                                 {selectedCar.reason}). Pilih
                                                 mobil lain atau ubah waktunya.
                                             </AlertDescription>
@@ -330,7 +326,6 @@ export default function BookingFormPage({
                                 label="Tujuan / keperluan"
                                 required
                                 error={form.errors.purpose}
-                                hint={`Minimal ${bookingRules.purposeMinLength} karakter.`}
                                 span="full"
                             >
                                 <Textarea
@@ -346,7 +341,6 @@ export default function BookingFormPage({
                                     aria-invalid={
                                         !!form.errors.purpose || undefined
                                     }
-                                    aria-describedby="booking-purpose-hint"
                                 />
                             </FormField>
                         </FormGrid>

@@ -66,7 +66,6 @@ export default function CarIndex({ cars, query, statuses }: CarIndexProps) {
 
                 <DataTableCard
                     title="Daftar Mobil"
-                    description="Status ketersediaan dihitung otomatis dari peminjaman aktif dan status operasional mobil."
                     table={table}
                     data={cars}
                     columns={columns}

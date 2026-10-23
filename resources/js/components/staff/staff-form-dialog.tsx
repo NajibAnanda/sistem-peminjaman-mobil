@@ -53,7 +53,7 @@ export function StaffFormDialog({ open, onOpenChange, staff, roles }: Props) {
             description={
                 isEdit
                     ? 'Perbarui nama, email, atau peran akun petugas sesuai tugasnya saat ini.'
-                    : 'Buat akun petugas baru; password sementara dibuat otomatis dan wajib diganti saat login pertama.'
+                    : 'Buat akun petugas baru. Password sementara dibuat otomatis dan wajib diganti saat login pertama.'
             }
             onSubmit={submit}
             submitLabel={isEdit ? 'Simpan Perubahan' : 'Buat Akun'}
@@ -107,7 +107,7 @@ export function StaffFormDialog({ open, onOpenChange, staff, roles }: Props) {
                     hint={
                         staff?.is_self
                             ? 'Peran akun Anda sendiri tidak dapat diubah.'
-                            : 'Pengelola dapat mengelola akun petugas dan melihat log aktivitas.'
+                            : undefined
                     }
                     span="full"
                 >
@@ -121,7 +121,9 @@ export function StaffFormDialog({ open, onOpenChange, staff, roles }: Props) {
                         <SelectTrigger
                             id="staff-role"
                             className="w-full"
-                            aria-describedby="staff-role-hint"
+                            aria-describedby={
+                                staff?.is_self ? 'staff-role-hint' : undefined
+                            }
                         >
                             <SelectValue />
                         </SelectTrigger>

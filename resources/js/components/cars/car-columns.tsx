@@ -33,20 +33,20 @@ export function useCarColumns(): DataTableColumn<Car>[] {
             },
         },
         {
-            id: 'plate_number',
-            header: 'Plat',
-            cell: (car) => (
-                <span className="font-medium">{car.plate_number}</span>
-            ),
-        },
-        {
             id: 'model',
             header: 'Merk & tipe',
             cell: (car) => (
                 <TruncatedText
                     text={`${car.brand} ${car.model}`}
-                    className="max-w-56"
+                    className="max-w-56 font-medium"
                 />
+            ),
+        },
+        {
+            id: 'plate_number',
+            header: 'Plat',
+            cell: (car) => (
+                <span className="tabular-nums">{car.plate_number}</span>
             ),
         },
         {

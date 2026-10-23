@@ -85,7 +85,6 @@ export default function EmployeeIndex({
 
                 <DataTableCard
                     title="Daftar Karyawan"
-                    description="Identitas, divisi, dan nomor HP karyawan yang dapat dihubungi selama peminjaman berlangsung."
                     table={table}
                     data={employees}
                     columns={columns}

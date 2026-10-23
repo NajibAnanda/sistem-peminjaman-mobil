@@ -10,7 +10,7 @@ export default function Appearance() {
 
             <FormCard
                 title="Tampilan"
-                description="Pilih tampilan terang, gelap, atau mengikuti pengaturan sistem; pilihan disimpan di browser ini."
+                description="Pilih tema terang, gelap, atau mengikuti sistem. Pilihan disimpan di peramban ini."
             >
                 <AppearanceTabs />
             </FormCard>

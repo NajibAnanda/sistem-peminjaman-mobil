@@ -8,7 +8,6 @@ use App\Models\Car;
 use App\Models\CarPhoto;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Membutuhkan relasi `photos` dan scope `withDisplayStatus()` pada query.
@@ -52,6 +51,7 @@ final class CarResource extends JsonResource
         }
 
         // Versi di URL memaksa browser memuat ulang setelah foto diganti.
-        return Storage::disk('public')->url($photo->path).'?v='.$photo->updated_at->timestamp;
+        // Menggunakan path relatif agar selalu sesuai origin dan protokol halaman aktif.
+        return '/storage/'.ltrim($photo->path, '/').'?v='.$photo->updated_at->timestamp;
     }
 }

@@ -136,7 +136,6 @@ export default function StaffIndex({
 
                 <DataTableCard
                     title="Daftar Petugas"
-                    description="Daftar akun petugas lengkap dengan peran, status akun, autentikasi dua faktor, dan login terakhir."
                     table={table}
                     data={staff}
                     columns={columns}

@@ -43,11 +43,6 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
             cell: (booking) => booking.employee.division,
         },
         {
-            id: 'plate',
-            header: 'Plat',
-            cell: (booking) => booking.car.plate_number,
-        },
-        {
             id: 'car',
             header: 'Mobil',
             cell: (booking) => (
@@ -55,6 +50,13 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
                     text={`${booking.car.brand} ${booking.car.model}`}
                     className="max-w-44"
                 />
+            ),
+        },
+        {
+            id: 'plate',
+            header: 'Plat',
+            cell: (booking) => (
+                <span className="tabular-nums">{booking.car.plate_number}</span>
             ),
         },
         {

@@ -52,7 +52,6 @@ export function BookingCancelDialog({ booking, open, onOpenChange }: Props) {
                 label="Alasan pembatalan"
                 required
                 error={form.errors.reason}
-                hint={`Minimal ${reasonMinLength} karakter.`}
             >
                 <Textarea
                     id="cancel-reason"
@@ -63,7 +62,6 @@ export function BookingCancelDialog({ booking, open, onOpenChange }: Props) {
                     maxLength={500}
                     placeholder="Misalnya: kegiatan ditunda oleh atasan"
                     aria-invalid={!!form.errors.reason || undefined}
-                    aria-describedby="cancel-reason-hint"
                 />
             </FormField>
         </FormDialog>

@@ -23,7 +23,7 @@ export default function Profile() {
                 {({ processing, errors }) => (
                     <FormCard
                         title="Profil"
-                        description="Perbarui nama yang tampil di aplikasi; email hanya dapat diubah oleh Pengelola."
+                        description="Perbarui nama yang tampil di aplikasi. Email hanya dapat diubah oleh Pengelola."
                         footer={
                             <LoadingButton
                                 loading={processing}
