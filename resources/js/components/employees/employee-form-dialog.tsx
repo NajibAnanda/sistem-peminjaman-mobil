@@ -183,26 +183,42 @@ export function EmployeeFormDialog({
             return;
         }
 
+        const targetValue = divisionToDelete.value;
         setIsDeletingDivision(true);
-        router.delete(destroyDivision(divisionToDelete.value), {
+
+        router.delete(destroyDivision(targetValue), {
             preserveScroll: true,
-            onSuccess: () => {
-                if (form.data.division === divisionToDelete.value) {
-                    form.setData('division', '');
-                }
-                setDivisionOptions((prev) =>
-                    prev.filter((d) => d.value !== divisionToDelete.value),
+            onSuccess: (page) => {
+                // Periksa apakah divisi benar-benar terhapus di server (tidak ditolak karena masih dipakai).
+                const freshDivisions = (
+                    page.props as unknown as { divisions?: DivisionOption[] }
+                ).divisions;
+                const isStillPresent = freshDivisions?.some(
+                    (d) => d.value === targetValue,
                 );
-                setIsDeletingDivision(false);
-                setDivisionToDelete(null);
+
+                if (!isStillPresent) {
+                    if (form.data.division === targetValue) {
+                        form.setData('division', '');
+                    }
+                    if (freshDivisions) {
+                        setDivisionOptions(freshDivisions);
+                    } else {
+                        setDivisionOptions((prev) =>
+                            prev.filter((d) => d.value !== targetValue),
+                        );
+                    }
+                }
             },
             onError: (errors) => {
-                setIsDeletingDivision(false);
-                setDivisionToDelete(null);
                 const errorMessage = Object.values(errors)[0];
                 if (errorMessage) {
                     toast.error(errorMessage);
                 }
+            },
+            onFinish: () => {
+                setIsDeletingDivision(false);
+                setDivisionToDelete(null);
             },
         });
     };

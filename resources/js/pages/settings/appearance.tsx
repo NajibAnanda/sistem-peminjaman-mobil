@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import AppearanceTabs from '@/components/appearance-tabs';
 import { FormCard } from '@/components/form/form-card';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editProfile } from '@/routes/profile';
 
 export default function Appearance() {
     return (
@@ -21,7 +22,11 @@ export default function Appearance() {
 Appearance.layout = {
     breadcrumbs: [
         {
-            title: 'Pengaturan tampilan',
+            title: 'Pengaturan',
+            href: editProfile(),
+        },
+        {
+            title: 'Tampilan',
             href: editAppearance(),
         },
     ],

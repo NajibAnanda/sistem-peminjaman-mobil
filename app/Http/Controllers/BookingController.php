@@ -20,6 +20,7 @@ use App\Models\Booking;
 use App\Models\Employee;
 use App\Support\CarAvailability;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -69,7 +70,7 @@ final class BookingController extends Controller
         return to_route('bookings.show', $booking)->with('success', "Peminjaman {$booking->code} berhasil dijadwalkan.");
     }
 
-    public function show(Booking $booking): Response
+    public function show(Request $request, Booking $booking): Response
     {
         Gate::authorize('view', $booking);
 
@@ -80,9 +81,13 @@ final class BookingController extends Controller
             'photos.uploader', 'extensions.extender',
         ]);
 
+        $from = $request->query('from');
+        $validFrom = is_string($from) && in_array($from, ['history', 'schedule'], true) ? $from : null;
+
         return Inertia::render('bookings/show', [
             'booking' => (new BookingDetailResource($booking))->resolve(),
             'maxUploadKb' => (int) config('fleet.photos.max_upload_kb'),
+            'from' => $validFrom,
         ]);
     }
 
@@ -112,6 +117,9 @@ final class BookingController extends Controller
         [$start, $end] = $request->range()
             ?? ($booking === null ? [null, null] : [$booking->start_at, $booking->planned_return_at]);
 
+        $from = $request->query('from');
+        $validFrom = is_string($from) && in_array($from, ['history', 'schedule'], true) ? $from : null;
+
         return Inertia::render('bookings/form', [
             'booking' => $booking === null ? null : (new BookingResource($booking->load(['employee', 'car'])))->resolve(),
             // Karyawan nonaktif disembunyikan sepenuhnya (prd.md 5.4).
@@ -125,6 +133,7 @@ final class BookingController extends Controller
             // Dimuat ulang (partial reload) setiap rentang waktu berubah.
             'cars' => CarAvailability::forForm($start, $end, $booking),
             'startToleranceMinutes' => (int) config('fleet.booking.start_tolerance_minutes'),
+            'from' => $validFrom,
         ]);
     }
 }

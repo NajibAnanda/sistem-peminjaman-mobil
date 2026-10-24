@@ -17,11 +17,14 @@ import { useBookingDialogs } from '@/hooks/use-booking-dialogs';
 import { useDateFormat } from '@/hooks/use-date-format';
 import { edit, index, show } from '@/routes/bookings';
 import { show as showCar } from '@/routes/cars';
+import { index as historyIndex } from '@/routes/history';
+import { index as scheduleIndex } from '@/routes/schedule';
 import type { BookingShowProps } from '@/types';
 
 export default function BookingShow({
     booking,
     maxUploadKb,
+    from,
 }: BookingShowProps) {
     const { formatDateTime } = useDateFormat();
     const dialogs = useBookingDialogs();
@@ -47,7 +50,12 @@ export default function BookingShow({
                     <div className="flex shrink-0 flex-wrap gap-2">
                         {actions.edit && (
                             <Button variant="outline" asChild>
-                                <Link href={edit(booking.id)}>
+                                <Link
+                                    href={edit(
+                                        booking.id,
+                                        from ? { query: { from } } : undefined,
+                                    )}
+                                >
                                     <Pencil aria-hidden="true" />
                                     Edit Jadwal
                                 </Link>
@@ -312,9 +320,25 @@ function Muted({ children }: { children: ReactNode }) {
 
 // Breadcrumb dihitung dari props saat render (bukan setLayoutProps di dalam
 // komponen) agar hasil SSR sama dengan klien dan tidak terjadi hydration mismatch.
-BookingShow.layout = ({ booking }: BookingShowProps) => ({
-    breadcrumbs: [
-        { title: 'Peminjaman', href: index() },
-        { title: booking.code, href: show(booking.id) },
-    ],
-});
+BookingShow.layout = ({ booking, from }: BookingShowProps) => {
+    let parentTitle = 'Peminjaman';
+    let parentHref = index();
+
+    if (from === 'history') {
+        parentTitle = 'Riwayat';
+        parentHref = historyIndex();
+    } else if (from === 'schedule') {
+        parentTitle = 'Jadwal Armada';
+        parentHref = scheduleIndex();
+    }
+
+    return {
+        breadcrumbs: [
+            { title: parentTitle, href: parentHref },
+            {
+                title: booking.code,
+                href: show(booking.id, from ? { query: { from } } : undefined),
+            },
+        ],
+    };
+};

@@ -5,8 +5,11 @@ use App\Models\Booking;
 use App\Models\BookingPhoto;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase $this */
     Storage::fake('local');
     $this->booking = Booking::factory()->active()->create();
     $this->photo = BookingPhoto::factory()->for($this->booking)->create(['stage' => PhotoStage::Pickup]);
@@ -89,3 +92,31 @@ test('form edit booking yang bukan Dijadwalkan diarahkan ke detail', function ()
         ->assertRedirect(route('bookings.show', $this->booking))
         ->assertSessionHas('error', 'Jadwal hanya dapat diedit selama peminjaman berstatus Dijadwalkan (status saat ini: Aktif). Data kemungkinan baru saja diubah petugas lain. Muat ulang halaman untuk melihat data terbaru.');
 });
+
+test('parameter from diteruskan ke halaman detail dan form edit untuk navigasi kontekstual', function (?string $from, ?string $expected) {
+    $admin = User::factory()->admin()->create();
+    $scheduled = Booking::factory()->scheduled()->create();
+
+    $showUrl = route('bookings.show', $this->booking).($from !== null ? "?from={$from}" : '');
+    $this->actingAs($admin)
+        ->get($showUrl)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('bookings/show')
+            ->where('from', $expected)
+        );
+
+    $editUrl = route('bookings.edit', $scheduled).($from !== null ? "?from={$from}" : '');
+    $this->actingAs($admin)
+        ->get($editUrl)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('bookings/form')
+            ->where('from', $expected)
+        );
+})->with([
+    'dari riwayat' => ['history', 'history'],
+    'dari jadwal' => ['schedule', 'schedule'],
+    'tanpa parameter' => [null, null],
+    'parameter tidak valid' => ['unknown', null],
+]);

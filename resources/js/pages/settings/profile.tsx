@@ -80,7 +80,11 @@ export default function Profile() {
 Profile.layout = {
     breadcrumbs: [
         {
-            title: 'Pengaturan profil',
+            title: 'Pengaturan',
+            href: edit(),
+        },
+        {
+            title: 'Profil',
             href: edit(),
         },
     ],

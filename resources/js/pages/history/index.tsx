@@ -46,7 +46,9 @@ export default function HistoryIndex({
                                 {
                                     label: 'Lihat detail',
                                     icon: Eye,
-                                    href: show(booking.id),
+                                    href: show(booking.id, {
+                                        query: { from: 'history' },
+                                    }),
                                 },
                             ]}
                         />

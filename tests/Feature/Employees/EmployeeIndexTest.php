@@ -45,6 +45,7 @@ test('pencarian dan filter mengembalikan data yang benar', function (array $quer
 })->with([
     'cari nama' => [['search' => 'lestari'], ['Ani Lestari']],
     'cari no HP' => [['search' => '0833'], ['Citra Dewi']],
+    'cari divisi' => [['search' => 'teknik'], ['Budi Santoso']],
     'divisi' => [['division' => ['Teknik', 'SDM']], ['Budi Santoso', 'Citra Dewi']],
     'status aktif' => [['status' => ['active']], ['Ani Lestari', 'Budi Santoso']],
     'divisi dan status' => [['division' => ['SDM'], 'status' => ['active']], []],

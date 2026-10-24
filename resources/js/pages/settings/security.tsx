@@ -10,6 +10,7 @@ import ManageTwoFactor from '@/components/manage-two-factor';
 import PasswordInput from '@/components/password-input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LoadingButton } from '@/components/loading-button';
+import { edit as editProfile } from '@/routes/profile';
 import { edit } from '@/routes/security';
 
 type Props = {
@@ -137,7 +138,11 @@ export default function Security(props: Props) {
 Security.layout = {
     breadcrumbs: [
         {
-            title: 'Pengaturan keamanan',
+            title: 'Pengaturan',
+            href: editProfile(),
+        },
+        {
+            title: 'Keamanan',
             href: edit(),
         },
     ],

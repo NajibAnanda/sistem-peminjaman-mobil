@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Models\Booking;
+use App\Models\BookingPhoto;
 use App\Models\Car;
 use App\Models\Employee;
 use App\Models\User;
@@ -18,6 +19,7 @@ use Laravel\Fortify\Features;
  * @property Employee $rina
  * @property Employee $budi
  * @property Booking $booking
+ * @property BookingPhoto $photo
  * @property Booking $late
  * @property Booking $scheduled
  * @property User $staff
@@ -39,6 +41,8 @@ abstract class TestCase extends BaseTestCase
     public ?Employee $budi = null;
 
     public ?Booking $booking = null;
+
+    public ?BookingPhoto $photo = null;
 
     public ?Booking $late = null;
 

@@ -121,9 +121,11 @@ export type BookingFormProps = {
     employees: EmployeeOption[];
     cars: CarOption[];
     startToleranceMinutes: number;
+    from?: 'history' | 'schedule' | null;
 };
 
 export type BookingShowProps = {
     booking: BookingDetail;
     maxUploadKb: number;
+    from?: 'history' | 'schedule' | null;
 };

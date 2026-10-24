@@ -34,7 +34,9 @@ export function ScheduleBlock({ block }: { block: TimelineBlock }) {
         <Tooltip>
             <TooltipTrigger asChild>
                 <Link
-                    href={show(booking.id)}
+                    href={show(booking.id, {
+                        query: { from: 'schedule' },
+                    })}
                     // Lapisan bg-card membuat blok buram, sehingga garis hari
                     // di belakangnya tidak tembus dan teks tetap terbaca.
                     className={cn(

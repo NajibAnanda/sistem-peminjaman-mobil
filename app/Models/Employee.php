@@ -55,7 +55,8 @@ final class Employee extends Model
             ->when($table->search, fn (Builder $query, string $term) => $query->where(
                 fn (Builder $query) => $query
                     ->where('name', 'like', "%{$term}%")
-                    ->orWhere('phone', 'like', "%{$term}%"),
+                    ->orWhere('phone', 'like', "%{$term}%")
+                    ->orWhere('division', 'like', "%{$term}%"),
             ))
             ->when($table->filter('division'), fn (Builder $query, array $divisions) => $query->whereIn('division', $divisions))
             ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereIn(

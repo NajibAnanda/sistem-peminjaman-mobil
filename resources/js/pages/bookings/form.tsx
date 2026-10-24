@@ -20,6 +20,8 @@ import { useDateFormat } from '@/hooks/use-date-format';
 import { useLongBookingConfirm } from '@/hooks/use-long-booking-confirm';
 import { toDateTimeLocal, toZonedIso } from '@/lib/datetime';
 import { create, edit, index, show, store, update } from '@/routes/bookings';
+import { index as historyIndex } from '@/routes/history';
+import { index as scheduleIndex } from '@/routes/schedule';
 import type { BookingFormProps, CarOption, EmployeeOption } from '@/types';
 
 const AVAILABILITY_DEBOUNCE_MS = 400;
@@ -74,6 +76,7 @@ export default function BookingFormPage({
     employees,
     cars,
     startToleranceMinutes,
+    from,
 }: BookingFormProps) {
     const { timezone, bookingRules } = usePage().props;
     const { toDateTimeLocal: toLocal } = useDateFormat();
@@ -191,7 +194,14 @@ export default function BookingFormPage({
                                 >
                                     <Link
                                         href={
-                                            booking ? show(booking.id) : index()
+                                            booking
+                                                ? show(
+                                                      booking.id,
+                                                      from
+                                                          ? { query: { from } }
+                                                          : undefined,
+                                                  )
+                                                : index()
                                         }
                                     >
                                         Batal
@@ -355,15 +365,40 @@ export default function BookingFormPage({
 
 // Breadcrumb dihitung dari props saat render (bukan setLayoutProps di dalam
 // komponen) agar hasil SSR sama dengan klien dan tidak terjadi hydration mismatch.
-BookingFormPage.layout = ({ booking }: BookingFormProps) => ({
-    breadcrumbs: booking
-        ? [
-              { title: 'Peminjaman', href: index() },
-              { title: booking.code, href: show(booking.id) },
-              { title: 'Edit Jadwal', href: edit(booking.id) },
-          ]
-        : [
-              { title: 'Peminjaman', href: index() },
-              { title: 'Jadwalkan', href: create() },
-          ],
-});
+BookingFormPage.layout = ({ booking, from }: BookingFormProps) => {
+    let parentTitle = 'Peminjaman';
+    let parentHref = index();
+
+    if (from === 'history') {
+        parentTitle = 'Riwayat';
+        parentHref = historyIndex();
+    } else if (from === 'schedule') {
+        parentTitle = 'Jadwal Armada';
+        parentHref = scheduleIndex();
+    }
+
+    return {
+        breadcrumbs: booking
+            ? [
+                  { title: parentTitle, href: parentHref },
+                  {
+                      title: booking.code,
+                      href: show(
+                          booking.id,
+                          from ? { query: { from } } : undefined,
+                      ),
+                  },
+                  {
+                      title: 'Edit Jadwal',
+                      href: edit(
+                          booking.id,
+                          from ? { query: { from } } : undefined,
+                      ),
+                  },
+              ]
+            : [
+                  { title: 'Peminjaman', href: index() },
+                  { title: 'Jadwalkan', href: create() },
+              ],
+    };
+};
