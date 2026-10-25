@@ -46,8 +46,7 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     public function query(): Builder
     {
         return Booking::query()
-            ->with(['employee', 'car', 'creator'])
-            ->withCount('extensions')
+            ->with(['employee', 'car'])
             ->forHistory($this->table, $this->now)
             // Sama dengan tabel Riwayat (terbaru di atas). Urutan harus stabil
             // (id sebagai penentu) agar chunk tidak melewatkan/menggandakan baris.
@@ -73,9 +72,7 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
             'Waktu Ambil',
             'Waktu Kembali',
             'Status',
-            'Jumlah Perpanjangan',
             'Durasi Keterlambatan',
-            'Petugas Pencatat',
         ];
     }
 
@@ -86,6 +83,9 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     public function map(mixed $row): array
     {
         $lateness = $row->latenessMinutes($this->now);
+        $purpose = $row->cancellation_reason
+            ? "{$row->purpose} (Dibatalkan: {$row->cancellation_reason})"
+            : $row->purpose;
 
         return [
             $row->code,
@@ -94,15 +94,13 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
             $row->employee->phone,
             "{$row->car->brand} {$row->car->model}",
             $row->car->plate_number,
-            $row->purpose,
+            $purpose,
             DateFormat::dateTime($row->start_at),
             DateFormat::dateTime($row->planned_return_at),
             $row->picked_up_at === null ? '' : DateFormat::dateTime($row->picked_up_at),
             $row->returned_at === null ? '' : DateFormat::dateTime($row->returned_at),
             $row->displayStatus($this->now)->label(),
-            (int) $row->extensions_count,
             $lateness === null ? '' : DateFormat::duration($lateness),
-            $row->creator->name,
         ];
     }
 
@@ -116,7 +114,7 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     {
         return [
             'A' => 18, 'B' => 28, 'C' => 16, 'D' => 16, 'E' => 22, 'F' => 13, 'G' => 40, 'H' => 19,
-            'I' => 19, 'J' => 19, 'K' => 19, 'L' => 14, 'M' => 12, 'N' => 18, 'O' => 22,
+            'I' => 19, 'J' => 19, 'K' => 19, 'L' => 14, 'M' => 18,
         ];
     }
 
@@ -160,7 +158,7 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     public function styles(Worksheet $sheet): array
     {
         $highestRow = $sheet->getHighestRow();
-        $highestColumn = 'O';
+        $highestColumn = 'M';
 
         // Header baris 1: navy gelap kontras, teks putih tebal, tinggi 28pt
         $sheet->getStyle("A1:{$highestColumn}1")->applyFromArray([
@@ -192,6 +190,12 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
                     'vertical' => Alignment::VERTICAL_CENTER,
                 ],
             ]);
+
+            // Perataan kolom: center untuk kode, kontak, plat, waktu, status, dan keterlambatan
+            $sheet->getStyle("A1:A{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("D1:D{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("F1:F{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("H1:M{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
             // Zebra striping khusus baris isi tabel: baris ganjil data (row 3, 5, ...) diberi aksen abu-abu sangat lembut
             for ($row = 2; $row <= $highestRow; $row++) {

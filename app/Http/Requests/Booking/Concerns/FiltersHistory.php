@@ -53,9 +53,14 @@ trait FiltersHistory
     public function carOptions(): array
     {
         return $this->carOptions ??= array_values(Car::query()
+            ->orderBy('brand')
+            ->orderBy('model')
             ->orderBy('plate_number')
-            ->get(['id', 'plate_number'])
-            ->map(fn (Car $car): array => ['value' => (string) $car->id, 'label' => $car->plate_number])
+            ->get(['id', 'brand', 'model', 'plate_number'])
+            ->map(fn (Car $car): array => [
+                'value' => (string) $car->id,
+                'label' => "{$car->brand} {$car->model} ({$car->plate_number})",
+            ])
             ->all());
     }
 

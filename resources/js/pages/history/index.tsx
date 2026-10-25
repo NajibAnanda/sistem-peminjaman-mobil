@@ -90,7 +90,7 @@ export default function HistoryIndex({
                         icon: History,
                         title: 'Belum ada riwayat peminjaman',
                         description:
-                            'Setiap peminjaman yang dijadwalkan akan tercatat di sini beserta status akhirnya.',
+                            'Belum ada data peminjaman pada periode ini. Ubah rentang tanggal periode untuk melihat riwayat lainnya.',
                     }}
                 />
             </div>

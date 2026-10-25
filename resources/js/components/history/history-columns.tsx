@@ -1,8 +1,10 @@
+import { Link } from '@inertiajs/react';
 import { TruncatedText } from '@/components/data-table/truncated-text';
 import type { DataTableColumn } from '@/components/data-table/types';
 import { StatusBadge } from '@/components/status-badge';
 import { useDateFormat } from '@/hooks/use-date-format';
 import { formatMinutes } from '@/lib/datetime';
+import { show } from '@/routes/bookings';
 import type { HistoryBooking } from '@/types';
 
 function Empty() {
@@ -17,14 +19,14 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
             id: 'code',
             header: 'Kode',
             cell: (booking) => (
-                <span className="font-medium tabular-nums">{booking.code}</span>
-            ),
-        },
-        {
-            id: 'purpose',
-            header: 'Tujuan',
-            cell: (booking) => (
-                <TruncatedText text={booking.purpose} className="max-w-56" />
+                <Link
+                    href={show(booking.id, {
+                        query: { from: 'history' },
+                    })}
+                    className="rounded-sm font-medium tabular-nums underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                    {booking.code}
+                </Link>
             ),
         },
         {
@@ -57,6 +59,13 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
             header: 'Plat',
             cell: (booking) => (
                 <span className="tabular-nums">{booking.car.plate_number}</span>
+            ),
+        },
+        {
+            id: 'purpose',
+            header: 'Tujuan',
+            cell: (booking) => (
+                <TruncatedText text={booking.purpose} className="max-w-56" />
             ),
         },
         {

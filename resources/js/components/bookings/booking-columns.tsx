@@ -18,13 +18,6 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
             ),
         },
         {
-            id: 'purpose',
-            header: 'Tujuan',
-            cell: (booking) => (
-                <TruncatedText text={booking.purpose} className="max-w-56" />
-            ),
-        },
-        {
             id: 'employee',
             header: 'Karyawan',
             cell: (booking) => (
@@ -54,6 +47,13 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
             header: 'Plat',
             cell: (booking) => (
                 <span className="tabular-nums">{booking.car.plate_number}</span>
+            ),
+        },
+        {
+            id: 'purpose',
+            header: 'Tujuan',
+            cell: (booking) => (
+                <TruncatedText text={booking.purpose} className="max-w-56" />
             ),
         },
         {

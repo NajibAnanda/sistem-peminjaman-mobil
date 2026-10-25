@@ -18,7 +18,7 @@ use Tests\TestCase;
 const EXPORT_HEADINGS = [
     'Kode Peminjaman', 'Nama Karyawan', 'Divisi', 'No HP', 'Mobil', 'Plat Nomor', 'Tujuan',
     'Waktu Mulai', 'Rencana Kembali', 'Waktu Ambil', 'Waktu Kembali', 'Status',
-    'Jumlah Perpanjangan', 'Durasi Keterlambatan', 'Petugas Pencatat',
+    'Durasi Keterlambatan',
 ];
 
 // Ekspor wajib berperiode (config fleet.export.max_range_days).
@@ -99,9 +99,26 @@ test('CSV berisi kolom laporan lengkap dengan tanggal dan teks Indonesia', funct
             'PMJ-202609-9001', 'Ayu Ningsih Pratiwi', 'Keuangan', '081234567890', 'Toyota Avanza', 'B 1234 ABC',
             'Kunjungan ke Kantor Cabang Bekasi — “urgent”',
             '10 Sep 2026, 08.00', '10 Sep 2026, 12.00', '10 Sep 2026, 07.45', '11 Sep 2026, 15.30',
-            'Selesai', '2', '1 hari 3 jam', 'Dewi Pencatat',
+            'Selesai', '1 hari 3 jam',
         ],
     ]);
+});
+
+test('peminjaman dibatalkan menyertakan alasan pembatalan di kolom tujuan', function () {
+    Booking::factory()->create([
+        'code' => 'PMJ-202609-9002',
+        'car_id' => $this->scheduled->car_id,
+        'employee_id' => $this->scheduled->employee_id,
+        'purpose' => 'Rapat koordinasi cabang',
+        'cancellation_reason' => 'Rapat dibatalkan oleh pihak klien',
+        'status' => BookingStatus::Cancelled,
+        'start_at' => CarbonImmutable::parse('2026-09-15 08:00'),
+        'planned_return_at' => CarbonImmutable::parse('2026-09-15 12:00'),
+    ]);
+
+    $rows = csvRows($this->actingAs($this->user)->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv', 'status' => ['cancelled']])));
+
+    expect($rows[1][6])->toBe('Rapat koordinasi cabang (Dibatalkan: Rapat dibatalkan oleh pihak klien)');
 });
 
 test('ekspor mengikuti filter dan periode yang sama dengan tabel', function () {
@@ -116,9 +133,7 @@ test('ekspor mengikuti filter dan periode yang sama dengan tabel', function () {
         ->and(array_column(array_slice($scheduledOnly, 1), 0))->toBe(['PMJ-202610-9001'])
         ->and($scheduledOnly[1][9])->toBe('')
         ->and($scheduledOnly[1][11])->toBe('Dijadwalkan')
-        // Tanpa perpanjangan ditulis 0, bukan sel kosong.
-        ->and($scheduledOnly[1][12])->toBe('0')
-        ->and($scheduledOnly[1][13])->toBe('')
+        ->and($scheduledOnly[1][12])->toBe('')
         ->and($none)->toBe([EXPORT_HEADINGS]);
 
     $this->get(route('history.export', ['format' => 'csv', 'from' => '2026-10-01', 'to' => '2026-10-31']))
@@ -142,16 +157,15 @@ test('file Excel berisi judul tebal dan no HP tersimpan sebagai teks', function 
 
     $sheet = IOFactory::load(exportedFile($response))->getActiveSheet();
 
-    expect($sheet->rangeToArray('A1:O1')[0])->toBe(EXPORT_HEADINGS)
+    expect($sheet->rangeToArray('A1:M1')[0])->toBe(EXPORT_HEADINGS)
         ->and($sheet->getStyle('A1')->getFont()->getBold())->toBeTrue()
         ->and($sheet->getHighestRow())->toBe(2)
         ->and($sheet->getCell('D2')->getValue())->toBe('081234567890')
         ->and($sheet->getCell('D2')->getDataType())->toBe(DataType::TYPE_STRING)
         ->and($sheet->getCell('H2')->getValue())->toBe('10 Sep 2026, 08.00')
-        ->and($sheet->getCell('M2')->getValue())->toBe(2)
+        ->and($sheet->getCell('M2')->getValue())->toBe('1 hari 3 jam')
         ->and(IOFactory::load(exportedFile($this->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'xlsx', 'status' => ['scheduled']]))))
-            ->getActiveSheet()->getCell('M2')->getValue())->toBe(0)
-        ->and($sheet->getCell('N2')->getValue())->toBe('1 hari 3 jam');
+            ->getActiveSheet()->getCell('M2')->getValue())->toBe('');
 });
 
 test('ekspor besar dibaca bertahap tanpa baris hilang atau ganda', function () {

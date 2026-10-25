@@ -48,6 +48,12 @@
             border-collapse: collapse;
             table-layout: fixed;
         }
+        table.data-table thead {
+            display: table-header-group;
+        }
+        table.data-table tr {
+            page-break-inside: avoid;
+        }
         table.data-table th {
             background-color: #1e293b;
             color: #ffffff;
@@ -60,33 +66,28 @@
             text-align: left;
         }
         table.data-table td {
-            padding: 5px;
+            padding: 6px 6px;
             border: 1px solid #cbd5e1;
-            vertical-align: top;
+            vertical-align: middle;
             font-size: 7.5pt;
             word-wrap: break-word;
         }
         table.data-table tr:nth-child(even) td {
             background-color: #f8fafc;
         }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
+        table.data-table th.text-center,
+        table.data-table td.text-center,
+        .text-center {
+            text-align: center;
+        }
+        table.data-table th.text-right,
+        table.data-table td.text-right,
+        .text-right {
+            text-align: right;
+        }
         .font-bold { font-weight: bold; }
         .text-muted { color: #64748b; font-size: 7pt; }
         .text-danger { color: #dc2626; font-weight: bold; font-size: 7pt; }
-        .badge {
-            display: inline-block;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: 6.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .badge-completed { background-color: #e2e8f0; color: #334155; }
-        .badge-active { background-color: #dbeafe; color: #1e40af; }
-        .badge-scheduled { background-color: #e0f2fe; color: #0369a1; }
-        .badge-cancelled { background-color: #fee2e2; color: #991b1b; }
-        .badge-overdue { background-color: #ffedd5; color: #9a3412; }
         .footer-note {
             margin-top: 10px;
             font-size: 7pt;
@@ -122,21 +123,21 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 25px;" class="text-center">No</th>
-                <th style="width: 85px;">Kode</th>
-                <th style="width: 125px;">Peminjam</th>
-                <th style="width: 95px;">Kendaraan</th>
-                <th style="width: 110px;">Jadwal Rencana</th>
-                <th style="width: 110px;">Realisasi Aktual</th>
-                <th style="width: 80px;">Status</th>
-                <th>Tujuan</th>
+                <th style="width: 4%; text-align: center;" class="text-center">No</th>
+                <th style="width: 11%; text-align: center;" class="text-center">Kode</th>
+                <th style="width: 15%;">Peminjam</th>
+                <th style="width: 12%;">Kendaraan</th>
+                <th style="width: 12%;">Tujuan</th>
+                <th style="width: 18%;">Jadwal Rencana</th>
+                <th style="width: 18%;">Realisasi Aktual</th>
+                <th style="width: 10%;">Status</th>
             </tr>
         </thead>
         <tbody>
             @forelse($bookings as $index => $booking)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="font-bold">{{ $booking->code }}</td>
+                    <td class="font-bold text-center">{{ $booking->code }}</td>
                     <td>
                         <div class="font-bold">{{ $booking->employee->name }}</div>
                         <div class="text-muted">{{ $booking->employee->division }} &bull; {{ $booking->employee->phone }}</div>
@@ -144,6 +145,14 @@
                     <td>
                         <div class="font-bold">{{ $booking->car->brand }} {{ $booking->car->model }}</div>
                         <div class="text-muted">{{ $booking->car->plate_number }}</div>
+                    </td>
+                    <td>
+                        <div>{{ $booking->purpose }}</div>
+                        @if($booking->cancellation_reason)
+                            <div class="text-danger" style="margin-top: 2px;">
+                                Batal: {{ $booking->cancellation_reason }}
+                            </div>
+                        @endif
                     </td>
                     <td>
                         <div><span class="text-muted">Mulai:</span> {{ \App\Support\DateFormat::dateTime($booking->start_at) }}</div>
@@ -160,21 +169,13 @@
                         </div>
                     </td>
                     <td>
-                        <div>{{ $booking->displayStatus($now)->label() }}</div>
+                        <div class="font-bold">{{ $booking->displayStatus($now)->label() }}</div>
                         @if($booking->extensions_count > 0)
                             <div class="text-muted">Perpanjang: {{ $booking->extensions_count }}x</div>
                         @endif
                         @php $lateness = $booking->latenessMinutes($now); @endphp
                         @if($lateness !== null)
                             <div class="text-danger">Telat: {{ \App\Support\DateFormat::duration($lateness) }}</div>
-                        @endif
-                    </td>
-                    <td>
-                        <div>{{ $booking->purpose }}</div>
-                        @if($booking->cancellation_reason)
-                            <div class="text-danger" style="margin-top: 2px;">
-                                Batal: {{ $booking->cancellation_reason }}
-                            </div>
                         @endif
                     </td>
                 </tr>

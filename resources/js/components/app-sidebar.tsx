@@ -61,17 +61,38 @@ export function AppSidebar() {
         }
     }, [isDashboard, start, stop]);
 
+    const from =
+        (page.props as { from?: string | null }).from ??
+        new URL(
+            page.url,
+            typeof window !== 'undefined'
+                ? window.location.origin
+                : 'http://localhost',
+        ).searchParams.get('from');
+
     const mainNavItems: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-        { title: 'Jadwal Armada', href: schedule(), icon: CalendarRange },
+        {
+            title: 'Jadwal Armada',
+            href: schedule(),
+            icon: CalendarRange,
+            isActive: from === 'schedule' ? true : undefined,
+        },
         {
             title: 'Peminjaman',
             href: bookings(),
             icon: ClipboardList,
             badge: <BookingAlertBadge alerts={alerts} />,
             tooltip: bookingAlertTooltip(alerts),
+            isActive:
+                from === 'history' || from === 'schedule' ? false : undefined,
         },
-        { title: 'Riwayat', href: history(), icon: History },
+        {
+            title: 'Riwayat',
+            href: history(),
+            icon: History,
+            isActive: from === 'history' ? true : undefined,
+        },
         { title: 'Data Mobil', href: cars(), icon: CarFront },
         { title: 'Data Karyawan', href: employees(), icon: Users },
     ];

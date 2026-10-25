@@ -42,7 +42,7 @@ final class ExportBookings
 
         if ($format === ExportFormat::Pdf) {
             $bookings = Booking::query()
-                ->with(['employee', 'car', 'creator'])
+                ->with(['employee', 'car'])
                 ->withCount('extensions')
                 ->forHistory($table, $now)
                 ->orderByDesc('start_at')

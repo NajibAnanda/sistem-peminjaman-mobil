@@ -27,8 +27,8 @@ beforeEach(function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-20 12:00:00'));
     $this->user = User::factory()->admin()->create();
 
-    $this->carA = Car::factory()->create(['plate_number' => 'B 1111 AAA']);
-    $this->carB = Car::factory()->create(['plate_number' => 'D 2222 BBB']);
+    $this->carA = Car::factory()->create(['brand' => 'Daihatsu', 'model' => 'Terios', 'plate_number' => 'B 1111 AAA']);
+    $this->carB = Car::factory()->create(['brand' => 'Toyota', 'model' => 'Avanza', 'plate_number' => 'D 2222 BBB']);
     $this->rina = Employee::factory()->create(['name' => 'Rina Kartika', 'division' => 'Keuangan']);
     $this->budi = Employee::factory()->create(['name' => 'Budi Santoso', 'division' => 'Teknik']);
 
@@ -82,8 +82,8 @@ test('riwayat berisi semua peminjaman, terbaru di atas, dengan keterlambatan dan
             ])
             ->has('filterOptions.status', 6)
             ->where('filterOptions.car', [
-                ['value' => (string) $this->carA->id, 'label' => 'B 1111 AAA'],
-                ['value' => (string) $this->carB->id, 'label' => 'D 2222 BBB'],
+                ['value' => (string) $this->carA->id, 'label' => 'Daihatsu Terios (B 1111 AAA)'],
+                ['value' => (string) $this->carB->id, 'label' => 'Toyota Avanza (D 2222 BBB)'],
             ])
             ->where('filterOptions.employee.0', ['value' => (string) $this->budi->id, 'label' => 'Budi Santoso (Teknik)'])
             ->where('exportFormats', [
