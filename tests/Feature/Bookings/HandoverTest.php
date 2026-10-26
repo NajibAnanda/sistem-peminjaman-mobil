@@ -126,7 +126,7 @@ test('mobil Maintenance tidak dapat diambil', function () {
     $this->actingAs($this->user)
         ->post(route('bookings.pickup', $this->booking), handoverPayload())
         ->assertInertiaFlash('toast.type', 'error')
-        ->assertInertiaFlash('toast.message', "Mobil {$this->booking->car->plate_number} sedang Maintenance sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain.");
+        ->assertInertiaFlash('toast.message', "Mobil {$this->booking->car->brand} {$this->booking->car->model} ({$this->booking->car->plate_number}) sedang Maintenance sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain.");
 
     // Foto yang sempat disimpan dibuang karena transaksi gagal.
     expect($this->booking->refresh()->status)->toBe(BookingStatus::Scheduled)
@@ -144,7 +144,7 @@ test('serah terima ambil ditolak selama mobil belum kembali dari booking sebelum
 
     $this->actingAs($this->user)
         ->post(route('bookings.pickup', $this->booking), handoverPayload())
-        ->assertInertiaFlash('toast.message', "Mobil {$car->plate_number} masih dipakai peminjaman {$previous->code} yang belum dikembalikan. Serah terima ambil dapat dilakukan setelah mobil dikembalikan.");
+        ->assertInertiaFlash('toast.message', "Mobil {$car->brand} {$car->model} ({$car->plate_number}) masih dipakai peminjaman {$previous->code} yang belum dikembalikan. Serah terima ambil dapat dilakukan setelah mobil dikembalikan.");
 
     expect($this->booking->refresh()->status)->toBe(BookingStatus::Scheduled);
 

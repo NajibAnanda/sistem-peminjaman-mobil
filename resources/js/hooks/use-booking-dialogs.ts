@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Booking } from '@/types';
 
 export type BookingDialogType = 'pickup' | 'return' | 'extend' | 'cancel';
@@ -29,17 +29,19 @@ export function useBookingDialogs(): UseBookingDialogsReturn {
     const [current, setCurrent] = useState<BookingDialogState | null>(null);
     const [visible, setVisible] = useState(false);
 
+    const open = useCallback((type: BookingDialogType, booking: Booking) => {
+        setCurrent((previous) => ({
+            type,
+            booking,
+            key: (previous?.key ?? 0) + 1,
+        }));
+        setVisible(true);
+    }, []);
+
     return {
         current,
         visible,
-        open: (type, booking) => {
-            setCurrent((previous) => ({
-                type,
-                booking,
-                key: (previous?.key ?? 0) + 1,
-            }));
-            setVisible(true);
-        },
+        open,
         setVisible,
     };
 }

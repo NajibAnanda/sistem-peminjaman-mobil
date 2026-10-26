@@ -55,7 +55,7 @@ export default function BookingIndex({
                             onAction={dialogs.open}
                         />
                     )}
-                    searchPlaceholder="Cari kode, karyawan, atau plat..."
+                    searchPlaceholder="Cari kode, karyawan, atau plat…"
                     filterGroups={[
                         { key: 'status', label: 'Status', options: statuses },
                     ]}

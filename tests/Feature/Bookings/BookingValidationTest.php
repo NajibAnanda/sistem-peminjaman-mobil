@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 /*
  * Validasi tambahan peminjaman: durasi min./maks., panjang tujuan & alasan,
@@ -18,6 +19,7 @@ use Inertia\Testing\AssertableInertia as Assert;
  */
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->travelTo(CarbonImmutable::parse('2026-10-20 08:00:00'));
     $this->user = User::factory()->admin()->create();
     $this->car = Car::factory()->create(['plate_number' => 'B 1111 AAA']);
@@ -126,7 +128,7 @@ test('karyawan tidak boleh memiliki dua peminjaman yang waktunya tumpang tindih'
 
     $this->actingAs($this->user)
         ->post(route('bookings.store'), validationPayload($this->car, $this->employee))
-        ->assertSessionHasErrors(['employee_id' => "Rina Kartika sudah memiliki peminjaman lain pada waktu yang sama: PMJ-202610-0100 ({$existing->car->plate_number}, 20 Okt 2026, 13.00 – 20 Okt 2026, 17.00). Pilih waktu lain."]);
+        ->assertSessionHasErrors(['employee_id' => "Rina Kartika sudah memiliki peminjaman lain pada waktu yang sama: PMJ-202610-0100 ({$existing->car->brand} {$existing->car->model} · {$existing->car->plate_number}, 20 Okt 2026, 13.00 – 20 Okt 2026, 17.00). Pilih waktu lain."]);
 
     // Bersambung tepat di batas tidak dianggap tumpang tindih.
     $this->post(route('bookings.store'), validationPayload($this->car, $this->employee, [
@@ -249,7 +251,7 @@ test('serah terima ambil ditolak bila karyawan atau mobil sudah nonaktif', funct
         ])
         ->assertInertiaFlash('toast.message', $inactive === 'karyawan'
             ? 'Karyawan Rina Kartika sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti karyawannya lewat Edit Jadwal.'
-            : 'Mobil B 1111 AAA sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain lewat Edit Jadwal.');
+            : "Mobil {$this->car->brand} {$this->car->model} ({$this->car->plate_number}) sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain lewat Edit Jadwal.");
 
     expect($booking->refresh()->status)->toBe(BookingStatus::Scheduled)
         ->and(Storage::disk('local')->allFiles())->toBe([]);

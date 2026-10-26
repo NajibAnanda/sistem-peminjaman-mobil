@@ -69,10 +69,10 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                 title="Perpanjang Peminjaman"
                 description={
                     <>
-                        Rencana kembali {booking.code} (
-                        {booking.car.plate_number}) saat ini{' '}
-                        {formatDateTime(booking.planned_return_at)}. Pilih waktu
-                        baru beserta alasannya.
+                        Rencana kembali {booking.code} ({booking.car.brand}{' '}
+                        {booking.car.model} · {booking.car.plate_number}) saat
+                        ini {formatDateTime(booking.planned_return_at)}. Pilih
+                        waktu baru beserta alasannya.
                     </>
                 }
                 onSubmit={submit}
@@ -106,6 +106,7 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                     >
                         <Textarea
                             id="extend-reason"
+                            name="reason"
                             value={form.data.reason}
                             onChange={(e) =>
                                 form.setData('reason', e.target.value)
@@ -113,7 +114,7 @@ export function BookingExtendDialog({ booking, open, onOpenChange }: Props) {
                             required
                             minLength={bookingRules.reasonMinLength}
                             maxLength={500}
-                            placeholder="Misalnya: rapat dengan klien diperpanjang"
+                            placeholder="Misalnya: rapat dengan klien diperpanjang…"
                             aria-invalid={!!form.errors.reason || undefined}
                         />
                     </FormField>

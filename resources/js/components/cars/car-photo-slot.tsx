@@ -16,7 +16,7 @@ const ACCEPTED_TYPES = 'image/jpeg,image/png,image/webp';
 
 type Props = {
     carId: number;
-    plateNumber: string;
+    carTitle: string;
     slot: Slot;
     maxUploadKb: number;
     onOpen: () => void;
@@ -24,7 +24,7 @@ type Props = {
 
 export function CarPhotoSlot({
     carId,
-    plateNumber,
+    carTitle,
     slot,
     maxUploadKb,
     onOpen,
@@ -90,7 +90,7 @@ export function CarPhotoSlot({
                 >
                     <LoadingImage
                         src={slot.url}
-                        alt={`${plateNumber}, ${label}`}
+                        alt={`${carTitle}, ${label}`}
                         className="size-full object-cover"
                     />
                 </button>

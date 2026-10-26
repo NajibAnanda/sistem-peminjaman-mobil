@@ -16,6 +16,6 @@ final class CarOperationalStatusController extends Controller
         $status = $request->operationalStatus();
         $car = $action->handle($car, $status, $request->user());
 
-        return back()->with('success', "Status mobil {$car->plate_number} sekarang {$status->label()}.");
+        return back()->with('success', "Status mobil {$car->brand} {$car->model} ({$car->plate_number}) sekarang {$status->label()}.");
     }
 }

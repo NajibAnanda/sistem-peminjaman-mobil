@@ -37,6 +37,7 @@ export function BookingCancelDialog({ booking, open, onOpenChange }: Props) {
             description={
                 <>
                     {booking.code} untuk {booking.employee.name} (
+                    {booking.car.brand} {booking.car.model} ·{' '}
                     {booking.car.plate_number}) akan dibatalkan dan tidak dapat
                     diaktifkan kembali.
                 </>
@@ -55,12 +56,13 @@ export function BookingCancelDialog({ booking, open, onOpenChange }: Props) {
             >
                 <Textarea
                     id="cancel-reason"
+                    name="reason"
                     value={form.data.reason}
                     onChange={(e) => form.setData('reason', e.target.value)}
                     required
                     minLength={reasonMinLength}
                     maxLength={500}
-                    placeholder="Misalnya: kegiatan ditunda oleh atasan"
+                    placeholder="Misalnya: kegiatan ditunda oleh atasan…"
                     aria-invalid={!!form.errors.reason || undefined}
                 />
             </FormField>

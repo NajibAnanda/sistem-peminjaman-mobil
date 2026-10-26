@@ -31,6 +31,10 @@ export type Booking = {
     picked_up_at: string | null;
     /** Kode peminjaman Terlambat yang masih memakai mobil ini (FR-23). */
     awaiting_return_code: string | null;
+    awaiting_return_id: number | null;
+    /** Kode peminjaman Aktif lain yang saat ini sedang memakai mobil ini. */
+    active_car_booking_code: string | null;
+    active_car_booking_id: number | null;
     returned_at: string | null;
     employee: {
         id: number;

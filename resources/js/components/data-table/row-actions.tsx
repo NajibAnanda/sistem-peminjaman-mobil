@@ -19,6 +19,10 @@ export type RowAction = {
     onSelect?: () => void;
     /** Aksi berisiko (nonaktifkan, reset password, batalkan). */
     destructive?: boolean;
+    /** Nonaktifkan aksi (tetap tampil tapi tidak bisa diklik). */
+    disabled?: boolean;
+    /** Penjelasan tambahan, mis. alasan aksi dinonaktifkan. */
+    title?: string;
     /** Sembunyikan bila tidak berlaku untuk baris ini. */
     hidden?: boolean;
 };
@@ -71,7 +75,15 @@ export function RowActions({ label, actions }: Props) {
 }
 
 function RowActionItem({ action }: { action: RowAction }) {
-    const { icon: Icon, label, href, onSelect, destructive } = action;
+    const {
+        icon: Icon,
+        label,
+        href,
+        onSelect,
+        destructive,
+        disabled,
+        title,
+    } = action;
     const content = (
         <>
             <Icon aria-hidden="true" />
@@ -83,8 +95,10 @@ function RowActionItem({ action }: { action: RowAction }) {
         <DropdownMenuItem
             variant={destructive ? 'destructive' : 'default'}
             className="whitespace-nowrap"
+            disabled={disabled}
+            title={title}
             asChild={href !== undefined}
-            onSelect={href === undefined ? onSelect : undefined}
+            onSelect={href === undefined && !disabled ? onSelect : undefined}
         >
             {href !== undefined ? <Link href={href}>{content}</Link> : content}
         </DropdownMenuItem>

@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import { Ban, CalendarPlus, KeyRound, Pencil, Undo2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AwaitingReturnAlert } from '@/components/bookings/awaiting-return-notice';
+import {
+    AwaitingReturnAlert,
+    CarInUseAlert,
+} from '@/components/bookings/awaiting-return-notice';
 import { BookingActionDialogs } from '@/components/bookings/booking-action-dialogs';
 import { BookingPhotoComparison } from '@/components/bookings/booking-photo-comparison';
 import { StatusBadge } from '@/components/status-badge';
@@ -82,6 +85,17 @@ export default function BookingShow({
                         {actions.pickup && (
                             <Button
                                 onClick={() => dialogs.open('pickup', booking)}
+                                disabled={Boolean(
+                                    booking.awaiting_return_code ||
+                                    booking.active_car_booking_code,
+                                )}
+                                title={
+                                    booking.awaiting_return_code
+                                        ? `Mobil belum kembali dari ${booking.awaiting_return_code}`
+                                        : booking.active_car_booking_code
+                                          ? `Mobil sedang digunakan oleh ${booking.active_car_booking_code}`
+                                          : undefined
+                                }
                                 data-test="pickup-button"
                             >
                                 <KeyRound aria-hidden="true" />
@@ -100,9 +114,17 @@ export default function BookingShow({
                     </div>
                 </div>
 
-                {booking.awaiting_return_code && (
-                    <AwaitingReturnAlert code={booking.awaiting_return_code} />
-                )}
+                {booking.awaiting_return_code ? (
+                    <AwaitingReturnAlert
+                        code={booking.awaiting_return_code}
+                        id={booking.awaiting_return_id}
+                    />
+                ) : booking.active_car_booking_code ? (
+                    <CarInUseAlert
+                        code={booking.active_car_booking_code}
+                        id={booking.active_car_booking_id}
+                    />
+                ) : null}
 
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
@@ -126,7 +148,7 @@ export default function BookingShow({
                                     <Field label="Mobil">
                                         <Link
                                             href={showCar(booking.car.id)}
-                                            className="font-medium underline-offset-4 hover:underline"
+                                            className="rounded-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                         >
                                             {booking.car.brand}{' '}
                                             {booking.car.model}

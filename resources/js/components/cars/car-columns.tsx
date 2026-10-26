@@ -21,7 +21,7 @@ export function useCarColumns(): DataTableColumn<Car>[] {
                         {thumbnail ? (
                             <LoadingImage
                                 src={thumbnail}
-                                alt={`Foto ${car.plate_number}`}
+                                alt={`Foto ${car.brand} ${car.model} (${car.plate_number})`}
                                 className="size-full object-cover"
                                 compact
                             />

@@ -22,6 +22,15 @@ export function BookingActionsMenu({ booking, onAction }: Props) {
                     label: 'Serah terima ambil',
                     icon: KeyRound,
                     onSelect: () => onAction('pickup', booking),
+                    disabled: Boolean(
+                        booking.awaiting_return_code ||
+                        booking.active_car_booking_code,
+                    ),
+                    title: booking.awaiting_return_code
+                        ? `Mobil belum kembali dari ${booking.awaiting_return_code}`
+                        : booking.active_car_booking_code
+                          ? `Mobil sedang digunakan oleh ${booking.active_car_booking_code}`
+                          : undefined,
                     hidden: !actions.pickup,
                 },
                 {

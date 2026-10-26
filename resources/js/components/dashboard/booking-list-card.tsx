@@ -123,8 +123,9 @@ export function BookingListCard({
                                             {booking.employee.name}
                                         </span>
                                         <span className="truncate text-xs text-muted-foreground">
-                                            {booking.code} ·{' '}
-                                            {booking.car.plate_number}
+                                            {booking.code} · {booking.car.brand}{' '}
+                                            {booking.car.model} (
+                                            {booking.car.plate_number})
                                         </span>
                                         {renderDetail?.(booking)}
                                         {booking.awaiting_return_code && (

@@ -15,6 +15,6 @@ final class CarDeactivationController extends Controller
     {
         $car = $action->handle($car, $request->user());
 
-        return back()->with('success', "Mobil {$car->plate_number} dinonaktifkan.");
+        return back()->with('success', "Mobil {$car->brand} {$car->model} ({$car->plate_number}) dinonaktifkan.");
     }
 }

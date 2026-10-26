@@ -49,11 +49,11 @@ final class PickUpBooking
                 }
 
                 if (! $car->is_active) {
-                    throw BookingException::carInactiveAtPickup($car->plate_number);
+                    throw BookingException::carInactiveAtPickup($car);
                 }
 
                 if ($car->operational_status === CarOperationalStatus::Maintenance) {
-                    throw BookingException::carUnderMaintenance($car->plate_number);
+                    throw BookingException::carUnderMaintenance($car);
                 }
 
                 $stillInUse = $car->bookings()
@@ -62,7 +62,7 @@ final class PickUpBooking
                     ->value('code');
 
                 if (is_string($stillInUse)) {
-                    throw BookingException::carStillInUse($car->plate_number, $stillInUse);
+                    throw BookingException::carStillInUse($car, $stillInUse);
                 }
 
                 $this->recordEvidencePhoto($booking, PhotoStage::Pickup, $source, $path, $actor);

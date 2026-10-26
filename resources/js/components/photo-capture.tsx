@@ -19,6 +19,7 @@ export type CapturedPhoto = {
 };
 
 type Props = {
+    id?: string;
     value: CapturedPhoto | null;
     onChange: (photo: CapturedPhoto | null) => void;
     maxUploadKb: number;
@@ -33,6 +34,7 @@ type Props = {
  * memproses ulang.
  */
 export function PhotoCapture({
+    id,
     value,
     onChange,
     maxUploadKb,
@@ -127,6 +129,7 @@ export function PhotoCapture({
                                 : 'Diunggah dari file'}
                         </span>
                         <Button
+                            id={id}
                             type="button"
                             variant="outline"
                             size="sm"
@@ -141,6 +144,7 @@ export function PhotoCapture({
             ) : camera.status === 'idle' ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                     <Button
+                        id={id}
                         type="button"
                         variant="outline"
                         className="h-24 flex-col gap-2"

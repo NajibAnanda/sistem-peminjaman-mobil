@@ -41,9 +41,11 @@ export default function CarShow({
         setFormOpen(true);
     };
 
+    const carTitle = `${car.brand} ${car.model} (${car.plate_number})`;
+
     return (
         <>
-            <Head title={`${car.brand} ${car.model} (${car.plate_number})`} />
+            <Head title={carTitle} />
 
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
@@ -120,7 +122,7 @@ export default function CarShow({
                                 <CarPhotoSlot
                                     key={slot.position}
                                     carId={car.id}
-                                    plateNumber={car.plate_number}
+                                    carTitle={carTitle}
                                     slot={slot}
                                     maxUploadKb={maxUploadKb}
                                     onOpen={() => setGalleryIndex(slotIndex)}
@@ -213,7 +215,7 @@ export default function CarShow({
             />
 
             <CarGalleryDialog
-                title={car.plate_number}
+                title={carTitle}
                 photos={car.photos}
                 index={galleryIndex}
                 onIndexChange={setGalleryIndex}
@@ -229,10 +231,12 @@ function statusConfirmation(
     scheduledBookings: BookingSummary[],
     formatDateTime: (value: string) => string,
 ): ConfirmActionConfig {
+    const carTitle = `${car.brand} ${car.model} (${car.plate_number})`;
+
     if (car.operational_status === 'maintenance') {
         return {
             title: 'Selesai maintenance?',
-            description: `${car.plate_number} kembali Operasional dan dapat dijadwalkan lagi.`,
+            description: `${carTitle} kembali Operasional dan dapat dijadwalkan lagi.`,
             confirmLabel: 'Kembalikan ke Operasional',
             route: operationalStatus(car.id),
             data: { operational_status: 'operational' },
@@ -243,8 +247,8 @@ function statusConfirmation(
         title: 'Set mobil ke Maintenance?',
         description: (
             <>
-                {car.plate_number} tidak dapat dijadwalkan atau diserahterimakan
-                selama Maintenance.
+                {carTitle} tidak dapat dijadwalkan atau diserahterimakan selama
+                Maintenance.
                 {scheduledBookings.length > 0 && (
                     <span className="mt-2 block text-warning">
                         Jadwal berikut perlu dipindahkan ke mobil lain:{' '}

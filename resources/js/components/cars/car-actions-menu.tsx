@@ -17,7 +17,7 @@ type Props = {
 export function CarActionsMenu({ car, onAction }: Props) {
     return (
         <RowActions
-            label={`Aksi untuk ${car.plate_number}`}
+            label={`Aksi untuk ${car.brand} ${car.model} (${car.plate_number})`}
             actions={[
                 { label: 'Lihat detail', icon: Eye, href: show(car.id) },
                 {

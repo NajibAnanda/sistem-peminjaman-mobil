@@ -21,11 +21,11 @@ trait ChecksBookingAvailability
     private function ensureCarSchedulable(Car $car): void
     {
         if (! $car->is_active) {
-            throw BookingException::carNotSchedulable($car->plate_number, 'nonaktif');
+            throw BookingException::carNotSchedulable($car, 'nonaktif');
         }
 
         if ($car->operational_status === CarOperationalStatus::Maintenance) {
-            throw BookingException::carNotSchedulable($car->plate_number, 'Maintenance');
+            throw BookingException::carNotSchedulable($car, 'Maintenance');
         }
     }
 
@@ -59,7 +59,7 @@ trait ChecksBookingAvailability
     private function ensureEmployeeFree(Employee $employee, CarbonInterface $start, CarbonInterface $end, ?Booking $except = null): void
     {
         $conflicts = Booking::query()
-            ->with('car:id,plate_number')
+            ->with('car:id,plate_number,brand,model')
             ->where('employee_id', $employee->id)
             ->overlapping($start, $end)
             ->when($except, fn ($query, Booking $booking) => $query->whereKeyNot($booking->id))

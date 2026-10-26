@@ -31,7 +31,7 @@ final class BookingSearch implements SearchCategory
     public function search(string $term, int $limit): array
     {
         return array_values(Booking::query()
-            ->with(['employee:id,name', 'car:id,plate_number'])
+            ->with(['employee:id,name', 'car:id,plate_number,brand,model'])
             ->search($term)
             ->orderByDesc('start_at')
             ->orderByDesc('id')
@@ -40,7 +40,7 @@ final class BookingSearch implements SearchCategory
             ->map(fn (Booking $booking): array => [
                 'id' => $booking->id,
                 'title' => $booking->code,
-                'subtitle' => "{$booking->employee->name} · {$booking->car->plate_number} · {$booking->displayStatus()->label()}",
+                'subtitle' => "{$booking->employee->name} · {$booking->car->brand} {$booking->car->model} ({$booking->car->plate_number}) · {$booking->displayStatus()->label()}",
                 'url' => route('bookings.show', $booking, absolute: false),
             ])
             ->all());

@@ -194,7 +194,7 @@ test('mobil nonaktif atau Maintenance tidak dapat dijadwalkan', function (string
 
     $this->actingAs($this->user)
         ->post(route('bookings.store'), schedulePayload($car, $this->employee))
-        ->assertSessionHasErrors(['car_id' => "Mobil {$car->plate_number} sedang {$reason} sehingga tidak dapat dijadwalkan."]);
+        ->assertSessionHasErrors(['car_id' => "Mobil {$car->brand} {$car->model} ({$car->plate_number}) sedang {$reason} sehingga tidak dapat dijadwalkan."]);
 })->with([
     'nonaktif' => ['inactive', 'nonaktif'],
     'maintenance' => ['maintenance', 'Maintenance'],

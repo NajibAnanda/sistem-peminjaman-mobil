@@ -90,8 +90,9 @@ export function BookingHandoverDialog({
             title={text.title}
             description={
                 <>
-                    {booking.code} · {booking.car.plate_number} ·{' '}
-                    {booking.employee.name}. {text.result}
+                    {booking.code} · {booking.car.brand} {booking.car.model} (
+                    {booking.car.plate_number}) · {booking.employee.name}.{' '}
+                    {text.result}
                 </>
             }
             onSubmit={submit}
@@ -106,6 +107,7 @@ export function BookingHandoverDialog({
                     required
                 >
                     <PhotoCapture
+                        id="handover-photo"
                         value={photo}
                         onChange={changePhoto}
                         maxUploadKb={maxUploadKb}
@@ -122,12 +124,16 @@ export function BookingHandoverDialog({
                     >
                         <Textarea
                             id="return-notes"
+                            name="return_notes"
                             value={form.data.return_notes}
                             onChange={(e) =>
                                 form.setData('return_notes', e.target.value)
                             }
                             maxLength={1000}
-                            placeholder="Misalnya: baret baru di pintu kiri belakang"
+                            placeholder="Misalnya: baret baru di pintu kiri belakang…"
+                            aria-invalid={
+                                Boolean(form.errors.return_notes) || undefined
+                            }
                         />
                     </FormField>
                 )}

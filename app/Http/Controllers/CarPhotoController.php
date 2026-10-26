@@ -15,6 +15,6 @@ final class CarPhotoController extends Controller
     {
         $action->handle($car, $request->position(), $request->photo(), $request->user());
 
-        return back()->with('success', 'Foto mobil berhasil disimpan.');
+        return back()->with('success', "Foto mobil {$car->brand} {$car->model} ({$car->plate_number}) berhasil disimpan.");
     }
 }

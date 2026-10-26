@@ -235,7 +235,7 @@ export default function BookingFormPage({
                                         form.setData('employee_id', id)
                                     }
                                     placeholder="Pilih karyawan"
-                                    searchPlaceholder="Cari nama, no HP, atau divisi..."
+                                    searchPlaceholder="Cari nama, no HP, atau divisi…"
                                     emptyText="Karyawan tidak ditemukan."
                                     invalid={!!form.errors.employee_id}
                                 />
@@ -292,7 +292,7 @@ export default function BookingFormPage({
                                                 className="size-3"
                                                 aria-hidden="true"
                                             />
-                                            Memeriksa ketersediaan...
+                                            Memeriksa ketersediaan…
                                         </span>
                                     )
                                 }
@@ -309,7 +309,7 @@ export default function BookingFormPage({
                                             ? 'Isi waktu mulai dan rencana kembali terlebih dahulu'
                                             : 'Pilih mobil'
                                     }
-                                    searchPlaceholder="Cari merk, tipe, atau plat..."
+                                    searchPlaceholder="Cari merk, tipe, atau plat…"
                                     emptyText="Mobil tidak ditemukan."
                                     invalid={!!form.errors.car_id}
                                     disabled={range === ''}
@@ -340,6 +340,7 @@ export default function BookingFormPage({
                             >
                                 <Textarea
                                     id="booking-purpose"
+                                    name="purpose"
                                     value={form.data.purpose}
                                     onChange={(e) =>
                                         form.setData('purpose', e.target.value)
@@ -347,7 +348,7 @@ export default function BookingFormPage({
                                     required
                                     minLength={bookingRules.purposeMinLength}
                                     maxLength={255}
-                                    placeholder="Misalnya: kunjungan ke kantor cabang Bekasi"
+                                    placeholder="Misalnya: kunjungan ke kantor cabang Bekasi…"
                                     aria-invalid={
                                         !!form.errors.purpose || undefined
                                     }

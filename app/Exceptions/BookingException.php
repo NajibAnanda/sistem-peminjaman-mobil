@@ -6,6 +6,7 @@ namespace App\Exceptions;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\Car;
 use App\Support\DateFormat;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -41,7 +42,7 @@ final class BookingException extends BusinessRuleException
     public static function employeeConflict(string $name, Collection $conflicts): self
     {
         $listed = $conflicts->take(self::MAX_LISTED_CONFLICTS)
-            ->map(fn (Booking $booking): string => "{$booking->code} ({$booking->car->plate_number}, ".DateFormat::range($booking->start_at, $booking->planned_return_at).')')
+            ->map(fn (Booking $booking): string => "{$booking->code} ({$booking->car->brand} {$booking->car->model} · {$booking->car->plate_number}, ".DateFormat::range($booking->start_at, $booking->planned_return_at).')')
             ->implode(', ');
         $remaining = $conflicts->count() - self::MAX_LISTED_CONFLICTS;
         $suffix = $remaining > 0 ? " dan {$remaining} lainnya" : '';
@@ -55,9 +56,11 @@ final class BookingException extends BusinessRuleException
         return new self("Karyawan {$name} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti karyawannya lewat Edit Jadwal.");
     }
 
-    public static function carInactiveAtPickup(string $plateNumber): self
+    public static function carInactiveAtPickup(Car|string $car): self
     {
-        return new self("Mobil {$plateNumber} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain lewat Edit Jadwal.");
+        $name = $car instanceof Car ? "{$car->brand} {$car->model} ({$car->plate_number})" : $car;
+
+        return new self("Mobil {$name} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain lewat Edit Jadwal.");
     }
 
     /**
@@ -78,9 +81,11 @@ final class BookingException extends BusinessRuleException
             ->forField('car_id');
     }
 
-    public static function carNotSchedulable(string $plateNumber, string $reason): self
+    public static function carNotSchedulable(Car|string $car, string $reason): self
     {
-        return (new self("Mobil {$plateNumber} sedang {$reason} sehingga tidak dapat dijadwalkan."))->forField('car_id');
+        $name = $car instanceof Car ? "{$car->brand} {$car->model} ({$car->plate_number})" : $car;
+
+        return (new self("Mobil {$name} sedang {$reason} sehingga tidak dapat dijadwalkan."))->forField('car_id');
     }
 
     public static function employeeInactive(string $name): self
@@ -88,14 +93,18 @@ final class BookingException extends BusinessRuleException
         return (new self("Karyawan {$name} sudah nonaktif sehingga tidak dapat dijadwalkan."))->forField('employee_id');
     }
 
-    public static function carUnderMaintenance(string $plateNumber): self
+    public static function carUnderMaintenance(Car|string $car): self
     {
-        return new self("Mobil {$plateNumber} sedang Maintenance sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain.");
+        $name = $car instanceof Car ? "{$car->brand} {$car->model} ({$car->plate_number})" : $car;
+
+        return new self("Mobil {$name} sedang Maintenance sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain.");
     }
 
-    public static function carStillInUse(string $plateNumber, string $code): self
+    public static function carStillInUse(Car|string $car, string $code): self
     {
-        return new self("Mobil {$plateNumber} masih dipakai peminjaman {$code} yang belum dikembalikan. Serah terima ambil dapat dilakukan setelah mobil dikembalikan.");
+        $name = $car instanceof Car ? "{$car->brand} {$car->model} ({$car->plate_number})" : $car;
+
+        return new self("Mobil {$name} masih dipakai peminjaman {$code} yang belum dikembalikan. Serah terima ambil dapat dilakukan setelah mobil dikembalikan.");
     }
 
     public static function extensionNotLater(CarbonInterface $currentPlannedReturn): self

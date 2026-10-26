@@ -201,6 +201,31 @@ final class Booking extends Model
                 ->where('previous.planned_return_at', '<', $now ?? now())
                 ->orderBy('previous.planned_return_at')
                 ->limit(1),
+            'awaiting_return_id' => self::query()
+                ->from('bookings', 'prev_id')
+                ->select('prev_id.id')
+                ->whereColumn('prev_id.car_id', 'bookings.car_id')
+                ->whereColumn('prev_id.id', '!=', 'bookings.id')
+                ->where('prev_id.status', BookingStatus::Active)
+                ->where('prev_id.planned_return_at', '<', $now ?? now())
+                ->orderBy('prev_id.planned_return_at')
+                ->limit(1),
+            'active_car_booking_code' => self::query()
+                ->from('bookings', 'active_prev')
+                ->select('active_prev.code')
+                ->whereColumn('active_prev.car_id', 'bookings.car_id')
+                ->whereColumn('active_prev.id', '!=', 'bookings.id')
+                ->where('active_prev.status', BookingStatus::Active)
+                ->orderBy('active_prev.planned_return_at')
+                ->limit(1),
+            'active_car_booking_id' => self::query()
+                ->from('bookings', 'active_id')
+                ->select('active_id.id')
+                ->whereColumn('active_id.car_id', 'bookings.car_id')
+                ->whereColumn('active_id.id', '!=', 'bookings.id')
+                ->where('active_id.status', BookingStatus::Active)
+                ->orderBy('active_id.planned_return_at')
+                ->limit(1),
         ]);
     }
 
@@ -214,6 +239,38 @@ final class Booking extends Model
         $code = $this->getAttributes()['awaiting_return_code'] ?? null;
 
         return $this->status === BookingStatus::Scheduled && is_string($code) ? $code : null;
+    }
+
+    /**
+     * ID peminjaman Terlambat yang menahan mobil untuk jadwal ini (FR-23).
+     */
+    public function awaitingReturnId(): ?int
+    {
+        $id = $this->getAttributes()['awaiting_return_id'] ?? null;
+
+        return $this->status === BookingStatus::Scheduled && is_numeric($id) ? (int) $id : null;
+    }
+
+    /**
+     * Kode peminjaman Aktif lain yang saat ini sedang memakai mobil yang sama.
+     * Hanya terisi bila query memakai scope withAwaitingReturn() dan booking
+     * masih Dijadwalkan.
+     */
+    public function activeCarBookingCode(): ?string
+    {
+        $code = $this->getAttributes()['active_car_booking_code'] ?? null;
+
+        return $this->status === BookingStatus::Scheduled && is_string($code) ? $code : null;
+    }
+
+    /**
+     * ID peminjaman Aktif lain yang saat ini sedang memakai mobil yang sama.
+     */
+    public function activeCarBookingId(): ?int
+    {
+        $id = $this->getAttributes()['active_car_booking_id'] ?? null;
+
+        return $this->status === BookingStatus::Scheduled && is_numeric($id) ? (int) $id : null;
     }
 
     /**
