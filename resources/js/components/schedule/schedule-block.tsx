@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from '@inertiajs/react';
 import { statusToneClasses } from '@/components/status-badge';
 import {
@@ -20,15 +21,24 @@ export const ROW_PADDING_PX = 6;
  */
 const MIN_LABEL_WIDTH_PERCENT = 6;
 
+type Props = {
+    block: TimelineBlock;
+    carTitle?: string;
+};
+
 /**
  * Satu peminjaman di Jadwal Armada. Warna mengikuti status (StatusBadge) dan
  * disertai nama karyawan (atau tooltip untuk blok sempit), sehingga tidak
  * bergantung pada warna saja.
  */
-export function ScheduleBlock({ block }: { block: TimelineBlock }) {
+export const ScheduleBlock = memo(function ScheduleBlock({
+    block,
+    carTitle,
+}: Props) {
     const { formatDateTime } = useDateFormat();
     const { booking } = block;
     const range = `${formatDateTime(booking.start_at)} – ${formatDateTime(booking.end_at)}`;
+    const label = `${carTitle ? `${carTitle}, ` : ''}${booking.code}, ${booking.employee_name}, ${booking.display_status_label}, ${range}`;
 
     return (
         <Tooltip>
@@ -49,7 +59,7 @@ export function ScheduleBlock({ block }: { block: TimelineBlock }) {
                         width: `${block.width}%`,
                         top: block.lane * LANE_HEIGHT_PX + ROW_PADDING_PX,
                     }}
-                    aria-label={`${booking.code}, ${booking.employee_name}, ${booking.display_status_label}, ${range}`}
+                    aria-label={label}
                     data-test="schedule-block"
                 >
                     <span
@@ -74,13 +84,16 @@ export function ScheduleBlock({ block }: { block: TimelineBlock }) {
                 </Link>
             </TooltipTrigger>
             <TooltipContent side="top" className="grid max-w-72 gap-0.5">
-                <span className="font-medium">
+                {carTitle && <span className="font-semibold">{carTitle}</span>}
+                <span className="font-medium text-muted-foreground">
                     {booking.code} · {booking.display_status_label}
                 </span>
                 <span>{booking.employee_name}</span>
                 <span>{booking.purpose}</span>
-                <span className="tabular-nums">{range}</span>
+                <span className="text-muted-foreground tabular-nums">
+                    {range}
+                </span>
             </TooltipContent>
         </Tooltip>
     );
-}
+});

@@ -1,7 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CarFront, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
+import { DatePicker } from '@/components/date-picker/date-picker';
+import { formatDateRange } from '@/components/date-picker/date-range-picker';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -32,7 +34,7 @@ const LEGEND: BookingDisplayStatus[] = [
 // Kolom mobil + 7 kolom hari; lebar minimum agar tetap terbaca dan tabel
 // bergeser horizontal di layar sempit.
 const GRID: CSSProperties = {
-    gridTemplateColumns: '11rem repeat(7, minmax(6.5rem, 1fr))',
+    gridTemplateColumns: '12rem repeat(7, minmax(6.5rem, 1fr))',
 };
 
 export default function ScheduleIndex({
@@ -41,26 +43,39 @@ export default function ScheduleIndex({
     cars,
     bookings,
 }: ScheduleProps) {
+    const { url } = usePage();
     const { formatDate, formatWeekday, toDateTimeLocal } = useDateFormat();
     const rows = useMemo(
         () => layoutTimeline(bookings, week.start, week.end),
         [bookings, week.start, week.end],
     );
-    const nowLeft = useMemo(
-        () => nowPosition(now, week.start, week.end),
-        [now, week.start, week.end],
-    );
+    const nowLeft = nowPosition(now, week.start, week.end);
     const today = toDateTimeLocal(now).slice(0, 10);
     const lastDay = week.days[week.days.length - 1];
     const weekLabel = `${formatDate(week.start)} – ${formatDate(`${lastDay}T12:00:00Z`)}`;
+    const weekQuery = new URL(url, 'http://localhost').searchParams.get('week');
+    const activeDate =
+        weekQuery && week.days.includes(weekQuery)
+            ? weekQuery
+            : week.days.includes(today)
+              ? today
+              : week.days[0];
+    const weekRangeLabel =
+        formatDateRange({
+            from: week.days[0],
+            to: lastDay,
+        }) ?? weekLabel;
     // Saat berpindah minggu, blok jadwal diganti skeleton (kolom mobil dan
     // header tetap) bila pemuatan lebih lama dari jeda anti-kedip.
     const [navigating, setNavigating] = useState(false);
     const showSkeleton = useDelayedFlag(navigating);
-    const trackNavigation = {
-        onStart: () => setNavigating(true),
-        onFinish: () => setNavigating(false),
-    };
+    const trackNavigation = useMemo(
+        () => ({
+            onStart: () => setNavigating(true),
+            onFinish: () => setNavigating(false),
+        }),
+        [],
+    );
 
     return (
         <>
@@ -71,7 +86,7 @@ export default function ScheduleIndex({
                     title="Jadwal Armada"
                     description="Lihat pemakaian setiap mobil dalam sepekan dan klik blok jadwal untuk membuka detail peminjaman."
                     actions={
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 variant="outline"
                                 size="icon"
@@ -116,6 +131,27 @@ export default function ScheduleIndex({
                                     <ChevronRight aria-hidden="true" />
                                 </Link>
                             </Button>
+                            <div className="w-fit max-w-full">
+                                <DatePicker
+                                    value={activeDate}
+                                    displayValue={weekRangeLabel}
+                                    placeholder="Pilih tanggal"
+                                    onChange={(date) => {
+                                        if (date) {
+                                            router.get(
+                                                index({
+                                                    query: { week: date },
+                                                }),
+                                                {},
+                                                {
+                                                    preserveScroll: true,
+                                                    ...trackNavigation,
+                                                },
+                                            );
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
                     }
                 />
@@ -161,30 +197,35 @@ export default function ScheduleIndex({
                             >
                                 <div className="contents" role="row">
                                     <div
-                                        className="sticky left-0 z-20 border-b bg-card px-6 py-2 text-xs font-medium text-muted-foreground"
+                                        className="sticky left-0 z-20 border-r border-b bg-card px-4 py-2 text-xs font-medium text-muted-foreground"
                                         role="columnheader"
                                     >
                                         Mobil
                                     </div>
-                                    {week.days.map((day) => (
-                                        <div
-                                            key={day}
-                                            className={cn(
-                                                'border-b border-l px-2 py-2 text-center text-xs font-medium',
-                                                day === today
-                                                    ? 'bg-primary/10 text-primary'
-                                                    : 'text-muted-foreground',
-                                            )}
-                                            role="columnheader"
-                                            aria-current={
-                                                day === today
-                                                    ? 'date'
-                                                    : undefined
-                                            }
-                                        >
-                                            {formatWeekday(day)}
-                                        </div>
-                                    ))}
+                                    {week.days.map((day, dayIndex) => {
+                                        const isSunday = dayIndex === 6;
+                                        const isToday = day === today;
+
+                                        return (
+                                            <div
+                                                key={day}
+                                                className={cn(
+                                                    'border-b border-l px-2 py-2 text-center text-xs font-medium',
+                                                    isToday
+                                                        ? 'bg-primary/10 text-primary'
+                                                        : isSunday
+                                                          ? 'text-destructive'
+                                                          : 'text-muted-foreground',
+                                                )}
+                                                role="columnheader"
+                                                aria-current={
+                                                    isToday ? 'date' : undefined
+                                                }
+                                            >
+                                                {formatWeekday(day)}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
 
                                 {cars.map((car, carIndex) => {
@@ -207,7 +248,7 @@ export default function ScheduleIndex({
                                         >
                                             <div
                                                 className={cn(
-                                                    'sticky left-0 z-10 grid content-center gap-0.5 bg-card px-6 py-1.5',
+                                                    'sticky left-0 z-10 grid content-center gap-0.5 border-r bg-card px-4 py-1.5',
                                                     rowBorder,
                                                 )}
                                                 role="rowheader"
@@ -215,9 +256,22 @@ export default function ScheduleIndex({
                                                 <span className="truncate text-sm font-medium">
                                                     {car.brand} {car.model}
                                                 </span>
-                                                <span className="truncate text-xs text-muted-foreground tabular-nums">
-                                                    {car.plate_number}
-                                                </span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="truncate text-xs text-muted-foreground tabular-nums">
+                                                        {car.plate_number}
+                                                    </span>
+                                                    {(car.display_status ===
+                                                        'maintenance' ||
+                                                        car.display_status ===
+                                                            'inactive') && (
+                                                        <StatusBadge
+                                                            status={
+                                                                car.display_status
+                                                            }
+                                                            className="px-1.5 py-0 text-[10px]"
+                                                        />
+                                                    )}
+                                                </div>
                                             </div>
                                             <div
                                                 // minHeight, bukan height: kedua sel
@@ -229,6 +283,7 @@ export default function ScheduleIndex({
                                                 )}
                                                 style={{ minHeight: height }}
                                                 role="cell"
+                                                aria-colspan={7}
                                             >
                                                 <DayGrid
                                                     days={week.days}
@@ -260,6 +315,7 @@ export default function ScheduleIndex({
                                                                     block={
                                                                         block
                                                                     }
+                                                                    carTitle={`${car.brand} ${car.model} (${car.plate_number})`}
                                                                 />
                                                             ),
                                                         )}

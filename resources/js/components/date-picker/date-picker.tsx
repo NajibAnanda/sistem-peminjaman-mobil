@@ -23,6 +23,8 @@ type Props = {
     /** "2026-10-17" atau '' bila kosong. */
     value: string;
     onChange: (value: string) => void;
+    /** Teks kustom pada pemicu; bawaan memformat `value`. */
+    displayValue?: string;
     /** Tanggal paling awal yang boleh dipilih ("2026-10-17"). */
     min?: string;
     placeholder?: string;
@@ -38,6 +40,7 @@ export function DatePicker({
     id,
     value,
     onChange,
+    displayValue,
     min,
     placeholder = 'Pilih tanggal',
     invalid,
@@ -65,7 +68,10 @@ export function DatePicker({
                 <PopoverTrigger asChild>
                     <PickerTrigger
                         id={id}
-                        text={value !== '' ? formatDateValue(value) : null}
+                        text={
+                            displayValue ??
+                            (value !== '' ? formatDateValue(value) : null)
+                        }
                         placeholder={placeholder}
                         invalid={invalid}
                         disabled={disabled}
