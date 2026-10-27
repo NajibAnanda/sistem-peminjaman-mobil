@@ -50,7 +50,7 @@ export function TemporaryPasswordDialog({ credentials, onClose }: Props) {
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="flex items-center gap-1.5 border-l border-border px-3 text-sm hover:bg-muted"
+                        className="flex items-center gap-1.5 border-l border-border px-3 text-sm transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
                     >
                         <CopyIcon className="size-4" aria-hidden="true" />
                         {copied ? 'Tersalin' : 'Salin'}

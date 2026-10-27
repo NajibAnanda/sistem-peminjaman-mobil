@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -10,6 +10,7 @@ import { useStaffColumns } from '@/components/staff/staff-columns';
 import { StaffFormDialog } from '@/components/staff/staff-form-dialog';
 import { TemporaryPasswordDialog } from '@/components/staff/temporary-password-dialog';
 import { Button } from '@/components/ui/button';
+import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { useFlashData } from '@/hooks/use-flash-data';
 import { useTableQuery } from '@/hooks/use-table-query';
 import { activate, deactivate, index, resetPassword } from '@/routes/staff';
@@ -76,11 +77,7 @@ export default function StaffIndex({
     // Naik setiap kali form dibuka agar isi form selalu mulai dari data terbaru.
     const [formKey, setFormKey] = useState(0);
     const [editing, setEditing] = useState<StaffMember | null>(null);
-    const [pending, setPending] = useState<{
-        action: ConfirmableAction;
-        staff: StaffMember;
-    } | null>(null);
-    const [processing, setProcessing] = useState(false);
+    const confirmation = useConfirmAction();
 
     const openForm = (member: StaffMember | null) => {
         setEditing(member);
@@ -95,25 +92,15 @@ export default function StaffIndex({
             return;
         }
 
-        setPending({ action, staff: member });
-    };
-
-    const confirmPending = () => {
-        if (pending === null) {
-            return;
-        }
-
-        router.visit(confirmations[pending.action].route(pending.staff.id), {
-            preserveScroll: true,
-            onStart: () => setProcessing(true),
-            onFinish: () => {
-                setProcessing(false);
-                setPending(null);
-            },
+        const config = confirmations[action];
+        confirmation.request({
+            title: config.title,
+            description: config.description(member),
+            confirmLabel: config.confirmLabel,
+            destructive: config.destructive,
+            route: config.route(member.id),
         });
     };
-
-    const confirmation = pending ? confirmations[pending.action] : null;
 
     return (
         <>
@@ -174,18 +161,7 @@ export default function StaffIndex({
                 roles={roles}
             />
 
-            {confirmation && pending && (
-                <ConfirmDialog
-                    open
-                    onOpenChange={(open) => !open && setPending(null)}
-                    title={confirmation.title}
-                    description={confirmation.description(pending.staff)}
-                    confirmLabel={confirmation.confirmLabel}
-                    destructive={confirmation.destructive}
-                    processing={processing}
-                    onConfirm={confirmPending}
-                />
-            )}
+            <ConfirmDialog {...confirmation.dialogProps} />
 
             <TemporaryPasswordDialog
                 credentials={credentials}

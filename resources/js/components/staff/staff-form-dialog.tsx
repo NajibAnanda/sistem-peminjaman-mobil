@@ -69,13 +69,14 @@ export function StaffFormDialog({ open, onOpenChange, staff, roles }: Props) {
                 >
                     <Input
                         id="staff-name"
+                        name="name"
                         value={form.data.name}
                         onChange={(e) => form.setData('name', e.target.value)}
                         autoFocus
                         required
                         maxLength={255}
                         autoComplete="off"
-                        placeholder="Nama lengkap"
+                        placeholder="Nama lengkap…"
                         aria-invalid={!!form.errors.name || undefined}
                     />
                 </FormField>
@@ -88,13 +89,15 @@ export function StaffFormDialog({ open, onOpenChange, staff, roles }: Props) {
                 >
                     <Input
                         id="staff-email"
+                        name="email"
                         type="email"
                         value={form.data.email}
                         onChange={(e) => form.setData('email', e.target.value)}
                         required
                         maxLength={255}
                         autoComplete="off"
-                        placeholder="nama@perusahaan.co.id"
+                        spellCheck={false}
+                        placeholder="nama@perusahaan.co.id…"
                         aria-invalid={!!form.errors.email || undefined}
                     />
                 </FormField>
