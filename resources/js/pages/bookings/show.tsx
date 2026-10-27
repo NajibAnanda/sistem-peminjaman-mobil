@@ -8,6 +8,11 @@ import {
 import { BookingActionDialogs } from '@/components/bookings/booking-action-dialogs';
 import { BookingPhotoComparison } from '@/components/bookings/booking-photo-comparison';
 import { StatusBadge } from '@/components/status-badge';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -32,6 +37,11 @@ export default function BookingShow({
     const { formatDateTime } = useDateFormat();
     const dialogs = useBookingDialogs();
     const { actions } = booking;
+    const pickupDisabledReason = booking.awaiting_return_code
+        ? `Mobil belum kembali dari ${booking.awaiting_return_code}`
+        : booking.active_car_booking_code
+          ? `Mobil sedang digunakan oleh ${booking.active_car_booking_code}`
+          : undefined;
 
     return (
         <>
@@ -82,26 +92,35 @@ export default function BookingShow({
                                 Perpanjang
                             </Button>
                         )}
-                        {actions.pickup && (
-                            <Button
-                                onClick={() => dialogs.open('pickup', booking)}
-                                disabled={Boolean(
-                                    booking.awaiting_return_code ||
-                                    booking.active_car_booking_code,
-                                )}
-                                title={
-                                    booking.awaiting_return_code
-                                        ? `Mobil belum kembali dari ${booking.awaiting_return_code}`
-                                        : booking.active_car_booking_code
-                                          ? `Mobil sedang digunakan oleh ${booking.active_car_booking_code}`
-                                          : undefined
-                                }
-                                data-test="pickup-button"
-                            >
-                                <KeyRound aria-hidden="true" />
-                                Serah Terima Ambil
-                            </Button>
-                        )}
+                        {actions.pickup &&
+                            (pickupDisabledReason ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span className="inline-flex">
+                                            <Button
+                                                disabled
+                                                data-test="pickup-button"
+                                            >
+                                                <KeyRound aria-hidden="true" />
+                                                Serah Terima Ambil
+                                            </Button>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {pickupDisabledReason}
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : (
+                                <Button
+                                    onClick={() =>
+                                        dialogs.open('pickup', booking)
+                                    }
+                                    data-test="pickup-button"
+                                >
+                                    <KeyRound aria-hidden="true" />
+                                    Serah Terima Ambil
+                                </Button>
+                            ))}
                         {actions.return && (
                             <Button
                                 onClick={() => dialogs.open('return', booking)}

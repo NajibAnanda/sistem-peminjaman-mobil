@@ -40,7 +40,7 @@ export function DataTablePagination({
             )}
         >
             <p
-                className="text-sm text-muted-foreground"
+                className="text-sm text-muted-foreground tabular-nums"
                 data-test="table-summary"
             >
                 {meta.total === 0

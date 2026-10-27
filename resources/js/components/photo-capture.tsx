@@ -183,7 +183,7 @@ export function PhotoCapture({
                         ) : (
                             <span className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Spinner aria-hidden="true" />
-                                Membuka kamera...
+                                Membuka kamera…
                             </span>
                         )}
                     </div>
@@ -199,6 +199,7 @@ export function PhotoCapture({
                             Batal
                         </Button>
                         <LoadingButton
+                            id={id}
                             type="button"
                             size="sm"
                             onClick={() => void takePhoto()}

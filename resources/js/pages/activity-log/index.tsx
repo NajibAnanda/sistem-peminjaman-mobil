@@ -51,7 +51,7 @@ export default function ActivityLogIndex({
                             ]}
                         />
                     )}
-                    searchPlaceholder="Cari aktivitas..."
+                    searchPlaceholder="Cari aktivitas…"
                     filterGroups={[
                         {
                             key: 'type',

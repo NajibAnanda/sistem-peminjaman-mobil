@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import { AwaitingReturnHint } from '@/components/bookings/awaiting-return-notice';
 import { ListSkeleton } from '@/components/skeletons/list-skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +62,7 @@ function getInitials(name: string): string {
  * peminjaman (FR-20). Selama daftar dimuat, skeleton menempati ruang yang
  * sama: jumlah barisnya diambil dari badge (min(total, limit)).
  */
-export function BookingListCard({
+export const BookingListCard = memo(function BookingListCard({
     title,
     description,
     icon: Icon,
@@ -99,6 +99,7 @@ export function BookingListCard({
                             'font-semibold tabular-nums',
                             badgeToneClasses[tone],
                         )}
+                        aria-label={`${count} peminjaman`}
                     >
                         {count}
                     </Badge>
@@ -176,4 +177,4 @@ export function BookingListCard({
             </CardContent>
         </Card>
     );
-}
+});

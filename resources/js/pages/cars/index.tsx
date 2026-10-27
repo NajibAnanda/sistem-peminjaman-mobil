@@ -73,7 +73,7 @@ export default function CarIndex({ cars, query, statuses }: CarIndexProps) {
                     rowActions={(car) => (
                         <CarActionsMenu car={car} onAction={handleAction} />
                     )}
-                    searchPlaceholder="Cari plat, merk, atau tipe..."
+                    searchPlaceholder="Cari plat, merk, atau tipe…"
                     filterGroups={[
                         { key: 'status', label: 'Status', options: statuses },
                     ]}

@@ -133,7 +133,7 @@ export default function StaffIndex({
                             onAction={handleAction}
                         />
                     )}
-                    searchPlaceholder="Cari nama atau email..."
+                    searchPlaceholder="Cari nama atau email…"
                     filterGroups={[
                         { key: 'role', label: 'Peran', options: roles },
                         { key: 'status', label: 'Status', options: statuses },

@@ -1,4 +1,5 @@
 import { ChevronDown, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { useCallback } from 'react';
 import { LoadingButton } from '@/components/loading-button';
 import {
     DropdownMenu,
@@ -25,16 +26,19 @@ type Props = {
 export function ExportMenu({ query, formats }: Props) {
     const { downloading, download } = useFileDownload();
 
-    const href = (format: string) =>
-        exportMethod.url({
-            query: {
-                ...(query.search ? { search: query.search } : {}),
-                ...query.filters,
-                ...(query.period?.from ? { from: query.period.from } : {}),
-                ...(query.period?.to ? { to: query.period.to } : {}),
-                format,
-            },
-        });
+    const href = useCallback(
+        (format: string) =>
+            exportMethod.url({
+                query: {
+                    ...(query.search ? { search: query.search } : {}),
+                    ...query.filters,
+                    ...(query.period?.from ? { from: query.period.from } : {}),
+                    ...(query.period?.to ? { to: query.period.to } : {}),
+                    format,
+                },
+            }),
+        [query.search, query.filters, query.period?.from, query.period?.to],
+    );
 
     return (
         <DropdownMenu>

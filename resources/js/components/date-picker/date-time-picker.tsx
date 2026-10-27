@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { Clock } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CalendarPanel } from '@/components/date-picker/calendar-panel';
 import {
     ClearButton,
@@ -105,16 +105,20 @@ export function DateTimePicker({
     const onMinDay = min !== undefined && draft.date === min.slice(0, 10);
     const minTime = min ? parseTime(min) : undefined;
 
-    const minutes = Array.from(
-        { length: Math.ceil(60 / minuteStep) },
-        (_, index) => index * minuteStep,
-    );
+    const minutes = useMemo(() => {
+        const list = Array.from(
+            { length: Math.ceil(60 / minuteStep) },
+            (_, index) => index * minuteStep,
+        );
 
-    // Menit nilai lama yang bukan kelipatan tetap bisa dipilih.
-    if (!minutes.includes(draft.minute)) {
-        minutes.push(draft.minute);
-        minutes.sort((a, b) => a - b);
-    }
+        // Menit nilai lama yang bukan kelipatan tetap bisa dipilih.
+        if (!list.includes(draft.minute)) {
+            list.push(draft.minute);
+            list.sort((a, b) => a - b);
+        }
+
+        return list;
+    }, [minuteStep, draft.minute]);
 
     const selectDate = (date: Date) => {
         const next = { ...draft, date: toDateValue(date) };

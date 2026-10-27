@@ -265,7 +265,7 @@ export function EmployeeFormDialog({
                             autoFocus
                             required
                             maxLength={255}
-                            autoComplete="off"
+                            autoComplete="name"
                             placeholder="Nama lengkap"
                             aria-invalid={!!form.errors.name || undefined}
                         />
@@ -348,7 +348,7 @@ export function EmployeeFormDialog({
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="Nama divisi..."
+                                            placeholder="Nama divisi…"
                                             className="h-7 min-w-0 flex-1 px-2 text-xs"
                                             maxLength={50}
                                             onKeyDown={(e) => {
@@ -457,7 +457,7 @@ export function EmployeeFormDialog({
                             }
                             required
                             maxLength={16}
-                            autoComplete="off"
+                            autoComplete="tel"
                             placeholder="0812xxxxxxxx"
                             aria-invalid={!!form.errors.phone || undefined}
                         />

@@ -1,5 +1,5 @@
 import { Link, usePage, usePoll } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
     CalendarRange,
     CarFront,
@@ -61,57 +61,74 @@ export function AppSidebar() {
         }
     }, [isDashboard, start, stop]);
 
-    const from =
-        (page.props as { from?: string | null }).from ??
-        new URL(
-            page.url,
-            typeof window !== 'undefined'
-                ? window.location.origin
-                : 'http://localhost',
-        ).searchParams.get('from');
+    const fromProp = (page.props as { from?: string | null }).from;
+    const from = useMemo(() => {
+        if (fromProp) {
+            return fromProp;
+        }
 
-    const mainNavItems: NavItem[] = [
-        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-        {
-            title: 'Jadwal Armada',
-            href: schedule(),
-            icon: CalendarRange,
-            isActive: from === 'schedule' ? true : undefined,
-        },
-        {
-            title: 'Peminjaman',
-            href: bookings(),
-            icon: ClipboardList,
-            badge: <BookingAlertBadge alerts={alerts} />,
-            tooltip: bookingAlertTooltip(alerts),
-            isActive:
-                from === 'history' || from === 'schedule' ? false : undefined,
-        },
-        {
-            title: 'Riwayat',
-            href: history(),
-            icon: History,
-            isActive: from === 'history' ? true : undefined,
-        },
-        { title: 'Data Mobil', href: cars(), icon: CarFront },
-        { title: 'Data Pegawai', href: employees(), icon: Users },
-    ];
+        try {
+            return new URL(
+                page.url,
+                typeof window !== 'undefined'
+                    ? window.location.origin
+                    : 'http://localhost',
+            ).searchParams.get('from');
+        } catch {
+            return null;
+        }
+    }, [fromProp, page.url]);
+
+    const mainNavItems = useMemo<NavItem[]>(
+        () => [
+            { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+            {
+                title: 'Jadwal Armada',
+                href: schedule(),
+                icon: CalendarRange,
+                isActive: from === 'schedule' ? true : undefined,
+            },
+            {
+                title: 'Peminjaman',
+                href: bookings(),
+                icon: ClipboardList,
+                badge: <BookingAlertBadge alerts={alerts} />,
+                tooltip: bookingAlertTooltip(alerts),
+                isActive:
+                    from === 'history' || from === 'schedule'
+                        ? false
+                        : undefined,
+            },
+            {
+                title: 'Riwayat',
+                href: history(),
+                icon: History,
+                isActive: from === 'history' ? true : undefined,
+            },
+            { title: 'Data Mobil', href: cars(), icon: CarFront },
+            { title: 'Data Pegawai', href: employees(), icon: Users },
+        ],
+        [from, alerts],
+    );
 
     // Menyembunyikan menu hanya untuk kenyamanan; hak akses tetap dicek di server.
-    const managerNavItems: NavItem[] = [
-        ...(auth.can.manageStaff
-            ? [{ title: 'Kelola Petugas', href: staff(), icon: UserCog }]
-            : []),
-        ...(auth.can.viewActivityLog
-            ? [
-                  {
-                      title: 'Log Aktivitas',
-                      href: activityLog(),
-                      icon: ScrollText,
-                  },
-              ]
-            : []),
-    ];
+    const managerNavItems = useMemo<NavItem[]>(
+        () => [
+            ...(auth.can.manageStaff
+                ? [{ title: 'Kelola Petugas', href: staff(), icon: UserCog }]
+                : []),
+            ...(auth.can.viewActivityLog
+                ? [
+                      {
+                          title: 'Log Aktivitas',
+                          href: activityLog(),
+                          icon: ScrollText,
+                      },
+                  ]
+                : []),
+        ],
+        [auth.can.manageStaff, auth.can.viewActivityLog],
+    );
 
     return (
         <Sidebar collapsible="icon" variant="inset">

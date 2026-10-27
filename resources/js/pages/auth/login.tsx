@@ -38,7 +38,6 @@ export default function Login({ status }: Props) {
                                     name="email"
                                     required
                                     autoFocus
-                                    tabIndex={1}
                                     autoComplete="email"
                                     autoCapitalize="none"
                                     spellCheck={false}
@@ -53,7 +52,6 @@ export default function Login({ status }: Props) {
                                     id="password"
                                     name="password"
                                     required
-                                    tabIndex={2}
                                     autoComplete="current-password"
                                     placeholder="Password"
                                 />
@@ -61,18 +59,13 @@ export default function Login({ status }: Props) {
                             </div>
 
                             <div className="flex items-center space-x-3">
-                                <Checkbox
-                                    id="remember"
-                                    name="remember"
-                                    tabIndex={3}
-                                />
+                                <Checkbox id="remember" name="remember" />
                                 <Label htmlFor="remember">Ingat saya</Label>
                             </div>
 
                             <LoadingButton
                                 type="submit"
                                 className="w-full"
-                                tabIndex={4}
                                 loading={processing}
                                 data-test="login-button"
                             >
@@ -87,7 +80,6 @@ export default function Login({ status }: Props) {
 }
 
 Login.layout = {
-    title: 'Masuk ke akun Anda',
-    description:
-        'Masukkan email dan password akun petugas Anda untuk mengakses sistem.',
+    title: 'Sistem Peminjaman Mobil',
+    description: 'Masukkan Email dan Password Anda untuk mengakses sistem.',
 };

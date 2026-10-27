@@ -95,7 +95,7 @@ export default function EmployeeIndex({
                             onAction={handleAction}
                         />
                     )}
-                    searchPlaceholder="Cari nama, no HP, atau divisi..."
+                    searchPlaceholder="Cari nama, no HP, atau divisi…"
                     filterGroups={[
                         {
                             key: 'division',

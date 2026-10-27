@@ -89,9 +89,13 @@ export default function BookingFormPage({
     });
     // Batas pilihan di kalender; aturan sebenarnya divalidasi server
     // (AGENTS.md 5.11).
-    const earliestStart = addMinutes(
-        toDateTimeLocal(new Date(), timezone),
-        -startToleranceMinutes,
+    const earliestStart = useMemo(
+        () =>
+            addMinutes(
+                toDateTimeLocal(new Date(), timezone),
+                -startToleranceMinutes,
+            ),
+        [startToleranceMinutes, timezone],
     );
     const [checkingCars, setCheckingCars] = useState(false);
 

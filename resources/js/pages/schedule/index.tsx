@@ -52,19 +52,34 @@ export default function ScheduleIndex({
     const nowLeft = nowPosition(now, week.start, week.end);
     const today = toDateTimeLocal(now).slice(0, 10);
     const lastDay = week.days[week.days.length - 1];
-    const weekLabel = `${formatDate(week.start)} – ${formatDate(`${lastDay}T12:00:00Z`)}`;
-    const weekQuery = new URL(url, 'http://localhost').searchParams.get('week');
-    const activeDate =
-        weekQuery && week.days.includes(weekQuery)
-            ? weekQuery
-            : week.days.includes(today)
-              ? today
-              : week.days[0];
-    const weekRangeLabel =
-        formatDateRange({
-            from: week.days[0],
-            to: lastDay,
-        }) ?? weekLabel;
+    const { weekLabel, weekRangeLabel, activeDate } = useMemo(() => {
+        const label = `${formatDate(week.start)} – ${formatDate(`${lastDay}T12:00:00Z`)}`;
+        let query: string | null = null;
+        try {
+            query = new URL(url, 'http://localhost').searchParams.get('week');
+        } catch {
+            query = null;
+        }
+
+        const active =
+            query && week.days.includes(query)
+                ? query
+                : week.days.includes(today)
+                  ? today
+                  : week.days[0];
+
+        const rangeLabel =
+            formatDateRange({
+                from: week.days[0],
+                to: lastDay,
+            }) ?? label;
+
+        return {
+            weekLabel: label,
+            weekRangeLabel: rangeLabel,
+            activeDate: active,
+        };
+    }, [formatDate, lastDay, today, url, week.days, week.start]);
     // Saat berpindah minggu, blok jadwal diganti skeleton (kolom mobil dan
     // header tetap) bila pemuatan lebih lama dari jeda anti-kedip.
     const [navigating, setNavigating] = useState(false);
@@ -112,6 +127,9 @@ export default function ScheduleIndex({
                                 <Link
                                     href={index()}
                                     preserveScroll
+                                    aria-current={
+                                        week.is_current ? 'page' : undefined
+                                    }
                                     {...trackNavigation}
                                 >
                                     Minggu ini

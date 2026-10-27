@@ -110,6 +110,7 @@ function TwoFactorSetupStep({
                                         type="text"
                                         readOnly
                                         value={manualSetupKey}
+                                        aria-label="Kode pengaturan manual"
                                         className="h-full w-full bg-background p-3 font-mono text-sm tracking-wider text-foreground outline-none select-all"
                                     />
                                     <button
@@ -122,6 +123,14 @@ function TwoFactorSetupStep({
                                             className="size-4"
                                             aria-hidden="true"
                                         />
+                                        <span
+                                            className="sr-only"
+                                            aria-live="polite"
+                                        >
+                                            {copiedText === manualSetupKey
+                                                ? 'Kode berhasil disalin'
+                                                : ''}
+                                        </span>
                                     </button>
                                 </>
                             )}

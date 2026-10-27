@@ -54,6 +54,11 @@ export function TemporaryPasswordDialog({ credentials, onClose }: Props) {
                     >
                         <CopyIcon className="size-4" aria-hidden="true" />
                         {copied ? 'Tersalin' : 'Salin'}
+                        <span className="sr-only" aria-live="polite">
+                            {copied
+                                ? 'Password sementara berhasil disalin'
+                                : ''}
+                        </span>
                     </button>
                 </div>
 

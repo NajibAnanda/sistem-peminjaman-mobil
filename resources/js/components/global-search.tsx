@@ -30,7 +30,11 @@ const SHORTCUT_KEY = 'k';
 
 function StatusMessage({ children }: { children: ReactNode }) {
     return (
-        <div className="flex items-center justify-center gap-2 px-3 py-6 text-center text-sm text-muted-foreground">
+        <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center justify-center gap-2 px-3 py-6 text-center text-sm text-muted-foreground"
+        >
             {children}
         </div>
     );
@@ -124,7 +128,7 @@ export function GlobalSearch() {
                                 setFocused(false);
                                 setExpanded(false);
                             }}
-                            placeholder="Cari..."
+                            placeholder="Cari…"
                             aria-label="Cari peminjaman, mobil, pegawai, atau petugas"
                             className="h-9 w-full min-w-0 rounded-lg border border-input bg-background py-1 pr-2.5 pl-8 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
                             data-test="global-search-input"
