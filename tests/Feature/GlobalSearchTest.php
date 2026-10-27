@@ -64,14 +64,14 @@ test('hasil hanya berisi field untuk tampilan dan tertaut ke halaman terkait', f
         ->not->toContain('two_factor');
 });
 
-test('peminjaman bisa dicari lewat kode, nama karyawan, dan plat nomor', function (Closure $term) {
+test('peminjaman bisa dicari lewat kode, nama pegawai, dan plat nomor', function (Closure $term) {
     $groups = searchGroups($this->actingAs(User::factory()->admin()->create())
         ->getJson(route('search', ['q' => $term->call($this)])));
 
     expect(collect($groups['bookings'] ?? [])->pluck('id')->all())->toContain($this->booking->id);
 })->with([
     'kode' => [fn () => $this->booking->code],
-    'nama karyawan' => [fn () => 'wahyuni'],
+    'nama pegawai' => [fn () => 'wahyuni'],
     'plat nomor' => [fn () => '1234 SRI'],
 ]);
 

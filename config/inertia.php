@@ -56,7 +56,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Bawaan paket mengaktifkan DevTools otomatis saat APP_ENV=local: setiap
-    | request (termasuk data karyawan & petugas) direkam ke disk dan bisa
+    | request (termasuk data pegawai & petugas) direkam ke disk dan bisa
     | dibaca lewat /_inertia/devtools tanpa login. PC kantor bisa saja masih
     | `local`, jadi di sini default-nya MATI. Nyalakan hanya sementara saat
     | debugging di laptop pengembang (INERTIA_DEVTOOLS_ENABLED=true).

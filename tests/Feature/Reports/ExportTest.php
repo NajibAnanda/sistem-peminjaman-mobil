@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
 const EXPORT_HEADINGS = [
-    'Kode Peminjaman', 'Nama Karyawan', 'Divisi', 'No HP', 'Mobil', 'Plat Nomor', 'Tujuan',
+    'Kode Peminjaman', 'Nama Pegawai', 'Divisi', 'No HP', 'Mobil', 'Plat Nomor', 'Tujuan',
     'Waktu Mulai', 'Rencana Kembali', 'Waktu Ambil', 'Waktu Kembali', 'Status',
     'Durasi Keterlambatan',
 ];

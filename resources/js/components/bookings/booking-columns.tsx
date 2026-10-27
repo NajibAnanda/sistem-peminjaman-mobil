@@ -28,7 +28,7 @@ export function useBookingColumns(): DataTableColumn<Booking>[] {
             },
             {
                 id: 'employee',
-                header: 'Karyawan',
+                header: 'Pegawai',
                 cell: (booking) => (
                     <TruncatedText
                         text={booking.employee.name}

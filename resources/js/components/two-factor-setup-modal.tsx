@@ -110,15 +110,18 @@ function TwoFactorSetupStep({
                                         type="text"
                                         readOnly
                                         value={manualSetupKey}
-                                        className="h-full w-full bg-background p-3 text-foreground outline-none"
+                                        className="h-full w-full bg-background p-3 font-mono text-sm tracking-wider text-foreground outline-none select-all"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => copy(manualSetupKey)}
-                                        className="border-l border-border px-3 hover:bg-muted"
+                                        className="border-l border-border px-3 transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
                                         aria-label="Salin kode"
                                     >
-                                        <IconComponent className="w-4" />
+                                        <IconComponent
+                                            className="size-4"
+                                            aria-hidden="true"
+                                        />
                                     </button>
                                 </>
                             )}
@@ -138,13 +141,6 @@ function TwoFactorVerificationStep({
     onBack: () => void;
 }) {
     const [code, setCode] = useState<string>('');
-    const pinInputContainerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        setTimeout(() => {
-            pinInputContainerRef.current?.querySelector('input')?.focus();
-        }, 0);
-    }, []);
 
     return (
         <Form
@@ -161,10 +157,7 @@ function TwoFactorVerificationStep({
                 errors?: { confirmTwoFactorAuthentication?: { code?: string } };
             }) => (
                 <>
-                    <div
-                        ref={pinInputContainerRef}
-                        className="relative w-full space-y-3"
-                    >
+                    <div className="relative w-full space-y-3">
                         <div className="flex w-full flex-col items-center space-y-3 py-2">
                             <InputOTP
                                 id="otp"
@@ -264,7 +257,7 @@ export default function TwoFactorSetupModal({
             return {
                 title: 'Verifikasi kode autentikasi',
                 description:
-                    'Masukkan kode 6 digit dari aplikasi autentikator Anda',
+                    'Masukkan kode 6 digit dari aplikasi autentikator Anda.',
                 buttonText: 'Lanjutkan',
             };
         }
@@ -272,7 +265,7 @@ export default function TwoFactorSetupModal({
         return {
             title: 'Aktifkan autentikasi dua faktor',
             description:
-                'Pindai kode QR atau masukkan kode pengaturan di aplikasi autentikator (mis. Google Authenticator) untuk menyelesaikan pengaktifan',
+                'Pindai kode QR atau masukkan kode pengaturan di aplikasi autentikator (mis. Google Authenticator) untuk menyelesaikan pengaktifan.',
             buttonText: 'Lanjutkan',
         };
     }, [twoFactorEnabled, showVerificationStep]);

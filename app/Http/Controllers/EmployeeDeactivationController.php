@@ -15,6 +15,6 @@ final class EmployeeDeactivationController extends Controller
     {
         $employee = $action->handle($employee, $request->user());
 
-        return back()->with('success', "Karyawan {$employee->name} dinonaktifkan.");
+        return back()->with('success', "Pegawai {$employee->name} dinonaktifkan.");
     }
 }

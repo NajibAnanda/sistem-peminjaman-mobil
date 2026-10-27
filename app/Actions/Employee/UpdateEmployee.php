@@ -34,7 +34,7 @@ final class UpdateEmployee
                         'old' => array_intersect_key($before, array_flip($changed)),
                         'attributes' => $employee->only($changed),
                     ])
-                    ->log("Mengubah data karyawan {$employee->name}");
+                    ->log("Mengubah data pegawai {$employee->name}");
             }
 
             return $employee;

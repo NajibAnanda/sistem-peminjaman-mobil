@@ -40,7 +40,7 @@ final class DivisionController extends Controller
         $employeeCount = Employee::query()->where('division', $name)->count();
 
         if ($employeeCount > 0) {
-            return back()->with('error', "Divisi {$name} tidak dapat dihapus karena masih digunakan oleh {$employeeCount} karyawan.");
+            return back()->with('error', "Divisi {$name} tidak dapat dihapus karena masih digunakan oleh {$employeeCount} pegawai.");
         }
 
         Division::query()->where('name', $name)->delete();

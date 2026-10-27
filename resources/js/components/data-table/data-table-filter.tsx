@@ -65,7 +65,7 @@ export function DataTableFilter({ table, groups }: Props) {
                         <Fragment key={group.key}>
                             {index > 0 && <DropdownMenuSeparator />}
                             {group.submenu ? (
-                                // Daftar panjang (mis. karyawan) dibuka di submenu
+                                // Daftar panjang (mis. pegawai) dibuka di submenu
                                 // bergulir; ketik huruf awal untuk melompat.
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger>

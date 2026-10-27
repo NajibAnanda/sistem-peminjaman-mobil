@@ -24,7 +24,7 @@ enum ActivityLogName: string
         return match ($this) {
             self::Staff => 'Akun Petugas',
             self::Car => 'Data Mobil',
-            self::Employee => 'Data Karyawan',
+            self::Employee => 'Data Pegawai',
             self::Booking => 'Peminjaman',
             self::Report => 'Laporan',
         };

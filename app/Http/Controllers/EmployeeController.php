@@ -67,13 +67,13 @@ final class EmployeeController extends Controller
     {
         $employee = $action->handle($request->employeeData(), $request->user());
 
-        return back()->with('success', "Karyawan {$employee->name} berhasil ditambahkan.");
+        return back()->with('success', "Pegawai {$employee->name} berhasil ditambahkan.");
     }
 
     public function update(UpdateEmployeeRequest $request, Employee $employee, UpdateEmployee $action): RedirectResponse
     {
         $action->handle($employee, $request->employeeData(), $request->user());
 
-        return back()->with('success', 'Data karyawan berhasil diperbarui.');
+        return back()->with('success', 'Data pegawai berhasil diperbarui.');
     }
 }

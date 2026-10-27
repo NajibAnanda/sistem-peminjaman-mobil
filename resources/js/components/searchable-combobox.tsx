@@ -45,7 +45,7 @@ type Props = {
 
 /**
  * Kotak pilihan yang dapat dicari (shadcn command + popover), dipakai untuk
- * memilih karyawan dan mobil (prd.md 11.5).
+ * memilih pegawai dan mobil (prd.md 11.5).
  */
 export function SearchableCombobox({
     id,

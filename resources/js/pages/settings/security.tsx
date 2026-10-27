@@ -28,7 +28,7 @@ export default function Security(props: Props) {
 
             {props.twoFactorRequired && !props.twoFactorEnabled && (
                 <Alert>
-                    <ShieldAlert />
+                    <ShieldAlert className="size-4" aria-hidden="true" />
                     <AlertTitle>Autentikasi dua faktor wajib</AlertTitle>
                     <AlertDescription>
                         Akun Pengelola wajib mengaktifkan autentikasi dua faktor
@@ -85,7 +85,10 @@ export default function Security(props: Props) {
                                     name="current_password"
                                     required
                                     autoComplete="current-password"
-                                    placeholder="Password saat ini"
+                                    placeholder="Password saat ini…"
+                                    aria-invalid={
+                                        !!errors.current_password || undefined
+                                    }
                                 />
                             </FormField>
 
@@ -101,8 +104,11 @@ export default function Security(props: Props) {
                                     name="password"
                                     required
                                     autoComplete="new-password"
-                                    placeholder="Password baru"
+                                    placeholder="Password baru…"
                                     passwordrules={props.passwordRules}
+                                    aria-invalid={
+                                        !!errors.password || undefined
+                                    }
                                 />
                             </FormField>
 
@@ -117,8 +123,12 @@ export default function Security(props: Props) {
                                     name="password_confirmation"
                                     required
                                     autoComplete="new-password"
-                                    placeholder="Ulangi password baru"
+                                    placeholder="Ulangi password baru…"
                                     passwordrules={props.passwordRules}
+                                    aria-invalid={
+                                        !!errors.password_confirmation ||
+                                        undefined
+                                    }
                                 />
                             </FormField>
                         </FormGrid>

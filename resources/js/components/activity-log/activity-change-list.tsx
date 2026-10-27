@@ -21,7 +21,7 @@ export function ActivityChangeList({ changes }: Props) {
                     className="grid gap-0.5 sm:grid-cols-[10rem_1fr] sm:gap-3"
                 >
                     <dt className="text-muted-foreground">{change.label}</dt>
-                    <dd className="flex min-w-0 flex-wrap items-center gap-1.5 break-words">
+                    <dd className="flex min-w-0 flex-wrap items-center gap-1.5 wrap-break-word">
                         {change.old !== null || change.new === null ? (
                             <>
                                 <span className="text-muted-foreground line-through decoration-muted-foreground/50">

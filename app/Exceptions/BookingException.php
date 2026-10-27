@@ -53,7 +53,7 @@ final class BookingException extends BusinessRuleException
 
     public static function employeeInactiveAtPickup(string $name): self
     {
-        return new self("Karyawan {$name} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti karyawannya lewat Edit Jadwal.");
+        return new self("Pegawai {$name} sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti pegawainya lewat Edit Jadwal.");
     }
 
     public static function carInactiveAtPickup(Car|string $car): self
@@ -90,7 +90,7 @@ final class BookingException extends BusinessRuleException
 
     public static function employeeInactive(string $name): self
     {
-        return (new self("Karyawan {$name} sudah nonaktif sehingga tidak dapat dijadwalkan."))->forField('employee_id');
+        return (new self("Pegawai {$name} sudah nonaktif sehingga tidak dapat dijadwalkan."))->forField('employee_id');
     }
 
     public static function carUnderMaintenance(Car|string $car): self

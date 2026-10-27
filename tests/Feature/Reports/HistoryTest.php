@@ -100,12 +100,12 @@ test('pencarian dan filter riwayat mengembalikan data yang benar', function (Clo
         ->assertInertia(fn (Assert $page) => expect(historyCodes($page))->toBe($expected));
 })->with([
     'cari kode' => [fn () => ['search' => '202609-9002'], ['PMJ-202609-9002']],
-    'cari nama karyawan' => [fn () => ['search' => 'rina'], ['PMJ-202609-9001', 'PMJ-202610-9002', 'PMJ-202610-9003']],
+    'cari nama pegawai' => [fn () => ['search' => 'rina'], ['PMJ-202609-9001', 'PMJ-202610-9002', 'PMJ-202610-9003']],
     'cari plat' => [fn () => ['search' => '2222'], ['PMJ-202609-9002', 'PMJ-202610-9002']],
     'status selesai' => [fn () => ['status' => ['completed']], ['PMJ-202609-9001', 'PMJ-202609-9002']],
     'status dibatalkan & terlambat' => [fn () => ['status' => ['cancelled', 'overdue']], ['PMJ-202610-9001', 'PMJ-202610-9002']],
     'mobil' => [fn () => ['car' => [(string) $this->carA->id]], ['PMJ-202609-9001', 'PMJ-202610-9001', 'PMJ-202610-9003']],
-    'karyawan' => [fn () => ['employee' => [(string) $this->budi->id]], ['PMJ-202609-9002', 'PMJ-202610-9001']],
+    'pegawai' => [fn () => ['employee' => [(string) $this->budi->id]], ['PMJ-202609-9002', 'PMJ-202610-9001']],
     'divisi' => [fn () => ['division' => ['Keuangan']], ['PMJ-202609-9001', 'PMJ-202610-9002', 'PMJ-202610-9003']],
     'terlambat kembali (termasuk yang masih terlambat)' => [fn () => ['lateness' => ['late']], ['PMJ-202609-9001', 'PMJ-202610-9002']],
     'tepat waktu' => [fn () => ['lateness' => ['on_time']], ['PMJ-202609-9002']],

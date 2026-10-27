@@ -43,7 +43,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
             <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
                 <nav
-                    className="flex gap-1 lg:w-48 lg:shrink-0 lg:flex-col"
+                    className="flex gap-1 overflow-x-auto pb-1 lg:w-48 lg:shrink-0 lg:flex-col lg:overflow-visible lg:pb-0"
                     aria-label="Pengaturan"
                 >
                     {sidebarNavItems.map((item, index) => (

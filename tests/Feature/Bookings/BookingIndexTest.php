@@ -75,7 +75,7 @@ test('pencarian dan filter status mengembalikan data yang benar', function (arra
         ->assertInertia(fn (Assert $page) => expect(bookingCodes($page))->toBe($expected));
 })->with([
     'cari kode' => [['search' => '0002'], ['PMJ-202609-0002']],
-    'cari nama karyawan' => [['search' => 'rina'], ['PMJ-202609-0001']],
+    'cari nama pegawai' => [['search' => 'rina'], ['PMJ-202609-0001']],
     'cari no HP peminjam' => [['search' => '087777'], ['PMJ-202609-0001']],
     'cari plat' => [['search' => '4321'], ['PMJ-202609-0003']],
     'kode selesai tidak muncul' => [['search' => '0005'], []],

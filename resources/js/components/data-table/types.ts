@@ -32,7 +32,7 @@ export type DataTableFilterGroup = {
     key: string;
     label: string;
     options: Option[];
-    /** Tampilkan sebagai submenu bergulir untuk daftar panjang (mis. karyawan). */
+    /** Tampilkan sebagai submenu bergulir untuk daftar panjang (mis. pegawai). */
     submenu?: boolean;
 };
 

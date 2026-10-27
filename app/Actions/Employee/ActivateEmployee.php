@@ -29,7 +29,7 @@ final class ActivateEmployee
                 ->causedBy($actor)
                 ->event(ActivityEvent::Activated->value)
                 ->withChanges(['old' => ['is_active' => false], 'attributes' => ['is_active' => true]])
-                ->log("Mengaktifkan karyawan {$employee->name}");
+                ->log("Mengaktifkan pegawai {$employee->name}");
 
             return $employee;
         });

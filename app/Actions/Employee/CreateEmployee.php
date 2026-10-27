@@ -25,7 +25,7 @@ final class CreateEmployee
                 ->causedBy($actor)
                 ->event(ActivityEvent::Created->value)
                 ->withChanges(['attributes' => $employee->only(['name', 'division', 'phone'])])
-                ->log("Menambah karyawan {$employee->name}");
+                ->log("Menambah pegawai {$employee->name}");
 
             return $employee;
         });

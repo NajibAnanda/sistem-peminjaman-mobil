@@ -8,7 +8,7 @@ use App\Models\Employee;
 use App\Models\User;
 
 /**
- * Data Karyawan boleh dikelola Pengelola dan Admin (prd.md section 9). Akun
+ * Data Pegawai boleh dikelola Pengelola dan Admin (prd.md section 9). Akun
  * nonaktif sudah dikeluarkan oleh middleware sebelum sampai ke sini.
  */
 final class EmployeePolicy

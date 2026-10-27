@@ -7,7 +7,7 @@ namespace App\Enums;
 use App\Enums\Concerns\HasOptions;
 
 /**
- * Nilai filter status aktif/nonaktif pada tabel (akun petugas, karyawan).
+ * Nilai filter status aktif/nonaktif pada tabel (akun petugas, pegawai).
  * Bukan kolom tersimpan: data menyimpan boolean `is_active`.
  */
 enum ActiveStatus: string

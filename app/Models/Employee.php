@@ -45,7 +45,7 @@ final class Employee extends Model
     }
 
     /**
-     * Pencarian dan filter tabel Data Karyawan (pola tabel standar).
+     * Pencarian dan filter tabel Data Pegawai (pola tabel standar).
      *
      * @param  Builder<self>  $query
      */

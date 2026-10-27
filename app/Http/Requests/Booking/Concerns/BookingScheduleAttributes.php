@@ -25,7 +25,7 @@ trait BookingScheduleAttributes
         $startRules = ['required', 'date'];
 
         // AGENTS.md 5.11: waktu mulai tidak boleh di masa lalu, kecuali dalam
-        // toleransi untuk karyawan yang datang langsung.
+        // toleransi untuk pegawai yang datang langsung.
         if ($checkStartTolerance) {
             $startRules[] = 'after_or_equal:'.$this->earliestStart()->format('Y-m-d H:i:s');
         }

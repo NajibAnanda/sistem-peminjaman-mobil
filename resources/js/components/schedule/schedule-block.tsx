@@ -17,7 +17,7 @@ export const ROW_PADDING_PX = 6;
 
 /**
  * Di bawah lebar ini (± 10 jam, sekitar 50 px pada layar laptop) nama
- * karyawan hanya akan tampil sebagai satu-dua huruf terpotong.
+ * pegawai hanya akan tampil sebagai satu-dua huruf terpotong.
  */
 const MIN_LABEL_WIDTH_PERCENT = 6;
 
@@ -28,7 +28,7 @@ type Props = {
 
 /**
  * Satu peminjaman di Jadwal Armada. Warna mengikuti status (StatusBadge) dan
- * disertai nama karyawan (atau tooltip untuk blok sempit), sehingga tidak
+ * disertai nama pegawai (atau tooltip untuk blok sempit), sehingga tidak
  * bergantung pada warna saja.
  */
 export const ScheduleBlock = memo(function ScheduleBlock({

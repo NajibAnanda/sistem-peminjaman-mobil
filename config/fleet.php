@@ -6,10 +6,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Divisi Karyawan
+    | Divisi Pegawai
     |--------------------------------------------------------------------------
     |
-    | Pilihan divisi yang valid untuk data karyawan. Untuk menambah divisi,
+    | Pilihan divisi yang valid untuk data pegawai. Untuk menambah divisi,
     | cukup tambahkan nama baru ke daftar ini.
     |
     */
@@ -62,7 +62,7 @@ return [
     | Peminjaman
     |--------------------------------------------------------------------------
     |
-    | Toleransi waktu mulai di masa lalu (untuk karyawan yang datang langsung
+    | Toleransi waktu mulai di masa lalu (untuk pegawai yang datang langsung
     | saat jadwal dicatat), durasi minimal satu peminjaman, serta panjang
     | minimal tujuan dan alasan pembatalan/perpanjangan.
     |

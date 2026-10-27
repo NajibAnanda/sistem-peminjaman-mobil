@@ -65,7 +65,7 @@ trait FiltersHistory
     }
 
     /**
-     * Semua karyawan, termasuk yang nonaktif, karena riwayatnya tetap ada.
+     * Semua pegawai, termasuk yang nonaktif, karena riwayatnya tetap ada.
      *
      * @return list<array{value: string, label: string}>
      */

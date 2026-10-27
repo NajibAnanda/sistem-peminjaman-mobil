@@ -31,7 +31,7 @@ export function useHistoryColumns(): DataTableColumn<HistoryBooking>[] {
         },
         {
             id: 'employee',
-            header: 'Karyawan',
+            header: 'Pegawai',
             cell: (booking) => (
                 <TruncatedText
                     text={booking.employee.name}

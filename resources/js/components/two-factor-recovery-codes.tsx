@@ -1,8 +1,10 @@
-import { Form } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Eye, EyeOff, LockKeyhole, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import AlertError from '@/components/alert-error';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { LoadingButton } from '@/components/loading-button';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -25,6 +27,8 @@ export default function TwoFactorRecoveryCodes({
 }: Props) {
     const [codesAreVisible, setCodesAreVisible] = useState<boolean>(false);
     const [fetchingCodes, setFetchingCodes] = useState(false);
+    const [confirmRegenerateOpen, setConfirmRegenerateOpen] = useState(false);
+    const [regenerating, setRegenerating] = useState(false);
     const codesSectionRef = useRef<HTMLDivElement | null>(null);
     const canRegenerateCodes = recoveryCodesList.length > 0 && codesAreVisible;
 
@@ -51,11 +55,21 @@ export default function TwoFactorRecoveryCodes({
         }
     }, [codesAreVisible, recoveryCodesList.length, fetchRecoveryCodes]);
 
-    useEffect(() => {
-        if (!recoveryCodesList.length) {
-            void fetchRecoveryCodes();
-        }
-    }, [recoveryCodesList.length, fetchRecoveryCodes]);
+    const handleRegenerate = useCallback(() => {
+        router.post(
+            regenerateRecoveryCodes.url(),
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setRegenerating(true),
+                onSuccess: async () => {
+                    await fetchRecoveryCodes();
+                    setConfirmRegenerateOpen(false);
+                },
+                onFinish: () => setRegenerating(false),
+            },
+        );
+    }, [fetchRecoveryCodes]);
 
     const RecoveryCodeIconComponent = codesAreVisible ? EyeOff : Eye;
 
@@ -89,22 +103,15 @@ export default function TwoFactorRecoveryCodes({
                     </LoadingButton>
 
                     {canRegenerateCodes && (
-                        <Form
-                            {...regenerateRecoveryCodes.form()}
-                            options={{ preserveScroll: true }}
-                            onSuccess={fetchRecoveryCodes}
+                        <Button
+                            variant="secondary"
+                            type="button"
+                            onClick={() => setConfirmRegenerateOpen(true)}
+                            aria-describedby="regenerate-warning"
                         >
-                            {({ processing }) => (
-                                <LoadingButton
-                                    variant="secondary"
-                                    type="submit"
-                                    loading={processing}
-                                    aria-describedby="regenerate-warning"
-                                >
-                                    <RefreshCw /> Buat ulang kode
-                                </LoadingButton>
-                            )}
-                        </Form>
+                            <RefreshCw className="size-4" aria-hidden="true" />{' '}
+                            Buat ulang kode
+                        </Button>
                     )}
                 </div>
                 <div
@@ -167,6 +174,16 @@ export default function TwoFactorRecoveryCodes({
                     </div>
                 </div>
             </CardContent>
+
+            <ConfirmDialog
+                open={confirmRegenerateOpen}
+                onOpenChange={setConfirmRegenerateOpen}
+                title="Buat ulang kode pemulihan?"
+                description="Semua kode pemulihan sebelumnya tidak akan berlaku lagi setelah kode baru dibuat. Pastikan Anda menyimpan kode baru di tempat yang aman."
+                confirmLabel="Buat ulang kode"
+                onConfirm={handleRegenerate}
+                processing={regenerating}
+            />
         </Card>
     );
 }

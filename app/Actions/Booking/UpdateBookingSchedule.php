@@ -24,7 +24,7 @@ final class UpdateBookingSchedule
     private const LOGGED_ATTRIBUTES = ['employee_id', 'car_id', 'purpose', 'start_at', 'planned_return_at'];
 
     /**
-     * AGENTS.md 5.13: hanya saat Dijadwalkan; boleh mengganti mobil, karyawan,
+     * AGENTS.md 5.13: hanya saat Dijadwalkan; boleh mengganti mobil, pegawai,
      * waktu, dan tujuan. Cek bentrok dijalankan ulang bila mobil atau waktu
      * berubah. (Toleransi waktu mulai divalidasi di UpdateBookingRequest.)
      *

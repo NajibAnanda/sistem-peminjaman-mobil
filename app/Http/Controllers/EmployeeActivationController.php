@@ -15,6 +15,6 @@ final class EmployeeActivationController extends Controller
     {
         $employee = $action->handle($employee, $request->user());
 
-        return back()->with('success', "Karyawan {$employee->name} diaktifkan kembali.");
+        return back()->with('success', "Pegawai {$employee->name} diaktifkan kembali.");
     }
 }

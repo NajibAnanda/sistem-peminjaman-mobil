@@ -58,7 +58,7 @@ trait EmployeeAttributes
     {
         return [
             'phone.regex' => 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.',
-            'phone.unique' => 'No HP sudah dipakai karyawan lain.',
+            'phone.unique' => 'No HP sudah dipakai pegawai lain.',
         ];
     }
 

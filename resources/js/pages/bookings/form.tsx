@@ -40,7 +40,7 @@ function rangeKey(start: string, end: string): string {
     return start !== '' && end !== '' && end > start ? `${start}|${end}` : '';
 }
 
-/** Hanya karyawan aktif yang dikirim server; yang nonaktif disembunyikan. */
+/** Hanya pegawai aktif yang dikirim server; yang nonaktif disembunyikan. */
 function employeeOptions(employees: EmployeeOption[]): ComboboxOption[] {
     return employees.map((employee) => ({
         value: employee.id,
@@ -176,8 +176,8 @@ export default function BookingFormPage({
                     }
                     description={
                         booking
-                            ? 'Ubah karyawan, mobil, waktu, atau tujuan selama mobil belum diserahterimakan kepada karyawan.'
-                            : 'Catat permintaan peminjaman karyawan. Pilih waktu terlebih dahulu untuk melihat ketersediaan mobil.'
+                            ? 'Ubah pegawai, mobil, waktu, atau tujuan selama mobil belum diserahterimakan kepada pegawai.'
+                            : 'Catat permintaan peminjaman pegawai. Pilih waktu terlebih dahulu untuk melihat ketersediaan mobil.'
                     }
                 />
 
@@ -222,7 +222,7 @@ export default function BookingFormPage({
                         <FormGrid>
                             <FormField
                                 id="booking-employee"
-                                label="Karyawan"
+                                label="Pegawai"
                                 required
                                 error={form.errors.employee_id}
                                 span="full"
@@ -234,9 +234,9 @@ export default function BookingFormPage({
                                     onChange={(id) =>
                                         form.setData('employee_id', id)
                                     }
-                                    placeholder="Pilih karyawan"
+                                    placeholder="Pilih pegawai"
                                     searchPlaceholder="Cari nama, no HP, atau divisi…"
-                                    emptyText="Karyawan tidak ditemukan."
+                                    emptyText="Pegawai tidak ditemukan."
                                     invalid={!!form.errors.employee_id}
                                 />
                             </FormField>
@@ -246,7 +246,7 @@ export default function BookingFormPage({
                                 label="Waktu mulai"
                                 required
                                 error={form.errors.start_at}
-                                hint={`Paling awal ${startToleranceMinutes} menit sebelum sekarang, untuk karyawan yang datang langsung.`}
+                                hint={`Paling awal ${startToleranceMinutes} menit sebelum sekarang, untuk pegawai yang datang langsung.`}
                             >
                                 <DateTimePicker
                                     id="booking-start"

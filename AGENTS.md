@@ -7,13 +7,13 @@ Sumber kebenaran kebutuhan produk adalah **`prd.md`**. Jika ada konflik antara p
 
 ## 1. Ringkasan Project
 
-Sistem peminjaman mobil dinas internal yang **hanya dioperasikan petugas GA** (role `manager` = "Pengelola" dan `admin` = "Admin"). Karyawan peminjam **tidak login**; mereka hanya data master.
+Sistem peminjaman mobil dinas internal yang **hanya dioperasikan petugas GA** (role `manager` = "Pengelola" dan `admin` = "Admin"). Pegawai peminjam **tidak login**; mereka hanya data master.
 
 Alur inti: **Dijadwalkan → Aktif (serah terima ambil, 1 foto) → Selesai (serah terima kembali, 1 foto)**, dengan cabang **Dibatalkan** dan **Perpanjangan**. Status *Terlambat* dan *Belum Diambil* **dihitung, tidak disimpan**.
 
 Berjalan lokal di PC kantor (Laragon, Windows), tetapi **harus selalu siap deploy ke server hanya dengan mengganti `.env`**.
 
-Hal yang **tidak ada** di sistem ini dan **tidak boleh ditambahkan tanpa permintaan eksplisit**: login karyawan, registrasi, lupa password lewat email, verifikasi email, passkey, approve/tolak, odometer, jarak tempuh, tanda tangan digital, notifikasi WhatsApp/email, ekspor PDF.
+Hal yang **tidak ada** di sistem ini dan **tidak boleh ditambahkan tanpa permintaan eksplisit**: login pegawai, registrasi, lupa password lewat email, verifikasi email, passkey, approve/tolak, odometer, jarak tempuh, tanda tangan digital, notifikasi WhatsApp/email, ekspor PDF.
 
 ---
 
@@ -156,25 +156,25 @@ Satu controller per resource; untuk aksi non-CRUD gunakan controller terpisah sa
    - Selesai terlambat: `completed` dan `returned_at > planned_return_at`
 3. **Bentrok jadwal:** `new.start_at < existing.end AND new.planned_return_at > existing.start_at`, hanya terhadap `scheduled`/`active`. Untuk `active` yang terlambat, `existing.end = now()`. Selalu dalam `DB::transaction()` dengan `lockForUpdate()` pada baris mobil. Berlaku untuk jadwal baru, edit jadwal, dan perpanjangan. Konsekuensi yang disengaja: jadwal mendatang untuk mobil yang sedang terlambat tetap boleh (dengan peringatan FR-23), tetapi serah terima ambilnya ditolak sampai mobil kembali (aturan 12).
 4. **Status tampilan mobil diturunkan:** Nonaktif → Maintenance → Dipinjam (ada booking `active`) → Tersedia. Kolom `cars.operational_status` hanya `operational`/`maintenance`. Jangan menambahkan kolom "dipinjam".
-5. **Tidak ada hard delete** untuk booking, foto bukti, karyawan, mobil, akun petugas, atau log. Gunakan `is_active`. Foreign key memakai `restrictOnDelete()`.
-6. Karyawan/mobil dengan booking `scheduled`/`active` **tidak boleh dinonaktifkan**.
+5. **Tidak ada hard delete** untuk booking, foto bukti, pegawai, mobil, akun petugas, atau log. Gunakan `is_active`. Foreign key memakai `restrictOnDelete()`.
+6. Pegawai/mobil dengan booking `scheduled`/`active` **tidak boleh dinonaktifkan**.
 7. Minimal **1 akun `manager` aktif** harus selalu ada; Pengelola tidak bisa menonaktifkan dirinya sendiri.
 8. Waktu dari server (`now()`), zona waktu `Asia/Jakarta` lewat `APP_TIMEZONE` (dibaca `config/app.php`). Bandingkan waktu dengan `now()` dari PHP yang di-bind ke query, bukan `NOW()` SQL, agar tidak bergantung pada zona waktu MySQL. Timestamp foto = waktu server saat disimpan.
 9. Kode booking unik `PMJ-YYYYMM-NNNN`, dibuat di dalam transaksi.
 10. Setiap aksi yang mengubah data dicatat ke activity log (siapa, apa, kapan, nilai sebelum/sesudah bila relevan). Pencatatan dimulai sejak Fase 2; halaman Log Aktivitas dibuat di Fase 6.
-11. **Waktu mulai:** tidak boleh lebih awal dari `now()` dikurangi toleransi di `config/fleet.php` (default 15 menit). Berlaku untuk jadwal baru, dan untuk edit jadwal **hanya bila `start_at` diubah** — booking Belum Diambil tetap bisa diedit (tujuan, karyawan, mobil, rencana kembali) tanpa mengubah `start_at`.
+11. **Waktu mulai:** tidak boleh lebih awal dari `now()` dikurangi toleransi di `config/fleet.php` (default 15 menit). Berlaku untuk jadwal baru, dan untuk edit jadwal **hanya bila `start_at` diubah** — booking Belum Diambil tetap bisa diedit (tujuan, pegawai, mobil, rencana kembali) tanpa mengubah `start_at`.
 12. **Serah terima ambil** boleh sebelum `start_at` (`start_at` tetap rencana, `picked_up_at` = waktu aktual), tetapi **ditolak** bila mobil `maintenance` atau mobil masih memiliki booking `active` lain (peminjaman sebelumnya belum dikembalikan).
-13. **Edit jadwal** (hanya `scheduled`) boleh mengganti mobil, karyawan, `start_at`, `planned_return_at`, dan tujuan. Cek bentrok dijalankan ulang setiap kali `car_id`, `start_at`, atau `planned_return_at` berubah; nilai sebelum/sesudah dicatat di activity log.
+13. **Edit jadwal** (hanya `scheduled`) boleh mengganti mobil, pegawai, `start_at`, `planned_return_at`, dan tujuan. Cek bentrok dijalankan ulang setiap kali `car_id`, `start_at`, atau `planned_return_at` berubah; nilai sebelum/sesudah dicatat di activity log.
 14. **Perpanjangan:** rencana kembali baru wajib `>` `planned_return_at` saat ini. Tidak boleh memperpendek.
 15. **Foto referensi mobil** boleh menyusul (0–2 foto). Slot kosong menampilkan placeholder, dan mobil diberi penanda "Foto belum lengkap" di daftar dan detail.
 16. **Plat nomor** disimpan dalam satu format baku: huruf besar dengan spasi pemisah (`App\Support\PlateNumber::normalize`, mis. "B 1234 ABC"), divalidasi pola Indonesia (kode wilayah 1–2 huruf, 1–4 angka, akhiran 0–3 huruf), dan keunikan dicek pada format baku itu. Tampilkan nilai baku yang tersimpan apa adanya di **semua** tempat (tabel, detail, dropdown, laporan Excel/CSV); jangan memformat ulang di frontend.
-17. **Data karyawan:** NIP wajib, unik, hanya A–Z/a–z/0–9 tanpa spasi (`alpha_num:ascii`), maks. 30 karakter, tanpa pola khusus; dinormalisasi ke **huruf besar** sebelum validasi unik dan disimpan huruf besar. No HP wajib, diterima sebagai `08xx` atau `+62xx`, dinormalisasi dan disimpan sebagai `08xx`; panjang 10–15 digit dihitung **setelah** normalisasi.
-18. **Satu karyawan, satu peminjaman pada satu waktu:** karyawan tidak boleh memiliki dua peminjaman `scheduled`/`active` yang waktunya tumpang tindih (rumus bentrok sama dengan aturan 3), meskipun mobilnya berbeda. Dicek di jadwal baru, edit jadwal (bila karyawan atau waktu berubah), dan perpanjangan, dengan `lockForUpdate()` pada baris karyawan.
+17. **Data pegawai:** NIP wajib, unik, hanya A–Z/a–z/0–9 tanpa spasi (`alpha_num:ascii`), maks. 30 karakter, tanpa pola khusus; dinormalisasi ke **huruf besar** sebelum validasi unik dan disimpan huruf besar. No HP wajib, diterima sebagai `08xx` atau `+62xx`, dinormalisasi dan disimpan sebagai `08xx`; panjang 10–15 digit dihitung **setelah** normalisasi.
+18. **Satu pegawai, satu peminjaman pada satu waktu:** pegawai tidak boleh memiliki dua peminjaman `scheduled`/`active` yang waktunya tumpang tindih (rumus bentrok sama dengan aturan 3), meskipun mobilnya berbeda. Dicek di jadwal baru, edit jadwal (bila pegawai atau waktu berubah), dan perpanjangan, dengan `lockForUpdate()` pada baris pegawai.
 19. **Durasi peminjaman** (waktu mulai → rencana kembali, termasuk setelah perpanjangan) minimal `fleet.booking.min_duration_minutes` (30 menit). **Tidak ada batas maksimal** kecuali `FLEET_MAX_BOOKING_DAYS` diisi di `.env` (bawaan kosong = tanpa batas); bila diisi, server menolak lewat `App\Support\BookingDuration`. Durasi di atas `FLEET_LONG_BOOKING_WARNING_DAYS` (7 hari) hanya memunculkan dialog konfirmasi di frontend ("Durasi peminjaman X. Pastikan tanggal sudah benar." — "Periksa lagi" / "Ya, simpan", hook `useLongBookingConfirm`) dan tidak memblokir. Tujuan minimal `purpose_min_length` (5) karakter; alasan pembatalan/perpanjangan minimal `reason_min_length` (10) karakter.
-20. **Serah terima ambil** mengecek ulang di dalam transaksi bahwa karyawan dan mobil masih aktif (selain aturan 12).
+20. **Serah terima ambil** mengecek ulang di dalam transaksi bahwa pegawai dan mobil masih aktif (selain aturan 12).
 21. **Ekspor Riwayat** wajib berperiode, dengan rentang paling panjang `fleet.export.max_range_days` (366 hari); permintaan ekspor tanpa periode ditolak. Halaman Riwayat dibuka dengan periode **bulan berjalan** bila URL tidak membawa periode, dan periodenya tidak bisa dikosongkan.
 22. **Data yang sudah diubah petugas lain:** setiap transisi/aksi mengunci baris lalu memeriksa ulang statusnya; bila status sudah berubah, tolak dengan pesan yang meminta pengguna memuat ulang halaman (bukan pesan teknis).
-23. **Pilihan form jadwal:** karyawan dan mobil **nonaktif disembunyikan sepenuhnya** (termasuk saat edit); mobil Maintenance tetap tampil tetapi tidak dapat dipilih, dengan keterangan "Maintenance".
+23. **Pilihan form jadwal:** pegawai dan mobil **nonaktif disembunyikan sepenuhnya** (termasuk saat edit); mobil Maintenance tetap tampil tetapi tidak dapat dipilih, dengan keterangan "Maintenance".
 
 ---
 
@@ -238,7 +238,7 @@ Keamanan adalah syarat, bukan fitur tambahan. Setiap perubahan harus mematuhi da
 - Gunakan route bertipe dari Wayfinder; **jangan** hardcode URL string.
 - Form memakai `useForm` Inertia; tampilkan error validasi dari server per field.
 - **Input tanggal/waktu wajib memakai komponen `components/date-picker/`** — `DatePicker`, `DateTimePicker` (jam 00–23 + menit kelipatan `config('fleet.date_picker.minute_step')`, tombol "Terapkan"), dan `DateRangePicker` (filter periode). **Dilarang** `<input type="date">`/`datetime-local` bawaan browser. Kalender: header `[<] Bulan Tahun [>]`; klik bulan → grid bulan 4×3, klik tahun → grid 15 tahun 5×3; locale Indonesia, minggu mulai Senin, hari ini ditandai, tanggal di luar batas form dinonaktifkan (`min`). Hanya tanggal bulan yang dibuka yang tampil (sel bulan lain kosong dan tidak bisa diklik), selalu 6 baris agar tinggi popover tetap; hari Minggu (header "Min" dan tanggalnya) `text-destructive`, kecuali tanggal terpilih (gaya terpilih) dan tanggal nonaktif (gaya nonaktif). Popover ringkas ±280 px, sel 32 px. Pemicu bergaya Input dengan ikon kalender, format Indonesia ("17 Okt 2026, 14.30"), placeholder, dan tombol × untuk field opsional (`clearable`). Nilai di form = jam dinding zona waktu aplikasi ("2026-10-17T14:30"); saat submit dikonversi `toZonedIso()` ke ISO 8601 berzona waktu, dan server membacanya lewat `App\Support\DateInput::parse()`. Validasi tetap di server.
-- Pemilihan karyawan dan mobil memakai combobox dari shadcn `command` (`cmdk`).
+- Pemilihan pegawai dan mobil memakai combobox dari shadcn `command` (`cmdk`).
 - **Form wajib memakai komponen `components/form/`:** `FormCard` (card selebar area konten; header judul + deskripsi, isi `px-6 py-6`, footer tombol di **kanan bawah** dengan `border-t`), `FormGrid` (2 kolom bila wadahnya lebar, 1 kolom bila sempit — container query, juga di dalam dialog), dan `FormField` (label, penanda wajib `*` + sr-only "(wajib)", kontrol, petunjuk `id="{id}-hint"`, lalu error server tepat di bawah field; `span="full"` untuk field selebar dua kolom). Jangan membatasi lebar card form (`max-w-*`) atau menata label/error sendiri. Grid 2 kolom mulai lebar wadah 448 px (`@md/form`). Halaman autentikasi memakai bingkai `AuthSimpleLayout` (card dengan logo, judul dari `Page.layout`).
 - Komponen function, kecil, satu tanggung jawab. Logika berulang dipindah ke hook (`resources/js/hooks/`).
 - Badge Terlambat/Belum Diambil diperbarui dengan polling Inertia yang hanya memuat ulang prop terkait (interval dari config).
@@ -264,7 +264,7 @@ Keamanan adalah syarat, bukan fitur tambahan. Setiap perubahan harus mematuhi da
 - **Top bar diam**: di layout aplikasi yang di-scroll adalah kontainer isi (`[scroll-region]` di `app-sidebar-layout.tsx`), bukan window. Top bar berlatar solid `bg-background`, tidak sticky. Kode yang butuh posisi scroll harus memakai kontainer itu, bukan `window.scrollTo`/`scrollY`.
 - **Skeleton loading** (shadcn `Skeleton`, komponen di `components/skeletons/`) untuk konten yang dimuat **setelah** halaman tampil; perpindahan halaman biasa memakai progress bar Inertia (warna `--primary`). Skeleton meniru bentuk dan ukuran konten aslinya agar tidak ada pergeseran tata letak: `TableSkeleton` (otomatis di `DataTableCard`, jumlah baris = `per_page`), `CardStatSkeleton` & `ListSkeleton` (dashboard, data deferred), `ImageSkeleton` lewat `LoadingImage` (semua foto, termasuk tampilan pengganti bila gagal dimuat), `SearchResultSkeleton` (pencarian global & combobox). Skeleton baru tampil bila pemuatan lebih dari `SKELETON_DELAY_MS` (200 ms, `hooks/use-delayed-flag.ts`); sebelum itu ruangnya disiapkan tanpa isi (`invisible`) atau data lama tetap tampil. Area yang memuat diberi `aria-busy`, skeleton `aria-hidden`, plus teks sr-only "Memuat data..." (`LoadingText`). **Setiap tabel, daftar, dan gambar baru wajib memiliki skeleton yang sesuai.**
 - **Scrollbar** diatur global di `resources/css/app.css` (tipis, thumb membulat, warna token `--border` / hover `--muted-foreground`); jangan menata scrollbar per komponen atau menyembunyikannya. Kontainer scroll utama memakai `scrollbar-gutter: stable`.
-- **Dialog wajib memakai `FormDialog`** (`components/form-dialog.tsx`) untuk semua dialog form dan rincian (karyawan, mobil, petugas, serah terima, perpanjang, batalkan, password sementara, rincian aktivitas, setup 2FA): satu lebar untuk semua (`sm:max-w-lg`, acuan dialog Serah Terima), header judul + deskripsi satu kalimat, isi, dan footer dengan padding `px-6` seragam; footer bawaan "Batal" (outline) lalu aksi utama (`LoadingButton`) rata kanan; tinggi maksimal mengikuti layar dan hanya bagian isi yang di-scroll; tidak tertutup saat klik backdrop atau selama `processing`. Halaman/komponen **tidak boleh** mengatur lebar `DialogContent` sendiri. Pengecualian, masing-masing seragam di kelompoknya: konfirmasi singkat (`ConfirmDialog`/AlertDialog, satu ukuran kecil) dan tampilan foto (`PhotoViewerDialog` dan galeri foto mobil, `sm:max-w-3xl`).
+- **Dialog wajib memakai `FormDialog`** (`components/form-dialog.tsx`) untuk semua dialog form dan rincian (pegawai, mobil, petugas, serah terima, perpanjang, batalkan, password sementara, rincian aktivitas, setup 2FA): satu lebar untuk semua (`sm:max-w-lg`, acuan dialog Serah Terima), header judul + deskripsi satu kalimat, isi, dan footer dengan padding `px-6` seragam; footer bawaan "Batal" (outline) lalu aksi utama (`LoadingButton`) rata kanan; tinggi maksimal mengikuti layar dan hanya bagian isi yang di-scroll; tidak tertutup saat klik backdrop atau selama `processing`. Halaman/komponen **tidak boleh** mengatur lebar `DialogContent` sendiri. Pengecualian, masing-masing seragam di kelompoknya: konfirmasi singkat (`ConfirmDialog`/AlertDialog, satu ukuran kecil) dan tampilan foto (`PhotoViewerDialog` dan galeri foto mobil, `sm:max-w-3xl`).
 - **Dropdown selalu muncul di bawah pemicunya** dengan jarak 4 px: `Select` (bawaan `components/ui/select.tsx` sudah `position="popper"`, `side="bottom"`, `align="start"`, selebar field, tinggi maks. 18rem dengan scroll), `Popover` (combobox, pemilih tanggal), dan `DropdownMenu`. Bila ruang bawah tidak cukup, Radix memindahkannya ke atas tanpa menutupi field. Jangan memakai `position="item-aligned"`.
 - **Logo Pelindo** hanya lewat `BrandLogo` (logo penuh) dan `AppLogoIcon` (ikon "P"). Semua aset logo dibuat dari `resources/images/brand/pelindo-source.svg` (vektor resmi, dari Pelindo_2021.svg) dengan warna **persis sumber di semua mode, termasuk mode gelap** (ikon dan tulisan "PELINDO" tetap biru asli): dilarang varian warna, `currentColor`, fill dari token tema, filter CSS (invert/brightness), atau class `dark:` yang mengubah warna logo. Sidebar terbuka: logo penuh tinggi 36 px di tengah; sidebar diciutkan: ikon "P" 24 px utuh (`object-contain`) di tengah. Teks alt selalu "Logo Pelindo". Favicon (`public/favicon.ico`, `favicon.svg`, `apple-touch-icon.png`) berisi ikon "P" dan hanya dirujuk satu set tag di `resources/views/app.blade.php` dengan parameter versi (`?v=`); naikkan versinya setiap kali ikon diganti. Jangan menyetel ikon lewat `<Head>` Inertia.
 - **Teks deskripsi** halaman, tabel, card, dan dialog: satu kalimat utuh Bahasa Indonesia baku (±8–20 kata) yang menjelaskan fungsi/isi bagi pengguna, tanpa jargon teknis, diakhiri titik.
@@ -272,7 +272,7 @@ Keamanan adalah syarat, bukan fitur tambahan. Setiap perubahan harus mematuhi da
 
 ### 8.4 Pola Tabel (wajib untuk SEMUA tabel)
 
-Setiap daftar data (Kelola Petugas, Data Mobil, Data Karyawan, Peminjaman, Riwayat, Log Aktivitas) **wajib** memakai komponen `resources/js/components/data-table/` dan hook `useTableQuery`. Jangan membuat tabel, filter, atau pagination sendiri. Contoh acuan: `pages/staff/index.tsx`.
+Setiap daftar data (Kelola Petugas, Data Mobil, Data Pegawai, Peminjaman, Riwayat, Log Aktivitas) **wajib** memakai komponen `resources/js/components/data-table/` dan hook `useTableQuery`. Jangan membuat tabel, filter, atau pagination sendiri. Contoh acuan: `pages/staff/index.tsx`.
 
 **Struktur halaman daftar:**
 ```
@@ -306,12 +306,12 @@ Setiap daftar data (Kelola Petugas, Data Mobil, Data Karyawan, Peminjaman, Riway
 **Server (satu cara konsisten):**
 - FormRequest daftar menyediakan `tableQuery(): TableQuery` dengan **whitelist** nilai filter per kunci (`App\Support\TableQuery::fromRequest`). Nilai tak dikenal **diabaikan**, bukan error.
 - **Filter periode** (Riwayat, Log Aktivitas): `TableQuery::fromRequest(..., withPeriod: true)` membaca `?from=&to=` (Y-m-d, inklusif; tidak valid diabaikan, terbalik ditukar). Bila server mengirim `query.period`, header tabel otomatis menampilkan tombol **Periode** — tidak ada prop tambahan di `DataTableCard`. Periode wajib memakai `defaultToCurrentMonth: true` (Riwayat): tanpa `from`/`to` di URL dipakai bulan berjalan, server mengirim `query.period.default`, tombol "Semua periode" disembunyikan, dan reset kembali ke bulan berjalan. Pilihan cepat: Hari ini, 7 hari terakhir, Bulan ini, Bulan lalu, 3 bulan terakhir, Tahun ini (semuanya ≤ 366 hari).
-- Grup filter dengan daftar panjang (mis. Mobil, Karyawan, Petugas) memakai `submenu: true` agar tampil sebagai submenu bergulir di dalam dropdown Filter.
+- Grup filter dengan daftar panjang (mis. Mobil, Pegawai, Petugas) memakai `submenu: true` agar tampil sebagai submenu bergulir di dalam dropdown Filter.
 - Model menyediakan scope `scopeForTable(Builder, TableQuery)` untuk pencarian & filter.
 - Controller memakai trait `PaginatesForTable::paginateForTable()` dan mengirim `API Resource` yang field-nya dibatasi (bukan model utuh), plus `query` (`TableQuery::toArray()`) dan opsi filter (`Enum::options()` atau dari config).
 - Test wajib per tabel: pencarian & filter mengembalikan data yang benar, parameter tidak valid diabaikan, dan nomor urut halaman 2 dimulai dari 11 (`meta.from`).
 
-**Grup filter acuan:** Data Mobil — Status (Tersedia, Dipinjam, Maintenance, Nonaktif); Data Karyawan — Divisi (dari config), Status (Aktif, Nonaktif); Peminjaman — Status (Dijadwalkan, Aktif, Terlambat, Belum Diambil); Riwayat — Status, Keterlambatan, Divisi, Mobil, Karyawan + filter periode; Log Aktivitas — Jenis data, Petugas + filter periode.
+**Grup filter acuan:** Data Mobil — Status (Tersedia, Dipinjam, Maintenance, Nonaktif); Data Pegawai — Divisi (dari config), Status (Aktif, Nonaktif); Peminjaman — Status (Dijadwalkan, Aktif, Terlambat, Belum Diambil); Riwayat — Status, Keterlambatan, Divisi, Mobil, Pegawai + filter periode; Log Aktivitas — Jenis data, Petugas + filter periode.
 
 ---
 
@@ -361,7 +361,7 @@ Setiap daftar data (Kelola Petugas, Data Mobil, Data Karyawan, Peminjaman, Riway
 
 ## 12. Larangan Ringkas
 
-- ❌ Menambah login/registrasi karyawan, approval, odometer, tanda tangan, PDF, notifikasi eksternal
+- ❌ Menambah login/registrasi pegawai, approval, odometer, tanda tangan, PDF, notifikasi eksternal
 - ❌ Mengaktifkan kembali registrasi, lupa password lewat email, verifikasi email, atau passkey
 - ❌ Memasang ESLint/Prettier, atau memuat font/aset dari CDN eksternal
 - ❌ Logika bisnis di controller atau komponen React

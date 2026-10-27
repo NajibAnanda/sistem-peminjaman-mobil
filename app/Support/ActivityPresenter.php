@@ -23,7 +23,7 @@ use Throwable;
 
 /**
  * Menyajikan log aktivitas dalam bahasa yang mudah dipahami (FR-27): label
- * field Bahasa Indonesia, nama karyawan/plat alih-alih id, tanggal format
+ * field Bahasa Indonesia, nama pegawai/plat alih-alih id, tanggal format
  * Indonesia, dan label status alih-alih nilai enum.
  */
 final readonly class ActivityPresenter
@@ -53,7 +53,7 @@ final readonly class ActivityPresenter
     ) {}
 
     /**
-     * Memuat nama karyawan & plat yang dirujuk log di satu halaman sekaligus
+     * Memuat nama pegawai & plat yang dirujuk log di satu halaman sekaligus
      * (dua query, tanpa N+1).
      *
      * @param  iterable<Activity>  $activities
@@ -174,7 +174,7 @@ final readonly class ActivityPresenter
             $field === 'status' => BookingStatus::tryFrom((string) $value)?->label() ?? (string) $value,
             $field === 'operational_status' => CarOperationalStatus::tryFrom((string) $value)?->label() ?? (string) $value,
             $field === 'role' => StaffRole::tryFrom((string) $value)?->label() ?? (string) $value,
-            $field === 'employee_id' => $this->employees[(int) $value] ?? "Karyawan #{$value}",
+            $field === 'employee_id' => $this->employees[(int) $value] ?? "Pegawai #{$value}",
             $field === 'car_id' => $this->cars[(int) $value] ?? "Mobil #{$value}",
             in_array($field, self::DATE_FIELDS, true) => $this->dateTime($value),
             is_bool($value) => $value ? 'Ya' : 'Tidak',

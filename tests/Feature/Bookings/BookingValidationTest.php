@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /*
  * Validasi tambahan peminjaman: durasi min./maks., panjang tujuan & alasan,
- * bentrok per karyawan, cek ulang saat serah terima ambil, dan pesan saat
+ * bentrok per pegawai, cek ulang saat serah terima ambil, dan pesan saat
  * data sudah diubah petugas lain.
  */
 
@@ -118,7 +118,7 @@ test('tujuan terlalu pendek ditolak', function () {
     expect(Booking::query()->count())->toBe(0);
 });
 
-test('karyawan tidak boleh memiliki dua peminjaman yang waktunya tumpang tindih', function () {
+test('pegawai tidak boleh memiliki dua peminjaman yang waktunya tumpang tindih', function () {
     $existing = Booking::factory()->scheduled()->create([
         'code' => 'PMJ-202610-0100',
         'employee_id' => $this->employee->id,
@@ -142,7 +142,7 @@ test('karyawan tidak boleh memiliki dua peminjaman yang waktunya tumpang tindih'
     $this->post(route('bookings.store'), validationPayload($this->car, $this->employee))->assertSessionHasNoErrors();
 });
 
-test('bentrok karyawan dicek saat edit jadwal dan perpanjangan', function () {
+test('bentrok pegawai dicek saat edit jadwal dan perpanjangan', function () {
     $other = Booking::factory()->scheduled()->create([
         'employee_id' => $this->employee->id,
         'start_at' => CarbonImmutable::parse('2026-10-21 08:00'),
@@ -161,7 +161,7 @@ test('bentrok karyawan dicek saat edit jadwal dan perpanjangan', function () {
         ]))
         ->assertSessionHasErrors('employee_id');
 
-    // Mengganti ke karyawan yang sedang memakai mobil lain pada jam itu juga ditolak.
+    // Mengganti ke pegawai yang sedang memakai mobil lain pada jam itu juga ditolak.
     $busy = Employee::factory()->create();
     Booking::factory()->scheduled()->create([
         'employee_id' => $busy->id,
@@ -172,7 +172,7 @@ test('bentrok karyawan dicek saat edit jadwal dan perpanjangan', function () {
     $this->put(route('bookings.update', $booking), validationPayload($this->car, $busy))
         ->assertSessionHasErrors('employee_id');
 
-    // Perpanjangan yang menabrak peminjaman karyawan berikutnya.
+    // Perpanjangan yang menabrak peminjaman pegawai berikutnya.
     $booking->update(['status' => BookingStatus::Active, 'picked_up_at' => now()]);
 
     $this->post(route('bookings.extend', $booking), [
@@ -233,7 +233,7 @@ test('alasan pembatalan dan perpanjangan minimal 10 karakter', function () {
         ->and(BookingExtension::query()->count())->toBe(0);
 });
 
-test('serah terima ambil ditolak bila karyawan atau mobil sudah nonaktif', function (string $inactive) {
+test('serah terima ambil ditolak bila pegawai atau mobil sudah nonaktif', function (string $inactive) {
     Storage::fake('local');
     $booking = Booking::factory()->scheduled()->create([
         'car_id' => $this->car->id,
@@ -242,20 +242,20 @@ test('serah terima ambil ditolak bila karyawan atau mobil sudah nonaktif', funct
         'planned_return_at' => CarbonImmutable::parse('2026-10-20 15:00'),
     ]);
     // Data lama/impor: dinonaktifkan langsung di database, melewati aturan aplikasi.
-    ($inactive === 'karyawan' ? $this->employee : $this->car)->forceFill(['is_active' => false])->save();
+    ($inactive === 'pegawai' ? $this->employee : $this->car)->forceFill(['is_active' => false])->save();
 
     $this->actingAs($this->user)
         ->post(route('bookings.pickup', $booking), [
             'photo' => UploadedFile::fake()->image('foto.jpg'),
             'source' => 'upload',
         ])
-        ->assertInertiaFlash('toast.message', $inactive === 'karyawan'
-            ? 'Karyawan Rina Kartika sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti karyawannya lewat Edit Jadwal.'
+        ->assertInertiaFlash('toast.message', $inactive === 'pegawai'
+            ? 'Pegawai Rina Kartika sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Batalkan peminjaman ini atau ganti pegawainya lewat Edit Jadwal.'
             : "Mobil {$this->car->brand} {$this->car->model} ({$this->car->plate_number}) sudah nonaktif sehingga serah terima ambil tidak dapat dilakukan. Pindahkan peminjaman ke mobil lain lewat Edit Jadwal.");
 
     expect($booking->refresh()->status)->toBe(BookingStatus::Scheduled)
         ->and(Storage::disk('local')->allFiles())->toBe([]);
-})->with(['karyawan', 'mobil']);
+})->with(['pegawai', 'mobil']);
 
 test('serah terima ganda memberi pesan bahwa data sudah diubah', function () {
     Storage::fake('local');
@@ -280,7 +280,7 @@ test('mengaktifkan atau menonaktifkan data yang statusnya sudah berubah memberi 
 
     $this->actingAs($this->user)
         ->post(route('employees.deactivate', $employee))
-        ->assertInertiaFlash('toast.message', 'Karyawan ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
+        ->assertInertiaFlash('toast.message', 'Pegawai ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
 });
 
 test('aturan durasi dibagikan ke form sebagai petunjuk', function () {
@@ -299,8 +299,8 @@ test('aturan durasi dibagikan ke form sebagai petunjuk', function () {
         ->assertInertia(fn (Assert $page) => $page->where('bookingRules.maxDurationDays', 14));
 });
 
-test('form jadwal hanya menampilkan karyawan dan mobil aktif; Maintenance tampil tetapi tidak tersedia', function () {
-    Employee::factory()->inactive()->create(['name' => 'Karyawan Nonaktif']);
+test('form jadwal hanya menampilkan pegawai dan mobil aktif; Maintenance tampil tetapi tidak tersedia', function () {
+    Employee::factory()->inactive()->create(['name' => 'Pegawai Nonaktif']);
     Car::factory()->inactive()->create(['plate_number' => 'B 9999 ZZZ']);
     Car::factory()->maintenance()->create(['plate_number' => 'B 8888 YYY']);
 

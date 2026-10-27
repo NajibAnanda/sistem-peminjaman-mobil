@@ -30,7 +30,7 @@ type Props = {
     emptyText: string;
     /** Info utama di kanan tiap baris, mis. jam atau lama keterlambatan. */
     renderMeta: (booking: Booking) => ReactNode;
-    /** Info tambahan di bawah nama karyawan, mis. no HP. */
+    /** Info tambahan di bawah nama pegawai, mis. no HP. */
     renderDetail?: (booking: Booking) => ReactNode;
     tone?: 'default' | 'destructive' | 'warning';
 };

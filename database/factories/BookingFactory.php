@@ -108,7 +108,7 @@ final class BookingFactory extends Factory
                     'status' => BookingStatus::Cancelled,
                     'start_at' => $start,
                     'planned_return_at' => $plannedReturn,
-                    'cancellation_reason' => fake()->randomElement(['Kegiatan ditunda', 'Karyawan berhalangan', 'Memakai kendaraan lain']),
+                    'cancellation_reason' => fake()->randomElement(['Kegiatan ditunda', 'Pegawai berhalangan', 'Memakai kendaraan lain']),
                     'cancelled_at' => $createdAt->addHours(fake()->numberBetween(1, 20)),
                     'cancelled_by' => fn (array $attributes) => $attributes['created_by'],
                     'created_at' => $createdAt,

@@ -49,14 +49,14 @@ export default function EmployeeIndex({
         confirmation.request(
             employee.is_active
                 ? {
-                      title: 'Nonaktifkan karyawan?',
+                      title: 'Nonaktifkan pegawai?',
                       description: `${employee.name} tidak dapat dipilih untuk jadwal baru. Riwayat peminjamannya tetap tersimpan, dan data dapat diaktifkan kembali.`,
                       confirmLabel: 'Nonaktifkan',
                       destructive: true,
                       route: deactivate(employee.id),
                   }
                 : {
-                      title: 'Aktifkan kembali karyawan?',
+                      title: 'Aktifkan kembali pegawai?',
                       description: `${employee.name} dapat dipilih lagi untuk jadwal baru.`,
                       confirmLabel: 'Aktifkan',
                       route: activate(employee.id),
@@ -66,25 +66,25 @@ export default function EmployeeIndex({
 
     return (
         <>
-            <Head title="Data Karyawan" />
+            <Head title="Data Pegawai" />
 
             <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
                 <PageHeader
-                    title="Data Karyawan"
-                    description="Kelola data karyawan yang dapat dicatat sebagai peminjam mobil dinas beserta kontaknya."
+                    title="Data Pegawai"
+                    description="Kelola data pegawai yang dapat dicatat sebagai peminjam mobil dinas beserta kontaknya."
                     actions={
                         <Button
                             onClick={() => openForm(null)}
                             data-test="add-employee-button"
                         >
                             <UserPlus aria-hidden="true" />
-                            Tambah Karyawan
+                            Tambah Pegawai
                         </Button>
                     }
                 />
 
                 <DataTableCard
-                    title="Daftar Karyawan"
+                    title="Daftar Pegawai"
                     table={table}
                     data={employees}
                     columns={columns}
@@ -106,13 +106,13 @@ export default function EmployeeIndex({
                     ]}
                     emptyState={{
                         icon: Users,
-                        title: 'Belum ada data karyawan',
+                        title: 'Belum ada data pegawai',
                         description:
-                            'Tambahkan karyawan agar dapat dipilih saat menjadwalkan peminjaman.',
+                            'Tambahkan pegawai agar dapat dipilih saat menjadwalkan peminjaman.',
                         action: (
                             <Button onClick={() => openForm(null)}>
                                 <UserPlus aria-hidden="true" />
-                                Tambah Karyawan
+                                Tambah Pegawai
                             </Button>
                         ),
                     }}
@@ -133,5 +133,5 @@ export default function EmployeeIndex({
 }
 
 EmployeeIndex.layout = {
-    breadcrumbs: [{ title: 'Data Karyawan', href: index() }],
+    breadcrumbs: [{ title: 'Data Pegawai', href: index() }],
 };

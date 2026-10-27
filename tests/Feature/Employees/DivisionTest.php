@@ -49,7 +49,7 @@ test('nama divisi wajib diisi dan maksimal 50 karakter', function () {
         ->assertSessionHasErrors(['name']);
 });
 
-test('petugas dapat menghapus divisi yang tidak memiliki karyawan', function () {
+test('petugas dapat menghapus divisi yang tidak memiliki pegawai', function () {
     Division::create(['name' => 'Divisi Sementara']);
 
     $this->actingAs($this->user)
@@ -63,7 +63,7 @@ test('petugas dapat menghapus divisi yang tidak memiliki karyawan', function () 
     ]);
 });
 
-test('divisi yang masih memiliki karyawan tidak dapat dihapus', function () {
+test('divisi yang masih memiliki pegawai tidak dapat dihapus', function () {
     Division::firstOrCreate(['name' => 'Keuangan']);
     Employee::factory()->create(['division' => 'Keuangan']);
 
@@ -71,7 +71,7 @@ test('divisi yang masih memiliki karyawan tidak dapat dihapus', function () {
         ->from(route('employees.index'))
         ->delete(route('divisions.destroy', 'Keuangan'))
         ->assertRedirect(route('employees.index'))
-        ->assertSessionHas('error', 'Divisi Keuangan tidak dapat dihapus karena masih digunakan oleh 1 karyawan.');
+        ->assertSessionHas('error', 'Divisi Keuangan tidak dapat dihapus karena masih digunakan oleh 1 pegawai.');
 
     $this->assertDatabaseHas('divisions', [
         'name' => 'Keuangan',
@@ -86,7 +86,7 @@ test('tamu tidak dapat menambah atau menghapus divisi', function () {
         ->assertRedirect(route('login'));
 });
 
-test('divisi yang dihapus tidak muncul lagi di halaman daftar karyawan', function () {
+test('divisi yang dihapus tidak muncul lagi di halaman daftar pegawai', function () {
     Division::create(['name' => 'Divisi Dihapus']);
 
     $this->actingAs($this->user)

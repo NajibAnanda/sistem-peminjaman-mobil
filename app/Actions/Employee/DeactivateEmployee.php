@@ -36,7 +36,7 @@ final class DeactivateEmployee
                 ->causedBy($actor)
                 ->event(ActivityEvent::Deactivated->value)
                 ->withChanges(['old' => ['is_active' => true], 'attributes' => ['is_active' => false]])
-                ->log("Menonaktifkan karyawan {$employee->name}");
+                ->log("Menonaktifkan pegawai {$employee->name}");
 
             return $employee;
         });

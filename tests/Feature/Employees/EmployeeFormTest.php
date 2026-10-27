@@ -25,7 +25,7 @@ function employeePayload(array $overrides = []): array
     ], ...$overrides];
 }
 
-test('karyawan baru disimpan dengan no HP 08xx', function () {
+test('pegawai baru disimpan dengan no HP 08xx', function () {
     $this->actingAs($this->user)
         ->post(route('employees.store'), employeePayload())
         ->assertSessionHasNoErrors()
@@ -46,7 +46,7 @@ test('validasi no HP dan divisi', function (array $overrides, string $field, str
         ->post(route('employees.store'), employeePayload($overrides))
         ->assertSessionHasErrors([$field => $message]);
 })->with([
-    'no HP duplikat' => [['phone' => '081234567890'], 'phone', 'No HP sudah dipakai karyawan lain.'],
+    'no HP duplikat' => [['phone' => '081234567890'], 'phone', 'No HP sudah dipakai pegawai lain.'],
     'no HP 62 tanpa plus' => [['phone' => '6281234567890'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
     'no HP telepon rumah' => [['phone' => '0215551234'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
     'no HP terlalu pendek' => [['phone' => '081234567'], 'phone', 'No HP harus diawali 08 atau +62 dan berisi 10–15 digit.'],
@@ -54,7 +54,7 @@ test('validasi no HP dan divisi', function (array $overrides, string $field, str
     'divisi terlalu panjang' => [['division' => str_repeat('A', 51)], 'division', 'Divisi tidak boleh lebih dari 50 karakter.'],
 ]);
 
-test('karyawan dengan divisi baru kustom berhasil disimpan', function () {
+test('pegawai dengan divisi baru kustom berhasil disimpan', function () {
     $this->actingAs($this->user)
         ->post(route('employees.store'), employeePayload(['division' => 'Operasional Pelabuhan']))
         ->assertSessionHasNoErrors();
@@ -72,7 +72,7 @@ test('panjang no HP dihitung setelah normalisasi', function (string $phone) {
     '+62 menjadi 10 digit' => '+62812345678',
 ]);
 
-test('data karyawan dapat diubah dan perubahan tercatat', function () {
+test('data pegawai dapat diubah dan perubahan tercatat', function () {
     $employee = Employee::factory()->create(['division' => 'Keuangan']);
 
     $this->actingAs($this->user)
@@ -90,7 +90,7 @@ test('data karyawan dapat diubah dan perubahan tercatat', function () {
         ]);
 });
 
-test('karyawan dapat dinonaktifkan dan diaktifkan kembali', function () {
+test('pegawai dapat dinonaktifkan dan diaktifkan kembali', function () {
     $employee = Employee::factory()->create();
     Booking::factory()->completed()->for($employee)->create();
 
@@ -102,7 +102,7 @@ test('karyawan dapat dinonaktifkan dan diaktifkan kembali', function () {
     expect($employee->fresh()->is_active)->toBeTrue();
 });
 
-test('karyawan dengan peminjaman berjalan tidak dapat dinonaktifkan (FR-10)', function (string $state) {
+test('pegawai dengan peminjaman berjalan tidak dapat dinonaktifkan (FR-10)', function (string $state) {
     $employee = Employee::factory()->create();
     $booking = Booking::factory()->{$state}()->for($employee)->create();
 
@@ -115,7 +115,7 @@ test('karyawan dengan peminjaman berjalan tidak dapat dinonaktifkan (FR-10)', fu
         ->toContain($booking->code);
 })->with(['dijadwalkan' => 'scheduled', 'aktif' => 'active']);
 
-test('tamu tidak dapat mengubah data karyawan', function () {
+test('tamu tidak dapat mengubah data pegawai', function () {
     $employee = Employee::factory()->create();
 
     $this->post(route('employees.store'), employeePayload())->assertRedirect(route('login'));

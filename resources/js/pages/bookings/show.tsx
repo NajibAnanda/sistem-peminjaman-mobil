@@ -134,7 +134,7 @@ export default function BookingShow({
                             </CardHeader>
                             <CardContent>
                                 <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2">
-                                    <Field label="Karyawan">
+                                    <Field label="Pegawai">
                                         <span className="font-medium">
                                             {booking.employee.name}
                                         </span>

@@ -35,13 +35,13 @@ export default function AppearanceToggleTab({
                     aria-checked={appearance === value}
                     onClick={() => updateAppearance(value)}
                     className={cn(
-                        'flex items-center rounded-md px-3.5 py-1.5 transition-colors',
+                        'flex items-center rounded-md px-3.5 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
                         appearance === value
                             ? 'bg-background text-foreground shadow-xs'
                             : 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
                     )}
                 >
-                    <Icon className="-ml-1 h-4 w-4" aria-hidden="true" />
+                    <Icon className="-ml-1 size-4" aria-hidden="true" />
                     <span className="ml-1.5 text-sm">{label}</span>
                 </button>
             ))}

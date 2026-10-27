@@ -94,7 +94,7 @@ export function AppSidebar() {
             isActive: from === 'history' ? true : undefined,
         },
         { title: 'Data Mobil', href: cars(), icon: CarFront },
-        { title: 'Data Karyawan', href: employees(), icon: Users },
+        { title: 'Data Pegawai', href: employees(), icon: Users },
     ];
 
     // Menyembunyikan menu hanya untuk kenyamanan; hak akses tetap dicek di server.

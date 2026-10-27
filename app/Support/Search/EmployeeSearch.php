@@ -9,8 +9,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Data karyawan tidak punya halaman detail, jadi hasil membuka daftar
- * karyawan dengan pencarian nama itu.
+ * Data pegawai tidak punya halaman detail, jadi hasil membuka daftar
+ * pegawai dengan pencarian nama itu.
  */
 final class EmployeeSearch implements SearchCategory
 {
@@ -21,7 +21,7 @@ final class EmployeeSearch implements SearchCategory
 
     public function label(): string
     {
-        return 'Karyawan';
+        return 'Pegawai';
     }
 
     public function allows(User $user): bool

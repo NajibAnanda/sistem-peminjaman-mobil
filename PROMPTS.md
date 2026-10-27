@@ -9,9 +9,9 @@ Kumpulan prompt untuk membangun **Sistem Peminjaman Mobil Dinas** dari awal samp
 1. Selesaikan **Persiapan Manual** di bawah sebelum memberi prompt apa pun ke agent.
 2. Jalankan prompt **berurutan**, satu fase per sesi. Jangan menggabungkan beberapa fase dalam satu prompt.
 3. Setelah agent melapor selesai:
-   - Cek **Checklist Verifikasi** fase tersebut sendiri (buka aplikasi, coba fiturnya).
-   - Kalau ada yang salah, gunakan **Prompt Perbaikan** di bagian akhir.
-   - Kalau sudah benar, commit lalu lanjut ke fase berikutnya.
+    - Cek **Checklist Verifikasi** fase tersebut sendiri (buka aplikasi, coba fiturnya).
+    - Kalau ada yang salah, gunakan **Prompt Perbaikan** di bagian akhir.
+    - Kalau sudah benar, commit lalu lanjut ke fase berikutnya.
 4. Kalau sesi agent terputus atau konteksnya penuh, mulai sesi baru dengan **Prompt Melanjutkan**.
 5. Kalau agent menanyakan sesuatu yang tidak ada di PRD, jawab dulu. Jangan biarkan agent menebak.
 
@@ -216,6 +216,7 @@ hasil setiap perintah verifikasi, dan hal yang perlu keputusan saya.
 ```
 
 **Checklist Verifikasi Fase 1**
+
 - [ ] `php artisan migrate:fresh --seed` berhasil, login dengan akun Pengelola dari `.env` langsung diminta ganti password.
 - [ ] Halaman/tautan registrasi tidak ada.
 - [ ] Halaman login tidak menampilkan tautan lupa password maupun tombol passkey.
@@ -259,6 +260,7 @@ Jangan lanjut ke Fase 3. Laporkan seperti format sebelumnya.
 ```
 
 **Checklist Verifikasi Fase 2**
+
 - [ ] Pengelola bisa membuat akun Admin; Admin login dan diminta ganti password.
 - [ ] Admin tidak melihat dan tidak bisa membuka Kelola Petugas (coba ketik URL-nya langsung).
 - [ ] Pengelola terakhir tidak bisa dinonaktifkan.
@@ -296,18 +298,18 @@ Cakupan:
    - Status tampilan mobil diturunkan sesuai PRD 5.3 (scope/accessor terpusat).
    - Tidak bisa set Maintenance saat ada booking active; tampilkan peringatan
      berisi daftar booking scheduled mendatang.
-4. Data Karyawan: daftar (pencarian, filter divisi & status, pagination),
+4. Data Pegawai: daftar (pencarian, filter divisi & status, pagination),
    tambah/edit, aktif/nonaktif.
    - NIP: wajib, unik, huruf/angka tanpa spasi (alpha_num:ascii), maks. 30
      karakter, tanpa pola khusus; dinormalisasi ke huruf besar sebelum
      validasi unik dan disimpan huruf besar.
    - No HP: wajib, terima 08xx atau +62xx; normalisasi dan simpan sebagai
      08xx; panjang 10–15 digit dihitung setelah normalisasi.
-5. Proteksi FR-10: penonaktifan mobil/karyawan ditolak bila punya booking
+5. Proteksi FR-10: penonaktifan mobil/pegawai ditolak bila punya booking
    scheduled/active, dengan pesan yang menyebut booking penghalangnya.
 6. Semua aksi lewat Action + FormRequest + Policy dan tercatat di activity log.
    Tidak ada tombol hapus permanen.
-7. Seeder pengembangan: 8–10 mobil dan 20–30 karyawan dengan data realistis
+7. Seeder pengembangan: 8–10 mobil dan 20–30 pegawai dengan data realistis
    Indonesia (plat nomor format Indonesia).
 8. Test: validasi unik, format NIP & normalisasi no HP, mobil tanpa foto,
    unggah foto (Storage::fake), proteksi nonaktif, aturan maintenance,
@@ -317,6 +319,7 @@ Jangan lanjut ke Fase 4. Laporkan seperti format sebelumnya.
 ```
 
 **Checklist Verifikasi Fase 3**
+
 - [ ] Tambah mobil dengan 2 foto, galeri bisa digeser, tampil benar di light & dark.
 - [ ] Mobil tanpa foto tampil dengan placeholder dan penanda "Foto belum lengkap".
 - [ ] No HP `+6281234567890` tersimpan sebagai `081234567890`; NIP berisi spasi ditolak; NIP `abc123` tersimpan `ABC123` dan `ABC123` kedua ditolak sebagai duplikat.
@@ -341,13 +344,13 @@ Cakupan:
    PRD 5.1. Scope: overlapping, overdue, notPickedUp, completedLate.
 3. Action (masing-masing dalam DB::transaction + lockForUpdate baris mobil,
    tercatat di activity log):
-   - ScheduleBooking & UpdateBookingSchedule: validasi karyawan aktif, mobil
+   - ScheduleBooking & UpdateBookingSchedule: validasi pegawai aktif, mobil
      aktif & operasional, rencana kembali > mulai, waktu mulai tidak lebih
      awal dari now() dikurangi toleransi di config/fleet.php (15 menit),
      cek bentrok PRD 5.2 (termasuk booking active terlambat dianggap
      berakhir = now()). Error bentrok menyebut kode & rentang booking yang
      bertabrakan.
-   - UpdateBookingSchedule: hanya scheduled; boleh mengganti mobil, karyawan,
+   - UpdateBookingSchedule: hanya scheduled; boleh mengganti mobil, pegawai,
      waktu mulai, rencana kembali, dan tujuan; toleransi waktu mulai HANYA
      divalidasi bila start_at diubah (booking Belum Diambil tetap bisa
      diedit tanpa mengubah start_at); cek bentrok setiap kali mobil atau
@@ -366,7 +369,7 @@ Cakupan:
 5. Halaman:
    - Peminjaman: daftar booking berjalan (scheduled & active) dengan aksi
      sesuai status.
-   - Form jadwal: pilih karyawan (combobox dengan pencarian; pasang lewat
+   - Form jadwal: pilih pegawai (combobox dengan pencarian; pasang lewat
      npx shadcn@latest add command), rentang waktu dengan input
      datetime-local bawaan browser, lalu combobox mobil yang menandai
      ketersediaan pada rentang tersebut.
@@ -391,6 +394,7 @@ Jangan lanjut ke Fase 5. Laporkan seperti format sebelumnya.
 ```
 
 **Checklist Verifikasi Fase 4**
+
 - [ ] Jadwalkan 2 peminjaman bertabrakan untuk mobil yang sama → yang kedua ditolak.
 - [ ] Alur lengkap: jadwalkan → ambil (foto webcam) → perpanjang → kembali (foto upload) → detail menampilkan 2 foto berdampingan.
 - [ ] Salin URL foto bukti, buka di jendela incognito → harus diarahkan ke login.
@@ -407,7 +411,7 @@ Kerjakan FASE 5 — MONITORING sesuai prd.md (FR-20 s.d. FR-24, section 3.4,
 Cakupan:
 1. Dashboard: kartu ringkasan armada (Tersedia, Dipinjam, Maintenance,
    Nonaktif), jadwal ambil & kembali hari ini, daftar Terlambat (lama
-   keterlambatan "x hari y jam" + no HP karyawan), daftar Belum Diambil.
+   keterlambatan "x hari y jam" + no HP pegawai), daftar Belum Diambil.
    Setiap item tertaut ke detail peminjaman.
 2. Badge jumlah Terlambat & Belum Diambil di sidebar, dibagikan lewat shared
    prop yang efisien, diperbarui dengan polling Inertia yang hanya memuat
@@ -426,6 +430,7 @@ Jangan lanjut ke Fase 6. Laporkan seperti format sebelumnya.
 ```
 
 **Checklist Verifikasi Fase 5**
+
 - [ ] Buat peminjaman dengan rencana kembali beberapa menit lagi, tunggu lewat → badge Terlambat bertambah tanpa refresh halaman.
 - [ ] Jadwal Armada menampilkan peminjaman di hari yang benar.
 
@@ -438,8 +443,8 @@ Kerjakan FASE 6 — RIWAYAT, LAPORAN & LOG AKTIVITAS sesuai prd.md (FR-25 s.d.
 FR-27, section 3.8, 3.9) dan AGENTS.md. Kerjakan HANYA fase ini.
 
 Cakupan:
-1. Halaman Riwayat: pencarian (kode, nama karyawan, plat) dan filter periode,
-   mobil, karyawan, divisi, status, keterlambatan. Filter tersimpan di query
+1. Halaman Riwayat: pencarian (kode, nama pegawai, plat) dan filter periode,
+   mobil, pegawai, divisi, status, keterlambatan. Filter tersimpan di query
    string agar bisa dibagikan/di-refresh.
 2. Ekspor Excel (.xlsx) dan CSV (pasang maatwebsite/excel) lewat Action
    ExportBookings: mengikuti filter aktif, kolom sesuai PRD 3.8, tanggal
@@ -456,6 +461,7 @@ Jangan lanjut ke Fase 7. Laporkan seperti format sebelumnya.
 ```
 
 **Checklist Verifikasi Fase 6**
+
 - [ ] File Excel dan CSV terbuka rapi di Excel, termasuk karakter dan tanggal Indonesia.
 - [ ] Isi ekspor sama dengan data yang tampil sesuai filter.
 
@@ -492,6 +498,7 @@ seluruh perintah verifikasi. Laporkan temuan yang tersisa beserta alasannya.
 ```
 
 **Checklist Verifikasi Fase 7**
+
 - [ ] Laporan kepatuhan FR/NFR semuanya "Sesuai", atau ada alasan jelas untuk yang belum.
 - [ ] Set `APP_DEBUG=false`, buka URL yang tidak ada dan ID yang tidak ada → muncul halaman error ramah, tanpa detail teknis.
 
@@ -545,6 +552,7 @@ saya lakukan di PC kantor.
 ```
 
 **Checklist Verifikasi Fase 8 (Siap Pakai)**
+
 - [ ] User MySQL khusus sudah dibuat dan `.env` tidak lagi memakai `root`.
 - [ ] `APP_ENV=production`, `APP_DEBUG=false`, aset hasil `npm run build`.
 - [ ] Laragon autostart; aplikasi bisa dibuka setelah PC restart.
@@ -552,7 +560,7 @@ saya lakukan di PC kantor.
 - [ ] Folder sudah di-rename; aplikasi terbuka di `https://sistem-peminjaman-mobil.test`.
 - [ ] Webcam berfungsi di browser PC kantor.
 - [ ] Akun Pengelola asli dibuat, akun seeder/development dinonaktifkan, password diganti, 2FA Pengelola aktif.
-- [ ] Data dummy seeder dikosongkan (`migrate:fresh` + seeder produksi saja), lalu data mobil dan karyawan asli dimasukkan.
+- [ ] Data dummy seeder dikosongkan (`migrate:fresh` + seeder produksi saja), lalu data mobil dan pegawai asli dimasukkan.
 - [ ] README dan panduan pengguna diserahkan ke GA/IT kantor.
 
 ---

@@ -22,7 +22,7 @@ beforeEach(function () {
     Employee::factory()->inactive()->create(['name' => 'Citra Dewi', 'division' => 'SDM', 'phone' => '083333333333']);
 });
 
-test('daftar karyawan dikirim dengan opsi divisi dari config', function () {
+test('daftar pegawai dikirim dengan opsi divisi dari config', function () {
     $this->actingAs($this->user)
         ->get(route('employees.index'))
         ->assertOk()

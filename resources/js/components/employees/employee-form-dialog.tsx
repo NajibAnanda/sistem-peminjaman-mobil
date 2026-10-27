@@ -26,7 +26,7 @@ import type { DivisionOption, Employee } from '@/types';
 type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    /** null = tambah karyawan baru */
+    /** null = tambah pegawai baru */
     employee: Employee | null;
     divisions: DivisionOption[];
 };
@@ -237,14 +237,14 @@ export function EmployeeFormDialog({
             <FormDialog
                 open={open}
                 onOpenChange={onOpenChange}
-                title={isEdit ? 'Edit Data Karyawan' : 'Tambah Karyawan'}
+                title={isEdit ? 'Edit Data Pegawai' : 'Tambah Pegawai'}
                 description={
                     isEdit
-                        ? 'Perbarui identitas, divisi, atau nomor HP karyawan sesuai data terbaru.'
-                        : 'Tambahkan karyawan yang dapat meminjam mobil dinas. Karyawan tidak memiliki akun login.'
+                        ? 'Perbarui identitas, divisi, atau nomor HP pegawai sesuai data terbaru.'
+                        : 'Tambahkan pegawai yang dapat meminjam mobil dinas. Pegawai tidak memiliki akun login.'
                 }
                 onSubmit={submit}
-                submitLabel={isEdit ? 'Simpan Perubahan' : 'Tambah Karyawan'}
+                submitLabel={isEdit ? 'Simpan Perubahan' : 'Tambah Pegawai'}
                 processing={form.processing}
                 submitTestId="employee-form-submit"
             >

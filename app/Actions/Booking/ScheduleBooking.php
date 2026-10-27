@@ -30,7 +30,7 @@ final class ScheduleBooking
         return DB::transaction(function () use ($data, $actor): Booking {
             // Kunci mobil dulu: dua petugas yang menjadwalkan mobil yang sama
             // bersamaan diproses bergantian, sehingga hanya satu yang lolos
-            // cek bentrok (FR-12). Karyawan dikunci agar tidak dinonaktifkan
+            // cek bentrok (FR-12). Pegawai dikunci agar tidak dinonaktifkan
             // di antara pengecekan dan penyimpanan.
             $car = Car::query()->lockForUpdate()->findOrFail($data['car_id']);
             $employee = Employee::query()->lockForUpdate()->findOrFail($data['employee_id']);

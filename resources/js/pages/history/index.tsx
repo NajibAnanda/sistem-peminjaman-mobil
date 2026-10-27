@@ -56,7 +56,7 @@ export default function HistoryIndex({
                     toolbar={
                         <ExportMenu query={query} formats={exportFormats} />
                     }
-                    searchPlaceholder="Cari kode, karyawan, atau plat..."
+                    searchPlaceholder="Cari kode, pegawai, atau plat..."
                     filterGroups={[
                         {
                             key: 'status',
@@ -81,7 +81,7 @@ export default function HistoryIndex({
                         },
                         {
                             key: 'employee',
-                            label: 'Karyawan',
+                            label: 'Pegawai',
                             options: filterOptions.employee,
                             submenu: true,
                         },

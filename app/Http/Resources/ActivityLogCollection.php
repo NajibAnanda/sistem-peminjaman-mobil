@@ -12,7 +12,7 @@ use Spatie\Activitylog\Models\Activity;
 
 /**
  * Satu halaman Log Aktivitas. Dibuat sebagai koleksi (bukan per baris) agar
- * nama karyawan/mobil yang dirujuk seluruh baris dimuat sekaligus.
+ * nama pegawai/mobil yang dirujuk seluruh baris dimuat sekaligus.
  * Membutuhkan relasi `causer` dan `subject`.
  */
 final class ActivityLogCollection extends ResourceCollection

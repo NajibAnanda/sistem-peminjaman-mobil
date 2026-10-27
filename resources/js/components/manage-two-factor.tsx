@@ -1,11 +1,13 @@
 import { Form } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormCard } from '@/components/form/form-card';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { LoadingButton } from '@/components/loading-button';
 import { Button } from '@/components/ui/button';
+import { useConfirmAction } from '@/hooks/use-confirm-action';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { disable, enable } from '@/routes/two-factor';
 
@@ -32,6 +34,7 @@ export default function ManageTwoFactor(props: Props) {
     } = useTwoFactorAuth();
     const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
     const prevTwoFactorEnabled = useRef(twoFactorEnabled);
+    const confirmation = useConfirmAction();
 
     useEffect(() => {
         if (prevTwoFactorEnabled.current && !twoFactorEnabled) {
@@ -57,18 +60,23 @@ export default function ManageTwoFactor(props: Props) {
                         autentikator di ponsel Anda.
                     </p>
 
-                    <div className="relative inline">
-                        <Form {...disable.form()}>
-                            {({ processing }) => (
-                                <LoadingButton
-                                    variant="destructive"
-                                    type="submit"
-                                    loading={processing}
-                                >
-                                    Nonaktifkan 2FA
-                                </LoadingButton>
-                            )}
-                        </Form>
+                    <div>
+                        <Button
+                            variant="destructive"
+                            type="button"
+                            onClick={() =>
+                                confirmation.request({
+                                    title: 'Nonaktifkan 2FA?',
+                                    description:
+                                        'Keamanan akun Anda akan berkurang dan Anda tidak lagi diminta kode verifikasi dari ponsel saat masuk.',
+                                    confirmLabel: 'Nonaktifkan 2FA',
+                                    destructive: true,
+                                    route: disable(),
+                                })
+                            }
+                        >
+                            Nonaktifkan 2FA
+                        </Button>
                     </div>
 
                     <TwoFactorRecoveryCodes
@@ -88,7 +96,10 @@ export default function ManageTwoFactor(props: Props) {
                     <div>
                         {hasSetupData ? (
                             <Button onClick={() => setShowSetupModal(true)}>
-                                <ShieldCheck />
+                                <ShieldCheck
+                                    className="size-4"
+                                    aria-hidden="true"
+                                />
                                 Lanjutkan pengaturan
                             </Button>
                         ) : (
@@ -121,6 +132,8 @@ export default function ManageTwoFactor(props: Props) {
                 fetchSetupData={fetchSetupData}
                 errors={errors}
             />
+
+            <ConfirmDialog {...confirmation.dialogProps} />
         </FormCard>
     );
 }

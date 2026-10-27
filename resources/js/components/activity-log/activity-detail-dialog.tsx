@@ -50,7 +50,7 @@ export function ActivityDetailDialog({ activity, onOpenChange }: Props) {
                                         <dt className="text-muted-foreground">
                                             {detail.label}
                                         </dt>
-                                        <dd className="break-words whitespace-pre-line">
+                                        <dd className="wrap-break-word whitespace-pre-line">
                                             {detail.value}
                                         </dd>
                                     </div>

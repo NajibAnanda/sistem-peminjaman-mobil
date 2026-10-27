@@ -80,7 +80,7 @@ Route::middleware('auth')->group(function () {
         ->can('activate', 'car')
         ->name('cars.activate');
 
-    // Data Karyawan (Pengelola & Admin; otorisasi lewat EmployeePolicy).
+    // Data Pegawai (Pengelola & Admin; otorisasi lewat EmployeePolicy).
     Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
     Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
     Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');

@@ -55,7 +55,7 @@ export default function BookingIndex({
                             onAction={dialogs.open}
                         />
                     )}
-                    searchPlaceholder="Cari kode, karyawan, atau plat…"
+                    searchPlaceholder="Cari kode, pegawai, atau plat…"
                     filterGroups={[
                         { key: 'status', label: 'Status', options: statuses },
                     ]}
@@ -63,7 +63,7 @@ export default function BookingIndex({
                         icon: CalendarClock,
                         title: 'Belum ada peminjaman berjalan',
                         description:
-                            'Jadwalkan peminjaman saat karyawan mengajukan pemakaian mobil dinas.',
+                            'Jadwalkan peminjaman saat pegawai mengajukan pemakaian mobil dinas.',
                         action: (
                             <Button asChild>
                                 <Link href={create()}>

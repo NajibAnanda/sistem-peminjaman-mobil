@@ -23,7 +23,7 @@ export default function Profile() {
                 {({ processing, errors }) => (
                     <FormCard
                         title="Profil"
-                        description="Perbarui nama yang tampil di aplikasi. Email hanya dapat diubah oleh Pengelola."
+                        description="Perbarui nama yang tampil di aplikasi."
                         footer={
                             <LoadingButton
                                 loading={processing}
@@ -47,16 +47,12 @@ export default function Profile() {
                                     required
                                     maxLength={255}
                                     autoComplete="name"
-                                    placeholder="Nama lengkap"
+                                    placeholder="Nama lengkap…"
                                     aria-invalid={!!errors.name || undefined}
                                 />
                             </FormField>
 
-                            <FormField
-                                id="email"
-                                label="Email"
-                                hint="Email hanya dapat diubah oleh Pengelola."
-                            >
+                            <FormField id="email" label="Email">
                                 {/* Tanpa atribut name: email tidak dikirim dan
                                     hanya dapat diubah Pengelola (FR-03). */}
                                 <Input
@@ -66,7 +62,6 @@ export default function Profile() {
                                     readOnly
                                     disabled
                                     autoComplete="username"
-                                    aria-describedby="email-hint"
                                 />
                             </FormField>
                         </FormGrid>

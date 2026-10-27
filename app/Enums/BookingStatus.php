@@ -19,7 +19,7 @@ enum BookingStatus: string
     case Cancelled = 'cancelled';
 
     /**
-     * Status yang masih "berjalan": memblokir penonaktifan mobil/karyawan
+     * Status yang masih "berjalan": memblokir penonaktifan mobil/pegawai
      * dan diperhitungkan dalam cek bentrok.
      *
      * @return list<self>

@@ -200,18 +200,18 @@ test('mobil nonaktif atau Maintenance tidak dapat dijadwalkan', function (string
     'maintenance' => ['maintenance', 'Maintenance'],
 ]);
 
-test('karyawan nonaktif tidak dapat dijadwalkan', function () {
+test('pegawai nonaktif tidak dapat dijadwalkan', function () {
     $employee = Employee::factory()->inactive()->create();
 
     $this->actingAs($this->user)
         ->post(route('bookings.store'), schedulePayload($this->car, $employee))
-        ->assertSessionHasErrors(['employee_id' => "Karyawan {$employee->name} sudah nonaktif sehingga tidak dapat dijadwalkan."]);
+        ->assertSessionHasErrors(['employee_id' => "Pegawai {$employee->name} sudah nonaktif sehingga tidak dapat dijadwalkan."]);
 });
 
 test('kode booking unik dan berurutan per bulan', function () {
     $this->actingAs($this->user);
     $otherCar = Car::factory()->create();
-    // Karyawan lain: satu karyawan tidak boleh punya dua peminjaman bersamaan.
+    // Pegawai lain: satu pegawai tidak boleh punya dua peminjaman bersamaan.
     $otherEmployee = Employee::factory()->create();
 
     $this->post(route('bookings.store'), schedulePayload($this->car, $this->employee));
@@ -249,7 +249,7 @@ test('form jadwal menandai ketersediaan mobil pada rentang yang dipilih', functi
         ->assertInertia(fn (Assert $page) => $page
             ->component('bookings/form')
             ->where('booking', null)
-            // Karyawan uji + karyawan milik booking yang bentrok; yang nonaktif tidak.
+            // Pegawai uji + pegawai milik booking yang bentrok; yang nonaktif tidak.
             ->has('employees', 2)
             ->has('cars', 3)
             ->where('startToleranceMinutes', 15)

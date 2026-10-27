@@ -93,7 +93,7 @@ test('log ekspor menampilkan format dan jumlah baris', function () {
 test('filter jenis data, petugas, periode, dan pencarian', function (Closure $query, array $expected) {
     activity(ActivityLogName::Car)->causedBy($this->admin)->event(ActivityEvent::Created->value)->log('Menambah mobil A');
     $this->travelTo(CarbonImmutable::parse('2026-10-22 08:00:00'));
-    activity(ActivityLogName::Employee)->causedBy($this->manager)->event(ActivityEvent::Created->value)->log('Menambah karyawan B');
+    activity(ActivityLogName::Employee)->causedBy($this->manager)->event(ActivityEvent::Created->value)->log('Menambah pegawai B');
     activity(ActivityLogName::Car)->causedBy($this->manager)->event(ActivityEvent::Updated->value)->log('Mengubah data mobil A');
 
     $this->actingAs($this->manager)
@@ -102,9 +102,9 @@ test('filter jenis data, petugas, periode, dan pencarian', function (Closure $qu
 })->with([
     'jenis data mobil' => [fn () => ['type' => ['car']], ['Mengubah data mobil A', 'Menambah mobil A']],
     'petugas admin' => [fn () => ['staff' => [(string) $this->admin->id]], ['Menambah mobil A']],
-    'periode 22 Okt' => [fn () => ['from' => '2026-10-22', 'to' => '2026-10-22'], ['Mengubah data mobil A', 'Menambah karyawan B']],
-    'pencarian' => [fn () => ['search' => 'karyawan'], ['Menambah karyawan B']],
-    'tidak dikenal diabaikan' => [fn () => ['type' => ['rahasia'], 'staff' => ['99999'], 'from' => 'besok'], ['Mengubah data mobil A', 'Menambah karyawan B', 'Menambah mobil A']],
+    'periode 22 Okt' => [fn () => ['from' => '2026-10-22', 'to' => '2026-10-22'], ['Mengubah data mobil A', 'Menambah pegawai B']],
+    'pencarian' => [fn () => ['search' => 'pegawai'], ['Menambah pegawai B']],
+    'tidak dikenal diabaikan' => [fn () => ['type' => ['rahasia'], 'staff' => ['99999'], 'from' => 'besok'], ['Mengubah data mobil A', 'Menambah pegawai B', 'Menambah mobil A']],
 ]);
 
 test('nomor urut halaman 2 dimulai dari 11', function () {

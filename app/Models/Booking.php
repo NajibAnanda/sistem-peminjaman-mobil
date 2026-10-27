@@ -359,7 +359,7 @@ final class Booking extends Model
     }
 
     /**
-     * Pencarian kode, nama/no HP karyawan, atau plat nomor.
+     * Pencarian kode, nama/no HP pegawai, atau plat nomor.
      *
      * @param  Builder<self>  $query
      */

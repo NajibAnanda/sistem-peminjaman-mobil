@@ -86,7 +86,7 @@ export type BookingDetail = Booking & {
     extensions: BookingExtension[];
 };
 
-/** Pilihan karyawan di form jadwal (BookingController::form). */
+/** Pilihan pegawai di form jadwal (BookingController::form). */
 export type EmployeeOption = {
     id: number;
     name: string;

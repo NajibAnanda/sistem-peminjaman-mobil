@@ -15,16 +15,16 @@ final class EmployeeException extends BusinessRuleException
      */
     public static function hasOngoingBookings(array $codes): self
     {
-        return new self('Karyawan tidak dapat dinonaktifkan karena masih memiliki peminjaman yang dijadwalkan atau aktif: '.self::listCodes($codes).'. Selesaikan atau batalkan peminjaman tersebut terlebih dahulu.');
+        return new self('Pegawai tidak dapat dinonaktifkan karena masih memiliki peminjaman yang dijadwalkan atau aktif: '.self::listCodes($codes).'. Selesaikan atau batalkan peminjaman tersebut terlebih dahulu.');
     }
 
     public static function alreadyInactive(): self
     {
-        return new self('Karyawan ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
+        return new self('Pegawai ini sudah nonaktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 
     public static function alreadyActive(): self
     {
-        return new self('Karyawan ini sudah aktif. Muat ulang halaman untuk melihat data terbaru.');
+        return new self('Pegawai ini sudah aktif. Muat ulang halaman untuk melihat data terbaru.');
     }
 }

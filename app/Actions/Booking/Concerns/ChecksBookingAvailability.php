@@ -52,9 +52,9 @@ trait ChecksBookingAvailability
     }
 
     /**
-     * Satu karyawan tidak boleh memegang dua peminjaman yang waktunya tumpang
+     * Satu pegawai tidak boleh memegang dua peminjaman yang waktunya tumpang
      * tindih, meskipun mobilnya berbeda. Pemanggil wajib sudah mengunci baris
-     * karyawan agar dua penjadwalan bersamaan diproses bergantian.
+     * pegawai agar dua penjadwalan bersamaan diproses bergantian.
      */
     private function ensureEmployeeFree(Employee $employee, CarbonInterface $start, CarbonInterface $end, ?Booking $except = null): void
     {

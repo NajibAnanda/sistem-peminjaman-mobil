@@ -209,7 +209,7 @@ return [
         'brand' => 'merk',
         'model' => 'tipe',
         'operational_status' => 'status operasional',
-        'employee_id' => 'karyawan',
+        'employee_id' => 'pegawai',
         'car_id' => 'mobil',
         'purpose' => 'tujuan',
         'start_at' => 'waktu mulai',

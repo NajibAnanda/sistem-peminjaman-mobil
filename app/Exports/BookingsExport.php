@@ -61,7 +61,7 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
     {
         return [
             'Kode Peminjaman',
-            'Nama Karyawan',
+            'Nama Pegawai',
             'Divisi',
             'No HP',
             'Mobil',

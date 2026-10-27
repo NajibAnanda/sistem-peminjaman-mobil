@@ -8,7 +8,7 @@ use App\Models\Booking;
 use App\Models\User;
 
 /**
- * Peminjaman: kode, nama/NIP karyawan, atau plat nomor (scope search yang sama
+ * Peminjaman: kode, nama/no HP pegawai, atau plat nomor (scope search yang sama
  * dengan tabel Peminjaman & Riwayat). Terbaru di atas.
  */
 final class BookingSearch implements SearchCategory
