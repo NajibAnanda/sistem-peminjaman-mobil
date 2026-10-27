@@ -38,7 +38,7 @@ final class DeactivateCar
                 ->causedBy($actor)
                 ->event(ActivityEvent::Deactivated->value)
                 ->withChanges(['old' => ['is_active' => true], 'attributes' => ['is_active' => false]])
-                ->log("Menonaktifkan mobil {$car->plate_number}");
+                ->log("Menonaktifkan mobil {$car->brand} {$car->model} ({$car->plate_number})");
 
             return $car;
         });

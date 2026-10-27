@@ -45,7 +45,7 @@ final readonly class ActivityPresenter
 
     /**
      * @param  array<int, string>  $employees  id => nama
-     * @param  array<int, string>  $cars  id => plat nomor
+     * @param  array<int, string>  $cars  id => label mobil
      */
     private function __construct(
         private array $employees,
@@ -74,9 +74,15 @@ final readonly class ActivityPresenter
             }
         }
 
+        $cars = Car::query()
+            ->whereKey(array_unique($ids['car_id']))
+            ->get(['id', 'brand', 'model', 'plate_number'])
+            ->mapWithKeys(fn (Car $car): array => [$car->id => "{$car->brand} {$car->model} ({$car->plate_number})"])
+            ->all();
+
         return new self(
             Employee::query()->whereKey(array_unique($ids['employee_id']))->pluck('name', 'id')->all(),
-            Car::query()->whereKey(array_unique($ids['car_id']))->pluck('plate_number', 'id')->all(),
+            $cars,
         );
     }
 
@@ -143,7 +149,7 @@ final readonly class ActivityPresenter
     {
         return match (true) {
             $activity->subject instanceof Booking => $activity->subject->code,
-            $activity->subject instanceof Car => $activity->subject->plate_number,
+            $activity->subject instanceof Car => "{$activity->subject->brand} {$activity->subject->model} ({$activity->subject->plate_number})",
             $activity->subject instanceof Employee => $activity->subject->name,
             $activity->subject instanceof User => $activity->subject->name,
             default => null,

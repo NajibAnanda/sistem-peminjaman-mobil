@@ -83,7 +83,7 @@ final class PickUpBooking
                         'attributes' => ['status' => BookingStatus::Active->value, 'picked_up_at' => $booking->picked_up_at],
                     ])
                     ->withProperties(['photo_source' => $source->value])
-                    ->log("Serah terima ambil {$booking->code} ({$car->plate_number})");
+                    ->log("Serah terima ambil {$booking->code} ({$car->brand} {$car->model} ({$car->plate_number}))");
 
                 return $booking;
             },

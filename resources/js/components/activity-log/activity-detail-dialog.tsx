@@ -1,5 +1,6 @@
 import { ActivityChangeList } from '@/components/activity-log/activity-change-list';
 import { FormDialog } from '@/components/form-dialog';
+import { Button } from '@/components/ui/button';
 import { useDateFormat } from '@/hooks/use-date-format';
 import type { ActivityEntry } from '@/types';
 
@@ -18,10 +19,15 @@ export function ActivityDetailDialog({ activity, onOpenChange }: Props) {
             onOpenChange={onOpenChange}
             title={activity?.description ?? 'Rincian aktivitas'}
             description={
-                activity &&
-                `${formatDateTime(activity.created_at)} oleh ${activity.causer_name} · ${activity.type_label}${activity.subject_label ? ` · ${activity.subject_label}` : ''}`
+                activity
+                    ? `${formatDateTime(activity.created_at)} oleh ${activity.causer_name} · ${activity.type_label}${activity.subject_label ? ` · ${activity.subject_label}` : ''}`
+                    : undefined
             }
-            footer={null}
+            footer={
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    Tutup
+                </Button>
+            }
         >
             {activity && (
                 <div className="grid gap-4">

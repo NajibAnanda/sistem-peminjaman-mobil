@@ -54,7 +54,7 @@ final class SetCarOperationalStatus
                     'old' => ['operational_status' => $previous->value],
                     'attributes' => ['operational_status' => $status->value],
                 ])
-                ->log("Mengubah status mobil {$car->plate_number} menjadi {$status->label()}");
+                ->log("Mengubah status mobil {$car->brand} {$car->model} ({$car->plate_number}) menjadi {$status->label()}");
 
             return $car;
         });

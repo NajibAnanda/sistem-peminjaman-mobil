@@ -25,13 +25,17 @@ export function ActivityChangeList({ changes }: Props) {
                         {change.old !== null || change.new === null ? (
                             <>
                                 <span className="text-muted-foreground line-through decoration-muted-foreground/50">
+                                    <span className="sr-only">Semula: </span>
                                     {change.old ?? EMPTY}
                                 </span>
                                 <ArrowRight
                                     className="size-3.5 shrink-0 text-muted-foreground"
-                                    aria-label="menjadi"
+                                    aria-hidden="true"
                                 />
                                 <span className="font-medium">
+                                    <span className="sr-only">
+                                        , diubah menjadi:{' '}
+                                    </span>
                                     {change.new ?? EMPTY}
                                 </span>
                             </>

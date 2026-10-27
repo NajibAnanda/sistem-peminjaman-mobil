@@ -29,7 +29,7 @@ final class ActivateCar
                 ->causedBy($actor)
                 ->event(ActivityEvent::Activated->value)
                 ->withChanges(['old' => ['is_active' => false], 'attributes' => ['is_active' => true]])
-                ->log("Mengaktifkan mobil {$car->plate_number}");
+                ->log("Mengaktifkan mobil {$car->brand} {$car->model} ({$car->plate_number})");
 
             return $car;
         });

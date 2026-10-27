@@ -56,7 +56,7 @@ final class ScheduleBooking
                 ->causedBy($actor)
                 ->event(ActivityEvent::Created->value)
                 ->withChanges(['attributes' => $booking->only(['code', 'employee_id', 'car_id', 'purpose', 'start_at', 'planned_return_at'])])
-                ->log("Menjadwalkan peminjaman {$booking->code} ({$car->plate_number}, {$employee->name})");
+                ->log("Menjadwalkan peminjaman {$booking->code} ({$car->brand} {$car->model} ({$car->plate_number}), {$employee->name})");
 
             return $booking;
         });

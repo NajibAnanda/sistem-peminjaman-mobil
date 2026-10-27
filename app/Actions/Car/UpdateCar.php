@@ -34,7 +34,7 @@ final class UpdateCar
                         'old' => array_intersect_key($before, array_flip($changed)),
                         'attributes' => $car->only($changed),
                     ])
-                    ->log("Mengubah data mobil {$car->plate_number}");
+                    ->log("Mengubah data mobil {$car->brand} {$car->model} ({$car->plate_number})");
             }
 
             return $car;

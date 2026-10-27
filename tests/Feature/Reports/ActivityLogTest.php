@@ -49,7 +49,7 @@ test('perubahan jadwal ditampilkan dalam bahasa yang mudah dipahami', function (
             ->where('activities.data.0.event_label', 'Diubah')
             ->where('activities.data.0.subject_label', $booking->code)
             ->where('activities.data.0.changes', [
-                ['field' => 'car_id', 'label' => 'Mobil', 'old' => 'B 1111 AAA', 'new' => 'D 2222 BBB'],
+                ['field' => 'car_id', 'label' => 'Mobil', 'old' => "{$oldCar->brand} {$oldCar->model} (B 1111 AAA)", 'new' => "{$newCar->brand} {$newCar->model} (D 2222 BBB)"],
                 ['field' => 'planned_return_at', 'label' => 'Rencana waktu kembali', 'old' => '21 Okt 2026, 12.00', 'new' => '21 Okt 2026, 15.30'],
             ])
             ->where('filterOptions.type.0', ['value' => 'staff', 'label' => 'Akun Petugas']),
@@ -58,15 +58,17 @@ test('perubahan jadwal ditampilkan dalam bahasa yang mudah dipahami', function (
 
 test('status, aktif/nonaktif, dan keterangan tambahan ditampilkan dengan label', function () {
     $booking = Booking::factory()->scheduled()->create();
+    $car = Car::factory()->create();
 
     $this->actingAs($this->admin)
         ->post(route('bookings.cancel', $booking), ['reason' => 'Kegiatan ditunda'])
         ->assertSessionHasNoErrors();
-    $this->post(route('cars.deactivate', Car::factory()->create()));
+    $this->post(route('cars.deactivate', $car));
 
     $this->actingAs($this->manager)
         ->get(route('activity-log.index'))
         ->assertInertia(fn (Assert $page) => $page
+            ->where('activities.data.0.subject_label', "{$car->brand} {$car->model} ({$car->plate_number})")
             ->where('activities.data.0.changes', [
                 ['field' => 'is_active', 'label' => 'Status aktif', 'old' => 'Aktif', 'new' => 'Nonaktif'],
             ])

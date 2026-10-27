@@ -32,7 +32,7 @@ final class CreateCar
                 ->causedBy($actor)
                 ->event(ActivityEvent::Created->value)
                 ->withChanges(['attributes' => $car->only(['plate_number', 'brand', 'model'])])
-                ->log("Menambah mobil {$car->plate_number}");
+                ->log("Menambah mobil {$car->brand} {$car->model} ({$car->plate_number})");
 
             return $car;
         });

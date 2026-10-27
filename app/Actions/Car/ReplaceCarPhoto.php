@@ -43,7 +43,7 @@ final class ReplaceCarPhoto
                     ->causedBy($actor)
                     ->event(ActivityEvent::PhotoUpdated->value)
                     ->withProperties(['position' => $position, 'replaced' => $oldPath !== null])
-                    ->log("Memperbarui foto {$position} mobil {$car->plate_number}");
+                    ->log("Memperbarui foto {$position} mobil {$car->brand} {$car->model} ({$car->plate_number})");
 
                 // Foto referensi lama (bukan foto bukti) dihapus hanya setelah
                 // data baru benar-benar tersimpan.
