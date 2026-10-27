@@ -64,6 +64,14 @@ export default function BookingIndex({
                         title: 'Belum ada peminjaman berjalan',
                         description:
                             'Jadwalkan peminjaman saat karyawan mengajukan pemakaian mobil dinas.',
+                        action: (
+                            <Button asChild>
+                                <Link href={create()}>
+                                    <Plus aria-hidden="true" />
+                                    Jadwalkan Peminjaman
+                                </Link>
+                            </Button>
+                        ),
                     }}
                 />
             </div>

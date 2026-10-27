@@ -156,6 +156,12 @@ export default function StaffIndex({
                         title: 'Belum ada akun petugas',
                         description:
                             'Tambahkan akun untuk petugas GA yang akan memakai aplikasi.',
+                        action: (
+                            <Button onClick={() => openForm(null)}>
+                                <UserPlus aria-hidden="true" />
+                                Tambah Petugas
+                            </Button>
+                        ),
                     }}
                 />
             </div>

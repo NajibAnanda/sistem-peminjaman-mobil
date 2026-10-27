@@ -109,6 +109,12 @@ export default function EmployeeIndex({
                         title: 'Belum ada data karyawan',
                         description:
                             'Tambahkan karyawan agar dapat dipilih saat menjadwalkan peminjaman.',
+                        action: (
+                            <Button onClick={() => openForm(null)}>
+                                <UserPlus aria-hidden="true" />
+                                Tambah Karyawan
+                            </Button>
+                        ),
                     }}
                 />
             </div>

@@ -82,6 +82,12 @@ export default function CarIndex({ cars, query, statuses }: CarIndexProps) {
                         title: 'Belum ada data mobil',
                         description:
                             'Tambahkan mobil dinas agar dapat dijadwalkan untuk peminjaman.',
+                        action: (
+                            <Button onClick={() => openForm(null)}>
+                                <Plus aria-hidden="true" />
+                                Tambah Mobil
+                            </Button>
+                        ),
                     }}
                 />
             </div>

@@ -3,6 +3,13 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import type { FlashToast } from '@/types/ui';
 
+const DEFAULT_TITLES: Record<FlashToast['type'], string> = {
+    success: 'Berhasil',
+    info: 'Informasi',
+    warning: 'Peringatan',
+    error: 'Terjadi Kesalahan',
+};
+
 export function useFlashToast(): void {
     useEffect(() => {
         return router.on('flash', (event) => {
@@ -13,7 +20,10 @@ export function useFlashToast(): void {
                 return;
             }
 
-            toast[data.type](data.message);
+            const title = data.title || DEFAULT_TITLES[data.type];
+            toast[data.type](title, {
+                description: data.message,
+            });
         });
     }, []);
 }

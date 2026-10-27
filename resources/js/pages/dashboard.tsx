@@ -1,7 +1,6 @@
 import { Head, Link, usePage, usePoll } from '@inertiajs/react';
 import {
     AlarmClockOff,
-    CalendarClock,
     Clock,
     KeyRound,
     Phone,
@@ -16,8 +15,8 @@ import { Button } from '@/components/ui/button';
 import { useDateFormat } from '@/hooks/use-date-format';
 import { formatDuration } from '@/lib/datetime';
 import { dashboard } from '@/routes';
-import { create, index as bookings } from '@/routes/bookings';
-import type { Booking, DashboardProps } from '@/types';
+import { create } from '@/routes/bookings';
+import type { DashboardProps } from '@/types';
 
 const SECOND_MS = 1000;
 
@@ -46,13 +45,6 @@ export default function Dashboard({
         ],
     });
 
-    const time = (value: string) => (
-        <span className="font-medium tabular-nums">{formatTime(value)}</span>
-    );
-    const status = (booking: Booking) => (
-        <StatusBadge status={booking.display_status} />
-    );
-
     return (
         <>
             <Head title="Dashboard" />
@@ -71,20 +63,17 @@ export default function Dashboard({
                     }
                 />
 
-                <FleetSummary items={fleet} />
+                <FleetSummary items={fleet} alerts={alerts} />
 
                 <div className="grid gap-4 lg:grid-cols-2">
                     <BookingListCard
                         title="Terlambat"
-                        description="Peminjaman yang melewati rencana waktu kembali dan perlu segera ditindaklanjuti dengan karyawan."
+                        description="Melewati rencana waktu kembali."
                         icon={AlarmClockOff}
                         tone="destructive"
                         bookings={overdue}
                         total={alerts?.overdue}
                         limit={alertListLimit}
-                        viewAllHref={bookings({
-                            query: { status: ['overdue'] },
-                        })}
                         emptyText="Tidak ada peminjaman yang terlambat."
                         renderDetail={(booking) => (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
@@ -94,7 +83,7 @@ export default function Dashboard({
                         )}
                         renderMeta={(booking) => (
                             <div className="grid gap-0.5 text-xs">
-                                <span className="font-medium text-destructive">
+                                <span className="font-medium text-destructive tabular-nums">
                                     {formatDuration(
                                         booking.planned_return_at,
                                         now,
@@ -109,19 +98,22 @@ export default function Dashboard({
 
                     <BookingListCard
                         title="Belum Diambil"
-                        description="Peminjaman yang sudah melewati waktu mulai tetapi mobilnya belum diserahterimakan."
+                        description="Melewati jadwal waktu mulai."
                         icon={Clock}
                         tone="warning"
                         bookings={notPickedUp}
                         total={alerts?.not_picked_up}
                         limit={alertListLimit}
-                        viewAllHref={bookings({
-                            query: { status: ['not_picked_up'] },
-                        })}
-                        emptyText="Semua peminjaman yang sudah dimulai telah diserahterimakan."
+                        emptyText="Tidak ada peminjaman yang belum diambil."
+                        renderDetail={(booking) => (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
+                                <Phone className="size-3" aria-hidden="true" />
+                                {booking.employee.phone}
+                            </span>
+                        )}
                         renderMeta={(booking) => (
                             <div className="grid gap-0.5 text-xs">
-                                <span className="font-medium text-warning">
+                                <span className="font-medium text-warning tabular-nums">
                                     {formatDuration(booking.start_at, now)}
                                 </span>
                                 <span className="text-muted-foreground">
@@ -133,37 +125,36 @@ export default function Dashboard({
 
                     <BookingListCard
                         title="Jadwal Ambil Hari Ini"
-                        description="Peminjaman terjadwal yang mobilnya akan diserahterimakan kepada karyawan hari ini."
+                        description="Rencana serah terima ambil hari ini."
                         icon={KeyRound}
                         bookings={pickupsToday}
                         emptyText="Tidak ada jadwal ambil hari ini."
                         renderMeta={(booking) => (
                             <div className="grid justify-items-end gap-1">
-                                {time(booking.start_at)}
-                                {status(booking)}
+                                <span className="font-medium tabular-nums">
+                                    {formatTime(booking.start_at)}
+                                </span>
+                                <StatusBadge status={booking.display_status} />
                             </div>
                         )}
                     />
 
                     <BookingListCard
                         title="Jadwal Kembali Hari Ini"
-                        description="Peminjaman aktif yang mobilnya direncanakan kembali ke kantor hari ini."
+                        description="Rencana serah terima kembali hari ini."
                         icon={Undo2}
                         bookings={returnsToday}
                         emptyText="Tidak ada jadwal kembali hari ini."
                         renderMeta={(booking) => (
                             <div className="grid justify-items-end gap-1">
-                                {time(booking.planned_return_at)}
-                                {status(booking)}
+                                <span className="font-medium tabular-nums">
+                                    {formatTime(booking.planned_return_at)}
+                                </span>
+                                <StatusBadge status={booking.display_status} />
                             </div>
                         )}
                     />
                 </div>
-
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <CalendarClock className="size-3.5" aria-hidden="true" />
-                    Diperbarui otomatis setiap {pollingIntervalSeconds} detik.
-                </p>
             </div>
         </>
     );

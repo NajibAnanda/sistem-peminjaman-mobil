@@ -1,10 +1,12 @@
 import { Link } from '@inertiajs/react';
 import { Info, TriangleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 import { show } from '@/routes/bookings';
 
 type HintProps = {
     code: string;
+    className?: string;
 };
 
 type AlertProps = {
@@ -36,11 +38,16 @@ function BookingLink({ code, id }: { code: string; id?: number | null }) {
  * FR-23 (versi ringkas untuk tabel dan daftar): mobil jadwal ini masih
  * dipakai peminjaman Terlambat lain.
  */
-export function AwaitingReturnHint({ code }: HintProps) {
+export function AwaitingReturnHint({ code, className }: HintProps) {
     return (
         // Boleh turun baris agar tidak melebarkan kolom tabel (sel tabel
         // bawaan memakai whitespace-nowrap).
-        <span className="inline-flex max-w-44 items-start gap-1 text-xs whitespace-normal text-warning">
+        <span
+            className={cn(
+                'inline-flex items-start gap-1 text-xs whitespace-normal text-warning',
+                className ?? 'max-w-44',
+            )}
+        >
             <TriangleAlert
                 className="mt-px size-3.5 shrink-0"
                 aria-hidden="true"

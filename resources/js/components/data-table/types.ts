@@ -40,4 +40,5 @@ export type DataTableEmptyState = {
     icon: LucideIcon;
     title: string;
     description: string;
+    action?: ReactNode;
 };

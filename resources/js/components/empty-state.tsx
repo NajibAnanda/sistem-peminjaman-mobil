@@ -25,7 +25,7 @@ export function EmptyState({ icon: Icon, title, description, action }: Props) {
                     </p>
                 )}
             </div>
-            {action}
+            {action && <div className="pt-1">{action}</div>}
         </div>
     );
 }

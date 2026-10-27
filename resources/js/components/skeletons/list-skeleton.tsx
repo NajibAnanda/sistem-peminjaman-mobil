@@ -20,6 +20,7 @@ export function ListSkeleton({ rows, detailLine = false }: Props) {
                         key={index}
                         className="flex items-center gap-3 px-6 py-3"
                     >
+                        <Skeleton className="size-8 shrink-0 rounded-full" />
                         <div className="grid min-w-0 flex-1 gap-0.5">
                             <div className="flex h-5 items-center">
                                 <Skeleton className="h-4 w-40 max-w-full" />
