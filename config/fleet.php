@@ -115,6 +115,7 @@ return [
         'csv_delimiter' => env('FLEET_CSV_DELIMITER', ','),
         'chunk_size' => 500,
         'max_range_days' => 366,
+        'max_pdf_rows' => 1000,
     ],
 
     /*

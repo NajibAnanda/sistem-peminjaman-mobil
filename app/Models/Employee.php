@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ActiveStatus;
+use App\Support\SearchTerm;
 use App\Support\TableQuery;
 use Database\Factories\EmployeeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -52,12 +53,16 @@ final class Employee extends Model
     public function scopeForTable(Builder $query, TableQuery $table): void
     {
         $query
-            ->when($table->search, fn (Builder $query, string $term) => $query->where(
-                fn (Builder $query) => $query
-                    ->where('name', 'like', "%{$term}%")
-                    ->orWhere('phone', 'like', "%{$term}%")
-                    ->orWhere('division', 'like', "%{$term}%"),
-            ))
+            ->when($table->search, function (Builder $query, string $term): void {
+                $escaped = SearchTerm::escape($term);
+
+                $query->where(
+                    fn (Builder $query) => $query
+                        ->where('name', 'like', "%{$escaped}%")
+                        ->orWhere('phone', 'like', "%{$escaped}%")
+                        ->orWhere('division', 'like', "%{$escaped}%"),
+                );
+            })
             ->when($table->filter('division'), fn (Builder $query, array $divisions) => $query->whereIn('division', $divisions))
             ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereIn(
                 'is_active',

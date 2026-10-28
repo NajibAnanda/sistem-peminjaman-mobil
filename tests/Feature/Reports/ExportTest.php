@@ -252,3 +252,32 @@ test('permintaan ekspor JSON yang ditolak mengembalikan pesan untuk ditampilkan'
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['period']);
 });
+
+test('ekspor PDF dibatasi jika baris data melebihi batas maksimal', function () {
+    config(['fleet.export.max_pdf_rows' => 1]);
+
+    $this->actingAs($this->user)
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'pdf']))
+        ->assertRedirect()
+        ->assertSessionHas('error', 'Jumlah data untuk ekspor PDF melebihi batas (2 baris, maksimal 1 baris). Silakan persempit rentang tanggal atau gunakan format Excel / CSV.');
+});
+
+test('karakter formula injeksi pada ekspor CSV dinetralkan dengan tanda kutip', function (string $prefix) {
+    Booking::factory()->create([
+        'code' => 'PMJ-202609-9999',
+        'car_id' => $this->scheduled->car_id,
+        'employee_id' => $this->scheduled->employee_id,
+        'created_by' => $this->user->id,
+        'purpose' => "{$prefix}SUM(1+1)",
+        'status' => BookingStatus::Scheduled,
+        'start_at' => CarbonImmutable::parse('2026-09-15 08:00'),
+        'planned_return_at' => CarbonImmutable::parse('2026-09-15 12:00'),
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->get(route('history.export', [...EXPORT_PERIOD, 'format' => 'csv', 'search' => 'PMJ-202609-9999']))
+        ->assertOk();
+
+    $rows = csvRows($response);
+    expect($rows[1][6])->toBe("'{$prefix}SUM(1+1)");
+})->with(['=', '+', '-', '@']);

@@ -7,6 +7,7 @@ namespace App\Actions\Report;
 use App\Enums\ActivityEvent;
 use App\Enums\ActivityLogName;
 use App\Enums\ExportFormat;
+use App\Exceptions\ReportException;
 use App\Exports\BookingsExport;
 use App\Models\Booking;
 use App\Models\User;
@@ -28,13 +29,22 @@ final class ExportBookings
     {
         $now = CarbonImmutable::now();
         $fileName = $this->fileName($table, $format, $now);
+        $rowCount = Booking::query()->forHistory($table, $now)->count();
+
+        if ($format === ExportFormat::Pdf) {
+            $maxPdfRows = (int) config('fleet.export.max_pdf_rows', 1000);
+
+            if ($rowCount > $maxPdfRows) {
+                throw ReportException::pdfRowsExceeded($rowCount, $maxPdfRows);
+            }
+        }
 
         activity(ActivityLogName::Report)
             ->causedBy($actor)
             ->event(ActivityEvent::Exported->value)
             ->withProperties([
                 'format' => $format->value,
-                'rows' => Booking::query()->forHistory($table, $now)->count(),
+                'rows' => $rowCount,
                 'file' => $fileName,
                 'query' => $table->toArray(),
             ])

@@ -6,6 +6,7 @@ namespace App\Support\Search;
 
 use App\Models\Car;
 use App\Models\User;
+use App\Support\SearchTerm;
 use Illuminate\Database\Eloquent\Builder;
 
 final class CarSearch implements SearchCategory
@@ -27,11 +28,13 @@ final class CarSearch implements SearchCategory
 
     public function search(string $term, int $limit): array
     {
+        $escaped = SearchTerm::escape($term);
+
         return array_values(Car::query()
             ->where(fn (Builder $query) => $query
-                ->where('plate_number', 'like', "%{$term}%")
-                ->orWhere('brand', 'like', "%{$term}%")
-                ->orWhere('model', 'like', "%{$term}%"))
+                ->where('plate_number', 'like', "%{$escaped}%")
+                ->orWhere('brand', 'like', "%{$escaped}%")
+                ->orWhere('model', 'like', "%{$escaped}%"))
             ->orderBy('plate_number')
             ->limit($limit)
             ->get(['id', 'plate_number', 'brand', 'model', 'is_active'])

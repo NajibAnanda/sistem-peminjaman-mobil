@@ -100,3 +100,32 @@ test('divisi yang dihapus tidak muncul lagi di halaman daftar pegawai', function
             ->where('divisions', fn ($divisions) => ! collect($divisions)->contains('value', 'Divisi Dihapus'))
         );
 });
+
+test('pengelola juga dapat menambah dan menghapus divisi', function () {
+    $manager = User::factory()->manager()->create();
+
+    $this->actingAs($manager)
+        ->post(route('divisions.store'), ['name' => 'Divisi Pengelola'])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('divisions', ['name' => 'Divisi Pengelola']);
+
+    $this->actingAs($manager)
+        ->delete(route('divisions.destroy', 'Divisi Pengelola'))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseMissing('divisions', ['name' => 'Divisi Pengelola']);
+});
+
+test('petugas dapat menghapus divisi dengan karakter khusus tanpa double decode', function () {
+    Division::create(['name' => 'Tim 100% Khusus']);
+
+    $this->actingAs($this->user)
+        ->delete(route('divisions.destroy', ['division' => 'Tim 100% Khusus']))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseMissing('divisions', ['name' => 'Tim 100% Khusus']);
+});

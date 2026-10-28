@@ -102,6 +102,8 @@ test('pencarian dan filter riwayat mengembalikan data yang benar', function (Clo
     'cari kode' => [fn () => ['search' => '202609-9002'], ['PMJ-202609-9002']],
     'cari nama pegawai' => [fn () => ['search' => 'rina'], ['PMJ-202609-9001', 'PMJ-202610-9002', 'PMJ-202610-9003']],
     'cari plat' => [fn () => ['search' => '2222'], ['PMJ-202609-9002', 'PMJ-202610-9002']],
+    'cari wildcard persen literal' => [fn () => ['search' => '%%'], []],
+    'cari wildcard underscore literal' => [fn () => ['search' => '___'], []],
     'status selesai' => [fn () => ['status' => ['completed']], ['PMJ-202609-9001', 'PMJ-202609-9002']],
     'status dibatalkan & terlambat' => [fn () => ['status' => ['cancelled', 'overdue']], ['PMJ-202610-9001', 'PMJ-202610-9002']],
     'mobil' => [fn () => ['car' => [(string) $this->carA->id]], ['PMJ-202609-9001', 'PMJ-202610-9001', 'PMJ-202610-9003']],

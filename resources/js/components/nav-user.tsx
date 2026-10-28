@@ -35,6 +35,9 @@ export function NavUser() {
             {},
             {
                 onStart: () => setProcessing(true),
+                onError: () => {
+                    window.location.href = '/login';
+                },
                 onFinish: () => {
                     setProcessing(false);
                     setConfirmLogoutOpen(false);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support\Search;
 
 use App\Models\User;
+use App\Support\SearchTerm;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -30,10 +31,12 @@ final class StaffSearch implements SearchCategory
 
     public function search(string $term, int $limit): array
     {
+        $escaped = SearchTerm::escape($term);
+
         return array_values(User::query()
             ->where(fn (Builder $query) => $query
-                ->where('name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%"))
+                ->where('name', 'like', "%{$escaped}%")
+                ->orWhere('email', 'like', "%{$escaped}%"))
             ->orderBy('name')
             ->limit($limit)
             ->get(['id', 'name', 'email', 'role', 'is_active'])

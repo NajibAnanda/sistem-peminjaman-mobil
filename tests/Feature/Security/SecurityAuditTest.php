@@ -4,6 +4,7 @@ use App\Models\Booking;
 use App\Models\Car;
 use App\Models\User;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route as RoutingRoute;
@@ -56,7 +57,10 @@ test('Inertia DevTools tidak aktif sehingga rekaman request tidak bisa dibaca', 
 });
 
 test('perlindungan CSRF terpasang di grup web', function () {
-    expect(app(Kernel::class)->getMiddlewareGroups()['web'])->toContain(PreventRequestForgery::class);
+    /** @var HttpKernel $kernel */
+    $kernel = app(Kernel::class);
+
+    expect($kernel->getMiddlewareGroups()['web'])->toContain(PreventRequestForgery::class);
 });
 
 test('halaman yang tidak ada menampilkan halaman error ramah tanpa detail teknis', function (bool $loggedIn) {
@@ -191,4 +195,88 @@ test('field yang tidak diizinkan diabaikan saat mengubah profil (mass assignment
         ->and($admin->role->value)->toBe('admin')
         ->and($admin->is_active)->toBeTrue()
         ->and($admin->must_change_password)->toBeFalse();
+});
+
+test('serah terima kembali menolak file berbahaya (.php, .exe, .sh, .html)', function (string $name, string $content) {
+    Storage::fake('local');
+    $booking = Booking::factory()->active()->create();
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->post(route('bookings.return', $booking), [
+            'photo' => realUpload($name, $content),
+            'source' => 'upload',
+        ])
+        ->assertSessionHasErrors('photo');
+
+    expect($booking->refresh()->status->value)->toBe('active')
+        ->and(Storage::disk('local')->allFiles())->toBe([]);
+})->with([
+    'skrip PHP .php' => ['skrip.php', '<?php phpinfo(); ?>'],
+    'skrip shell .sh' => ['skrip.sh', "#!/bin/bash\necho 'test'"],
+    'executable .exe' => ['program.exe', "MZ\x90\x00\x03"],
+    'dokumen HTML .html' => ['halaman.html', '<html><body>xss</body></html>'],
+]);
+
+test('props sensitif (password hash, two_factor_secret, recovery_codes, remember_token) tidak pernah ada di respons Inertia halaman mana pun', function () {
+    $manager = User::factory()->manager()->create([
+        'two_factor_secret' => 'rahasia-2fa-super-secret',
+        'two_factor_recovery_codes' => '["recovery-code-1"]',
+        'remember_token' => 'remember-token-secret-xyz',
+    ]);
+    $car = Car::factory()->create();
+    $booking = Booking::factory()->scheduled()->create(['car_id' => $car->id]);
+
+    $routes = [
+        route('dashboard'),
+        route('bookings.index'),
+        route('bookings.create'),
+        route('bookings.show', $booking),
+        route('schedule.index'),
+        route('history.index'),
+        route('cars.index'),
+        route('cars.show', $car),
+        route('employees.index'),
+        route('staff.index'),
+        route('activity-log.index'),
+        route('profile.edit'),
+        route('appearance.edit'),
+        route('security.edit'),
+    ];
+
+    foreach ($routes as $url) {
+        $response = $this->actingAs($manager)
+            ->withSession(['auth.password_confirmed_at' => time()])
+            ->get($url)
+            ->assertOk();
+        $content = (string) $response->getContent();
+
+        expect($content)->not->toContain('rahasia-2fa-super-secret')
+            ->not->toContain('recovery-code-1')
+            ->not->toContain('remember-token-secret-xyz')
+            ->not->toContain('"two_factor_secret"')
+            ->not->toContain('"two_factor_recovery_codes"');
+    }
+});
+
+test('seluruh route khusus Pengelola menolak akses role Admin', function () {
+    $admin = User::factory()->admin()->create();
+    $targetUser = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get(route('staff.index'))->assertForbidden();
+
+    $this->actingAs($admin)->post(route('staff.store'), [
+        'name' => 'Petugas Baru',
+        'email' => 'baru@kantor.test',
+        'role' => 'admin',
+    ])->assertForbidden();
+
+    $this->actingAs($admin)->put(route('staff.update', $targetUser), [
+        'name' => 'Petugas Edit',
+        'role' => 'admin',
+    ])->assertForbidden();
+
+    $this->actingAs($admin)->post(route('staff.deactivate', $targetUser))->assertForbidden();
+    $this->actingAs($admin)->post(route('staff.activate', $targetUser))->assertForbidden();
+    $this->actingAs($admin)->post(route('staff.reset-password', $targetUser))->assertForbidden();
+    $this->actingAs($admin)->get(route('activity-log.index'))->assertForbidden();
 });

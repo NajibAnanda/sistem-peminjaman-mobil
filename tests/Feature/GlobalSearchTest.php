@@ -107,3 +107,11 @@ test('pencarian wajib login dan akun aktif', function () {
         ->assertRedirect(route('login'));
     $this->assertGuest();
 });
+
+test('karakter wildcard SQL seperti persen dan garis bawah diperlakukan harfiah', function (string $wildcard) {
+    $response = $this->actingAs(User::factory()->manager()->create())
+        ->getJson(route('search', ['q' => $wildcard]))
+        ->assertOk();
+
+    expect($response->json('groups'))->toBe([]);
+})->with(['%%', '__']);

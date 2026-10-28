@@ -146,7 +146,15 @@ final class BookingsExport implements FromQuery, WithColumnWidths, WithCustomChu
         if (is_int($value)) {
             $cell->setValueExplicit($value, DataType::TYPE_NUMERIC);
         } else {
-            $cell->setValueExplicit(is_scalar($value) ? (string) $value : '', DataType::TYPE_STRING);
+            $string = is_scalar($value) ? (string) $value : '';
+
+            // Netralisir formula injection (CSV/Excel DDE): jika diawali =, +, -, @, \t, atau \r,
+            // beri awalan tanda kutip tunggal (') agar Excel/spreadsheet membacanya murni teks.
+            if ($string !== '' && in_array($string[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                $string = "'".$string;
+            }
+
+            $cell->setValueExplicit($string, DataType::TYPE_STRING);
         }
 
         return true;

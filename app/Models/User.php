@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ActiveStatus;
 use App\Enums\StaffRole;
+use App\Support\SearchTerm;
 use App\Support\TableQuery;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -66,11 +67,15 @@ final class User extends Authenticatable
     public function scopeForTable(Builder $query, TableQuery $table): void
     {
         $query
-            ->when($table->search, fn (Builder $query, string $term) => $query->where(
-                fn (Builder $query) => $query
-                    ->where('name', 'like', "%{$term}%")
-                    ->orWhere('email', 'like', "%{$term}%"),
-            ))
+            ->when($table->search, function (Builder $query, string $term): void {
+                $escaped = SearchTerm::escape($term);
+
+                $query->where(
+                    fn (Builder $query) => $query
+                        ->where('name', 'like', "%{$escaped}%")
+                        ->orWhere('email', 'like', "%{$escaped}%"),
+                );
+            })
             ->when($table->filter('role'), fn (Builder $query, array $roles) => $query->whereIn('role', $roles))
             ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereIn(
                 'is_active',

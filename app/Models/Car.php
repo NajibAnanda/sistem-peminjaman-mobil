@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\BookingStatus;
 use App\Enums\CarDisplayStatus;
 use App\Enums\CarOperationalStatus;
+use App\Support\SearchTerm;
 use App\Support\TableQuery;
 use Database\Factories\CarFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -134,12 +135,16 @@ final class Car extends Model
     public function scopeForTable(Builder $query, TableQuery $table): void
     {
         $query
-            ->when($table->search, fn (Builder $query, string $term) => $query->where(
-                fn (Builder $query) => $query
-                    ->where('plate_number', 'like', "%{$term}%")
-                    ->orWhere('brand', 'like', "%{$term}%")
-                    ->orWhere('model', 'like', "%{$term}%"),
-            ))
+            ->when($table->search, function (Builder $query, string $term): void {
+                $escaped = SearchTerm::escape($term);
+
+                $query->where(
+                    fn (Builder $query) => $query
+                        ->where('plate_number', 'like', "%{$escaped}%")
+                        ->orWhere('brand', 'like', "%{$escaped}%")
+                        ->orWhere('model', 'like', "%{$escaped}%"),
+                );
+            })
             ->when($table->filter('status'), fn (Builder $query, array $statuses) => $query->whereDisplayStatus($statuses));
     }
 

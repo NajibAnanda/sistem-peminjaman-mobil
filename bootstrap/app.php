@@ -64,7 +64,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
 
-            return back();
+            return back()->with('error', $exception->getMessage());
         });
 
         // Halaman error ramah berbahasa Indonesia. Saat APP_DEBUG=true detail

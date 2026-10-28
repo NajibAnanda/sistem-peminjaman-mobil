@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\BookingDisplayStatus;
 use App\Enums\BookingStatus;
 use App\Enums\LatenessFilter;
+use App\Support\SearchTerm;
 use App\Support\TableQuery;
 use Carbon\CarbonInterface;
 use Database\Factories\BookingFactory;
@@ -365,14 +366,16 @@ final class Booking extends Model
      */
     public function scopeSearch(Builder $query, string $term): void
     {
+        $escaped = SearchTerm::escape($term);
+
         // Subquery IN (dihitung sekali), bukan whereHas/EXISTS yang dijalankan
         // ulang untuk setiap baris peminjaman: jauh lebih cepat pada riwayat besar.
         $query->where(fn (Builder $query) => $query
-            ->where('code', 'like', "%{$term}%")
+            ->where('code', 'like', "%{$escaped}%")
             ->orWhereIn('employee_id', Employee::query()->select('id')->where(fn (Builder $query) => $query
-                ->where('name', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")))
-            ->orWhereIn('car_id', Car::query()->select('id')->where('plate_number', 'like', "%{$term}%")));
+                ->where('name', 'like', "%{$escaped}%")
+                ->orWhere('phone', 'like', "%{$escaped}%")))
+            ->orWhereIn('car_id', Car::query()->select('id')->where('plate_number', 'like', "%{$escaped}%")));
     }
 
     /**

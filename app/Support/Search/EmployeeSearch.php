@@ -6,6 +6,7 @@ namespace App\Support\Search;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Support\SearchTerm;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -31,10 +32,12 @@ final class EmployeeSearch implements SearchCategory
 
     public function search(string $term, int $limit): array
     {
+        $escaped = SearchTerm::escape($term);
+
         return array_values(Employee::query()
             ->where(fn (Builder $query) => $query
-                ->where('name', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%"))
+                ->where('name', 'like', "%{$escaped}%")
+                ->orWhere('phone', 'like', "%{$escaped}%"))
             ->orderBy('name')
             ->limit($limit)
             ->get(['id', 'name', 'division', 'phone', 'is_active'])

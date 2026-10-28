@@ -9,6 +9,7 @@ use App\Http\Controllers\Concerns\PaginatesForTable;
 use App\Http\Requests\ActivityLogIndexRequest;
 use App\Http\Resources\ActivityLogCollection;
 use App\Models\User;
+use App\Support\SearchTerm;
 use App\Support\TableQuery;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -45,7 +46,11 @@ final class ActivityLogController extends Controller
     {
         return Activity::query()
             ->with(['causer', 'subject'])
-            ->when($table->search, fn (Builder $query, string $term) => $query->where('description', 'like', "%{$term}%"))
+            ->when($table->search, function (Builder $query, string $term): void {
+                $escaped = SearchTerm::escape($term);
+
+                $query->where('description', 'like', "%{$escaped}%");
+            })
             ->when($table->filter('type'), fn (Builder $query, array $types) => $query->whereIn('log_name', $types))
             ->when($table->filter('staff'), fn (Builder $query, array $ids) => $query
                 ->where('causer_type', (new User)->getMorphClass())
