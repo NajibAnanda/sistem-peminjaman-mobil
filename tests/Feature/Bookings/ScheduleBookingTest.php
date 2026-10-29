@@ -8,8 +8,10 @@ use App\Models\Employee;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->travelTo(CarbonImmutable::parse('2026-10-20 08:00:00'));
     $this->user = User::factory()->admin()->create();
     $this->car = Car::factory()->create();

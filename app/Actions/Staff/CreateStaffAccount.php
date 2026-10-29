@@ -18,8 +18,9 @@ final class CreateStaffAccount
 
     /**
      * @param  array{name: string, email: string, role: StaffRole}  $data
+     * @param  User|null  $actor  null bila dijalankan lewat perintah artisan darurat
      */
-    public function handle(array $data, User $actor): StaffCredentials
+    public function handle(array $data, ?User $actor = null): StaffCredentials
     {
         return DB::transaction(function () use ($data, $actor): StaffCredentials {
             $temporaryPassword = $this->passwords->generate();
@@ -37,6 +38,7 @@ final class CreateStaffAccount
                 ->performedOn($staff)
                 ->causedBy($actor)
                 ->event(ActivityEvent::Created->value)
+                ->withProperties($actor === null ? ['via' => 'artisan'] : [])
                 ->withChanges(['attributes' => $staff->only(['name', 'email', 'role', 'is_active'])])
                 ->log("Membuat akun petugas {$staff->name}");
 
